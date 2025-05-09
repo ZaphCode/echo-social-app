@@ -9,6 +9,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [appIsReady, SetAppIsReady] = useState(false);
+
   const [loaded, error] = useFonts({
     "Geist-Bold": require("./assets/fonts/Geist-Bold.ttf"),
     "Geist-Regular": require("./assets/fonts/Geist-Regular.ttf"),

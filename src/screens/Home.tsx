@@ -1,25 +1,19 @@
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
-import Button from "@/components/ui/Button";
-import { useAuthCtx } from "@/context/Auth";
-import { pb } from "@/lib/pocketbase";
+
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuthCtx } from "@/context/Auth";
 
 export default function Home() {
-  const { logout } = useAuthCtx();
+  const { user } = useAuthCtx();
 
   return (
     <ScrollView style={styles.container}>
       <SafeAreaView>
-        <Text>Hola mundo</Text>
-        <Button
-          title="Sign out"
-          onPress={() => {
-            pb.authStore.clear();
-            logout();
-          }}
-        />
+        <Text fontFamily="bold" color="white" size={theme.fontSizes.xxl}>
+          {"Hola " + user.name}
+        </Text>
       </SafeAreaView>
     </ScrollView>
   );

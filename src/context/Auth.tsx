@@ -4,6 +4,7 @@ import { pb } from "../lib/pocketbase";
 const initialUser = {
   id: "",
   email: "",
+  name: "",
   role: "",
   created: "",
   avatar: "",
@@ -26,6 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       ? {
           user: {
             id: pb.authStore.record!.id,
+            name: pb.authStore.record!.name,
             email: pb.authStore.record!.email,
             role: pb.authStore.record!.role,
             created: pb.authStore.record!.created,
@@ -38,6 +40,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           authenticated: false,
         }
   );
+
+  console.log("AuthProvider", pb.authStore.record);
 
   const login = (user: AuthUser) => setAuthData({ user, authenticated: true });
   const logout = () => setAuthData({ user: initialUser, authenticated: false });
