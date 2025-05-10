@@ -1,0 +1,59 @@
+import { FlatList, Pressable, StyleSheet } from "react-native";
+
+import { theme } from "@/theme/theme";
+import Text from "./ui/Text";
+import useList from "@/hooks/useList";
+import { useState } from "react";
+
+export default function CategoryList() {
+  const [categories, fetchData] = useList("service_category");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+
+  if (fetchData.isLoading) {
+    return <Text>Loading...</Text>;
+  }
+
+  if (fetchData.isError) {
+    return <Text color={theme.colors.redError}>{fetchData.error!}</Text>;
+  }
+
+  return (
+    <FlatList
+      data={[{ id: "all", name: "Todas" }, ...categories]}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      keyExtractor={(category) => category.id}
+      renderItem={({ item: { id, name } }) => (
+        <Pressable
+          style={[
+            styles.listItem,
+            id === selectedCategoryId && styles.selectedListItem,
+          ]}
+          onPress={() => setSelectedCategoryId(id)}
+        >
+          <Text
+            color={
+              id === selectedCategoryId ? theme.colors.primaryBlue : "white"
+            }
+          >
+            {name}
+          </Text>
+        </Pressable>
+      )}
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  listItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: theme.colors.darkerGray,
+    marginVertical: 8,
+    marginRight: 16,
+    borderRadius: 8,
+  },
+  selectedListItem: {
+    backgroundColor: theme.colors.secondaryBlue,
+  },
+});

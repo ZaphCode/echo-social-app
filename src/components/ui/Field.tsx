@@ -13,6 +13,7 @@ interface Props {
   secureTextEntry?: boolean;
   keyboardType?: "default" | "email-address" | "numeric";
   rules?: RegisterOptions;
+  onSubmitEditing?: () => void;
 }
 
 const Field: FC<Props> = ({
@@ -24,6 +25,7 @@ const Field: FC<Props> = ({
   secureTextEntry = false,
   keyboardType = "default",
   rules,
+  onSubmitEditing,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -38,7 +40,6 @@ const Field: FC<Props> = ({
       }) => (
         <View>
           {label && <Text style={styles.label}>{label}</Text>}
-
           <View style={styles.inputContainer}>
             {icon && (
               <Feather
@@ -58,6 +59,7 @@ const Field: FC<Props> = ({
               onChangeText={onChange}
               value={value}
               autoCapitalize="none"
+              onSubmitEditing={onSubmitEditing}
             />
             {secureTextEntry && (
               <Pressable onPress={() => setShowPassword(!showPassword)}>
@@ -90,7 +92,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.darkGray,
     borderRadius: 12,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    paddingVertical: theme.spacing.md - 4,
   },
   input: {
     flex: 1,

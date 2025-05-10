@@ -12,7 +12,6 @@ import Field from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import useLogin from "@/hooks/auth/useLogin";
-import { AuthStack } from "@/navigation/stacks/Auth";
 
 type AuthStackParamList = {
   SignIn: undefined;
@@ -27,20 +26,17 @@ export default function SignIn() {
   const { login, loginError } = useLogin();
   const navigation = useNavigation<NavigationProp>();
 
-  const { control, handleSubmit, getValues } = useForm({
+  const { control, handleSubmit } = useForm({
     defaultValues: {
       email: "zaph@fapi.com",
       password: "menosfapi33",
     },
   });
 
-  const onSubmit = async () => {
-    const { email, password } = getValues();
-
+  const onSubmit = handleSubmit(async ({ email, password }) => {
     await login(email, password);
-
     if (loginError) Alert.alert("Error", loginError, [{ text: "OK" }]);
-  };
+  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,7 +74,7 @@ export default function SignIn() {
         <Button
           title="Iniciar sesión"
           style={{ marginTop: 10 }}
-          onPress={handleSubmit(onSubmit)}
+          onPress={onSubmit}
         />
       </View>
       <View style={styles.createAccountView}>

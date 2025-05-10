@@ -1,5 +1,8 @@
 import PocketBase, { AsyncAuthStore } from "pocketbase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import eventsource from "react-native-sse";
+
+(global as any).EventSource = eventsource;
 
 const POCKETBASE_URL = "http://localhost:8090/";
 

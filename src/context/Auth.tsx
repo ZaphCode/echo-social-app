@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
   );
 
-  console.log("AuthProvider", pb.authStore.record);
+  //console.log("AuthProvider", pb.authStore.record);
 
   const login = (user: AuthUser) => setAuthData({ user, authenticated: true });
   const logout = () => setAuthData({ user: initialUser, authenticated: false });
