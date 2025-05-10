@@ -6,7 +6,7 @@ import { theme } from "@/theme/theme";
 
 interface Props {
   name: string;
-  label: string;
+  label?: string;
   control: any;
   placeholder?: string;
   icon?: keyof typeof Feather.glyphMap;
@@ -37,7 +37,8 @@ const Field: FC<Props> = ({
         fieldState: { error },
       }) => (
         <View>
-          <Text style={styles.label}>{label}</Text>
+          {label && <Text style={styles.label}>{label}</Text>}
+
           <View style={styles.inputContainer}>
             {icon && (
               <Feather
