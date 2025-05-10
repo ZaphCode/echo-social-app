@@ -2,8 +2,6 @@ import { View, StyleSheet, Alert, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { useForm } from "react-hook-form";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { theme } from "@/theme/theme";
 import { isValidEmail } from "@/utils/validations";
@@ -12,20 +10,11 @@ import Field from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import useLogin from "@/hooks/auth/useLogin";
-import { AuthStack } from "@/navigation/stacks/Auth";
-
-type AuthStackParamList = {
-  SignIn: undefined;
-  SignUp: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "SignIn">;
 
 export default function SignIn() {
   useRedirect();
 
   const { login, loginError } = useLogin();
-  const navigation = useNavigation<NavigationProp>();
 
   const { control, handleSubmit, getValues } = useForm({
     defaultValues: {
@@ -83,7 +72,7 @@ export default function SignIn() {
       </View>
       <View style={styles.createAccountView}>
         <Text>¿Aún no tienes cuenta?</Text>
-        <Pressable onPress={() => navigation.navigate("SignUp")}>
+        <Pressable>
           <Text
             style={styles.createAccountText}
             color={theme.colors.primaryBlue}
