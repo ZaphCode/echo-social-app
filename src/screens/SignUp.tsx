@@ -12,16 +12,15 @@ import Field from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import useLogin from "@/hooks/auth/useLogin";
-import { AuthStack } from "@/navigation/stacks/Auth";
 
 type AuthStackParamList = {
   SignIn: undefined;
   SignUp: undefined;
 };
 
-type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "SignIn">;
+type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "SignUp">;
 
-export default function SignIn() {
+export default function SignUp() {
   useRedirect();
 
   const { login, loginError } = useLogin();
@@ -29,8 +28,9 @@ export default function SignIn() {
 
   const { control, handleSubmit, getValues } = useForm({
     defaultValues: {
-      email: "zaph@fapi.com",
-      password: "menosfapi33",
+      nombre: "",
+      email: "",
+      password: "",
     },
   });
 
@@ -48,24 +48,50 @@ export default function SignIn() {
         <Image
           source={require("@Assets/app-logo.png")}
           contentFit="contain"
-          style={{ width: 120, height: 120 }}
+          style={{ width: 120, height: 120, marginBottom: -20 }}
         />
       </View>
-      <View style={{ gap: 5, alignItems: "center" }}>
+
+      <View style={{ gap: 5, alignItems: "center", width: "100%" }}>
         <Text fontFamily="bold" color="white" size={theme.fontSizes.xl + 5}>
-          Bienvenido de Vuelta
+          Registrate Ahora
         </Text>
-        <Text size={theme.fontSizes.lg}>Inicia sesión para continuar</Text>
+
+        <View style={styles.roleButtonContainer}>
+          
+          <Pressable
+            style={styles.roleButton}
+            onPress={() => console.log("Cliente")}
+          >
+            <Text style={styles.roleButtonText}>Cliente</Text>
+          </Pressable>
+          <Pressable
+            style={styles.roleButton}
+            onPress={() => console.log("Prestador de Servicio")}
+          >
+            <Text style={styles.roleButtonText}>Prestador de Servicio</Text>
+          </Pressable>
+        </View>
+
       </View>
-      <View style={{ width: "90%", gap: 20, paddingVertical: 30 }}>
+
+      <View style={{ width: "90%", gap: 20, paddingVertical: 0 }}>
+        <Field
+          name="nombre"
+          label="Nombre"
+          control={control}
+          placeholder="Nombre"
+          icon="user"
+          keyboardType="default"
+        />
         <Field
           name="email"
-          label="Correo"
+          label="Correo electrónico"
           control={control}
-          placeholder="Email"
+          placeholder="Correo electrónico"
           icon="mail"
           keyboardType="email-address"
-          rules={isValidEmail}
+          secureTextEntry={false}
         />
         <Field
           name="password"
@@ -75,20 +101,28 @@ export default function SignIn() {
           icon="lock"
           secureTextEntry={true}
         />
+        <Field
+          name="confirmPassword"
+          label="Confirmar contraseña"
+          control={control}
+          placeholder="*****"
+          icon="lock"
+          secureTextEntry={true}
+        />
         <Button
-          title="Iniciar sesión"
+          title="Continuar"
           style={{ marginTop: 10 }}
           onPress={handleSubmit(onSubmit)}
         />
       </View>
-      <View style={styles.createAccountView}>
-        <Text>¿Aún no tienes cuenta?</Text>
-        <Pressable onPress={() => navigation.navigate("SignUp")}>
+      <View style={styles.loginAccountView}>
+        <Text>¿Ya tienes una cuenta?</Text>
+        <Pressable onPress={() => navigation.navigate("SignIn")}>
           <Text
-            style={styles.createAccountText}
+            style={styles.loginAccountText}
             color={theme.colors.primaryBlue}
           >
-            Crea una
+            Inicia sesión
           </Text>
         </Pressable>
       </View>
@@ -103,13 +137,35 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     gap: theme.spacing.sm,
   },
-  createAccountView: {
+  roleButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "90%",
+    marginTop: 10,
+  },
+  roleButton: {
+    flex: 1,
+    borderRadius: 12,
+    marginHorizontal: 5,
+    paddingVertical: 12,
+    backgroundColor: theme.colors.darkGray,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  roleButtonText: {
+    color: theme.colors.lightGray,
+    fontSize: theme.fontSizes.md,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  loginAccountView: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     gap: 5,
+    marginTop: 10,
   },
-  createAccountText: {
+  loginAccountText: {
     textDecorationLine: "underline",
   },
 });
