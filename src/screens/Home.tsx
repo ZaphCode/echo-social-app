@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthCtx } from "@/context/Auth";
 import SearchBar from "@/components/SearchBar";
 import CategoryList from "@/components/CategoryList";
+import ServiceList from "@/components/ServiceList";
 
 export default function Home() {
   const { user } = useAuthCtx();
@@ -21,6 +22,7 @@ export default function Home() {
           Categorías
         </Text>
         <CategoryList />
+        <ServiceList />
       </SafeAreaView>
     </ScrollView>
   );

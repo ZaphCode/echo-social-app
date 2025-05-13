@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import Home from "../../screens/Home";
+import { IndexStack } from "./Index";
 import { Foundation } from "@expo/vector-icons";
 import Profile from "@/screens/Profile";
 import Requests from "@/screens/Requests";
@@ -15,7 +15,7 @@ export const Tabs = createBottomTabNavigator({
   },
   screens: {
     Home: {
-      screen: Home,
+      screen: IndexStack,
       options: {
         tabBarLabel: "Inicio",
         tabBarIcon: ({ color }) => (

@@ -1,5 +1,6 @@
 import { Navigation } from "./src/navigation/Navigation";
 import { useEffect, useState } from "react";
+
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { AuthProvider } from "./src/context/Auth";
