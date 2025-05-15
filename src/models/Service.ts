@@ -1,11 +1,19 @@
+import { Category } from "./Category";
+import { User } from "./User";
+
 export type Service = {
   id: string;
+  provider: string; // fk: User ID
+  category: string; // fk: Category ID
   name: string;
   description: string;
   base_price: number;
-  provider_id: string;
-  category_id: string;
+  photos: string[];
   created: string;
   updated: string;
-  photos: string[];
+
+  expand?: {
+    provider: User;
+    category: Category;
+  };
 };

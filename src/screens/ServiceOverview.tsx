@@ -15,7 +15,7 @@ export default function ServiceOverview({ route }: Props) {
     <ScrollView style={styles.container}>
       <ServicePhotoCarousel photos={service.photos} serviceId={service.id} />
       <View style={{ paddingHorizontal: theme.spacing.sm }}>
-        <Text color="white" fontFamily="bold" size={theme.fontSizes.xl}>
+        <Text color="white" fontFamily="bold" size={theme.fontSizes.xxl - 5}>
           {service.name}
         </Text>
       </View>
