@@ -6,9 +6,7 @@ import {
 } from "@react-navigation/native";
 import { Tabs } from "./stacks/Tabs";
 import { AuthStack } from "./stacks/Auth";
-import { pb } from "../lib/pocketbase";
 import { useAuthCtx } from "@/context/Auth";
-import Notifications from "@/screens/Notifications";
 
 const RootStack = createNativeStackNavigator({
   screenOptions: {
@@ -22,10 +20,6 @@ const RootStack = createNativeStackNavigator({
     },
     Auth: {
       screen: AuthStack,
-    },
-    Notifications: {
-      screen: Notifications,
-      if: () => useAuthCtx().authenticated,
     },
   },
 });

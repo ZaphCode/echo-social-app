@@ -1,8 +1,9 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { IndexStack } from "./Index";
-import { Foundation } from "@expo/vector-icons";
+import { Foundation, MaterialCommunityIcons } from "@expo/vector-icons";
 import Profile from "@/screens/Profile";
 import Requests from "@/screens/Requests";
+import Notifications from "@/screens/Notifications";
 
 export const Tabs = createBottomTabNavigator({
   initialRouteName: "Home",
@@ -35,6 +36,20 @@ export const Tabs = createBottomTabNavigator({
         tabBarIcon: ({ color }) => (
           <Foundation
             name="list-thumbnails"
+            size={24}
+            color={color}
+            style={{ marginBottom: -5 }}
+          />
+        ),
+      },
+    },
+    Notifications: {
+      screen: Notifications,
+      options: {
+        tabBarLabel: "Notificaciones",
+        tabBarIcon: ({ color }) => (
+          <MaterialCommunityIcons
+            name="bell"
             size={24}
             color={color}
             style={{ marginBottom: -5 }}

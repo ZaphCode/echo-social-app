@@ -32,6 +32,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.background,
     flexDirection: "column",
-    padding: 20,
+    padding: theme.spacing.md,
   },
 });

@@ -2,27 +2,10 @@ import React from "react";
 import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
-import { Ionicons } from "@expo/vector-icons";
+// import { Ionicons } from "@expo/vector-icons";
+import { Notification } from "@/models/Notification";
 
-export type NotificationType = "application" | "offer" | "message" | "status" | "review";
-
-export interface NotificationData {
-  id: string;
-  type: NotificationType;
-  user: {
-    name: string;
-    avatar: string;
-  };
-  content: string;
-  job?: string;
-  status?: "pending" | "accepted" | "rejected";
-  budget?: string;
-  message?: string;
-  rating?: number;
-  time: string;
-}
-
-const getNotificationIcon = (type: NotificationType) => {
+const getNotificationIcon = (type: Notification["type"]) => {
   switch (type) {
     case "application":
       return "document-text";
@@ -39,7 +22,7 @@ const getNotificationIcon = (type: NotificationType) => {
   }
 };
 
-const getNotificationColor = (type: NotificationType) => {
+const getNotificationColor = (type: Notification["type"]) => {
   switch (type) {
     case "application":
       return theme.colors.primaryBlue;
@@ -50,30 +33,40 @@ const getNotificationColor = (type: NotificationType) => {
     case "status":
       return "#4CAF50";
     case "review":
-      return "#FFC107"; 
+      return "#FFC107";
     default:
       return theme.colors.lightGray;
   }
 };
 
-interface NotificationProps {
-  data: NotificationData;
-  onPress?: () => void;
-}
+type Props = {
+  notification: Notification;
+};
 
-export default function Notification({ data, onPress }: NotificationProps) {
+export default function NotificationCard({ notification }: Props) {
   return (
-    <TouchableOpacity style={styles.notificationItem} onPress={onPress}>
-      <View style={styles.notificationContent}>
+    <TouchableOpacity style={styles.notificationItem} onPress={() => {}}>
+      <Text>{notification.message}</Text>
+
+      {/* <View style={styles.notificationContent}>
         <View style={styles.avatarContainer}>
-          <View style={[styles.iconContainer, { backgroundColor: getNotificationColor(data.type) }]}>
-            <Ionicons name={getNotificationIcon(data.type)} size={16} color="white" />
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: getNotificationColor(notification.type) },
+            ]}
+          >
+            <Ionicons
+              name={getNotificationIcon(notification.type)}
+              size={16}
+              color="white"
+            />
           </View>
         </View>
         <View style={styles.textContainer}>
           <View style={styles.notificationText}>
             <Text fontFamily="bold" color="white" size={theme.fontSizes.sm}>
-              {`${data.user.name} `}
+              {`${notification.user.name} `}
             </Text>
             <Text color="white" size={theme.fontSizes.sm}>
               {data.content}
@@ -125,7 +118,7 @@ export default function Notification({ data, onPress }: NotificationProps) {
             {data.time}
           </Text>
         </View>
-      </View>
+      </View> */}
     </TouchableOpacity>
   );
 }
@@ -159,12 +152,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   notificationText: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 2,
   },
   ratingContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 2,
   },
-}); 
+});
