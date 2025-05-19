@@ -1,29 +1,9 @@
-import { View, FlatList } from "react-native";
-import React, { useEffect, useState } from "react";
+import { FlatList, View } from "react-native";
 import useList from "@/hooks/useList";
-import { Service } from "@/models/Service";
 import ServiceCard from "./ServiceCard";
 
 export default function ServiceList() {
-  const [service, setService] = useState<Service | null>(null);
-  const [services, {}] = useList("service", {
-    expand: "provider_id, provider_id.user_id",
-  });
-
-  useEffect(() => {
-    if (services) {
-      console.log("services", services);
-
-      if (services.length > 0) {
-        setService(services[1]);
-        console.log("service", services[0]);
-      }
-
-      if (service?.expand.provider_id.expand) {
-        console.log("service expand", service.expand.provider_id);
-      }
-    }
-  }, [services]);
+  const [services, { status }] = useList("service", { expand: "provider" });
 
   return (
     <FlatList
@@ -32,7 +12,10 @@ export default function ServiceList() {
       renderItem={({ item }) => <ServiceCard service={item} />}
       showsVerticalScrollIndicator={false}
       showsHorizontalScrollIndicator={false}
+      ItemSeparatorComponent={separator}
       horizontal
     />
   );
 }
+
+const separator = () => <View style={{ width: 20 }} />;

@@ -45,11 +45,10 @@ export default function ServiceCard({ service }: Props) {
       />
       <View style={styles.info}>
         <Text style={styles.title}>{service.name}</Text>
-
         <View style={styles.footer}>
           <View style={styles.userRow}>
             <Feather name="user" size={14} color={theme.colors.lightGray} />
-            <Text style={styles.username}>{"Usuario"}</Text>
+            <Text style={styles.username}>{service.expand!.provider.name}</Text>
           </View>
           <Text style={styles.price}>{"$" + service.base_price}</Text>
         </View>
@@ -60,11 +59,11 @@ export default function ServiceCard({ service }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.darkGray,
+    backgroundColor: theme.colors.darkerGray,
     borderRadius: 16,
     overflow: "hidden",
-    marginRight: 25,
-    width: DEVICE_WIDTH * 0.85,
+
+    width: DEVICE_WIDTH * 0.87,
   },
   image: {
     width: "100%",

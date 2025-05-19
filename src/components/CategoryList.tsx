@@ -9,11 +9,11 @@ export default function CategoryList() {
   const [categories, fetchData] = useList("service_category");
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
 
-  if (fetchData.isLoading) {
+  if (fetchData.status === "loading") {
     return <Text>Loading...</Text>;
   }
 
-  if (fetchData.isError) {
+  if (fetchData.status === "error") {
     return <Text color={theme.colors.redError}>{fetchData.error!}</Text>;
   }
 

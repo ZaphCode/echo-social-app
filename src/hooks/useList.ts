@@ -3,9 +3,10 @@ import { pb } from "../lib/pocketbase";
 import { ClientResponseError, RecordFullListOptions } from "pocketbase";
 import { PBCollectionsMap } from "@/utils/collections";
 
-type FetchingState = {
-  isLoading: boolean;
-  isError: boolean;
+type QueryStatus = "idle" | "loading" | "success" | "error";
+
+type QueryState = {
+  status: QueryStatus;
   error: string | null;
 };
 
@@ -14,34 +15,24 @@ export default function useList<K extends keyof PBCollectionsMap>(
   options?: RecordFullListOptions
 ) {
   const [data, setData] = useState<PBCollectionsMap[K][]>([]);
-  const [fetchingData, setFetchingData] = useState<FetchingState>({
-    isLoading: true,
-    isError: false,
+  const [queryState, setQueryState] = useState<QueryState>({
+    status: "idle",
     error: null,
   });
 
   const getData = async () => {
-    setFetchingData({ isLoading: true, isError: false, error: null });
+    setQueryState({ status: "loading", error: null });
     try {
       const res = await pb
         .collection(collection)
         .getFullList<PBCollectionsMap[K]>(options);
       setData(res);
-      setFetchingData({ isLoading: false, isError: false, error: null });
+      setQueryState({ status: "success", error: null });
     } catch (error) {
-      if (error instanceof ClientResponseError) {
-        console.log("PB Error:", error);
-        return setFetchingData({
-          isLoading: false,
-          isError: true,
-          error: error.message,
-        });
-      }
-      setFetchingData({
-        isLoading: false,
-        isError: true,
-        error: "Unknown error",
-      });
+      const message =
+        error instanceof ClientResponseError ? error.message : "Unknown error";
+      console.log("PB Error:", error);
+      setQueryState({ status: "error", error: message });
     }
   };
 
@@ -49,5 +40,5 @@ export default function useList<K extends keyof PBCollectionsMap>(
     getData();
   }, []);
 
-  return [data, fetchingData] as const;
+  return [data, queryState, getData] as const;
 }
