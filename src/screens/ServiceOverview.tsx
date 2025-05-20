@@ -1,5 +1,5 @@
 import { StyleSheet, ScrollView, View, Alert } from "react-native";
-import { StaticScreenProps } from "@react-navigation/native";
+import { StaticScreenProps, useNavigation } from "@react-navigation/native";
 
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
@@ -18,6 +18,7 @@ type Props = StaticScreenProps<{ service: Service }>;
 export default function ServiceOverview({ route }: Props) {
   const { service } = route.params;
   const { user } = useAuthCtx();
+  const navigation = useNavigation();
 
   const { create, mutationState } = useCreate("service_request");
   const [hasRequested, setHasRequested] = useState(false);
@@ -30,7 +31,15 @@ export default function ServiceOverview({ route }: Props) {
   }, [serviceRequests]);
 
   const handlePress = async () => {
-    if (hasRequested) return console.log("Nothing to do here");
+    if (hasRequested) {
+      navigation.navigate("Main", {
+        screen: "Home",
+        params: {
+          screen: "Chatroom",
+          params: { request: serviceRequests[0] },
+        },
+      });
+    }
 
     try {
       const res = await create({

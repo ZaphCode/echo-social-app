@@ -1,4 +1,4 @@
-
-
 start_pb:
-	cd ~/Development/go/pb/echo-app-bknd/ && ./pocketbase serve   
+	./__pb__/pocketbase serve   
+
+.DEFAULT_GOAL := start_pb

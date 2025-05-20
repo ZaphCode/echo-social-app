@@ -1,0 +1,22 @@
+import useList from "@/hooks/useList";
+import { renderHook } from "@testing-library/react-hooks/native";
+
+describe("useList", () => {
+  it("should fetch data successfully", async () => {
+    const { result, waitForNextUpdate } = renderHook(() => useList("users"));
+
+    let [users, { status }] = result.current;
+
+    expect(status).toBe("loading");
+    expect(users).toEqual([]);
+
+    await waitForNextUpdate();
+
+    [users, { status }] = result.current;
+
+    expect(status).toBe("success");
+
+    console.log("users", users);
+    console.log("test");
+  });
+});

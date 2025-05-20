@@ -16,35 +16,14 @@ const userData = {
   stats: {
     serviciosCompletados: 24,
     calificacion: 4.8,
-    miembroDesde: "Enero 2024"
-  }
+    miembroDesde: "Enero 2024",
+  },
 };
 
 export default function Profile() {
-  const InfoRow = ({ icon, label, value }: { icon: any; label: string; value: string }) => (
-    <View style={styles.infoRow}>
-      <View style={styles.labelContainer}>
-        <Feather name={icon} size={20} color={theme.colors.lightGray} />
-        <Text color="lightGray" style={styles.label}>{label}</Text>
-      </View>
-      <Text color="white" style={styles.value}>{value}</Text>
-    </View>
-  );
-
-  const StatBox = ({ value, label }: { value: string | number, label: string }) => (
-    <View style={styles.statBox}>
-      <Text color="white" fontFamily="bold" size={theme.fontSizes.xl}>
-        {value.toString()}
-      </Text>
-      <Text color="lightGray" size={theme.fontSizes.sm} style={{ textAlign: 'center' }}>
-        {label}
-      </Text>
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
+      <ScrollView
         style={{ width: "100%" }}
         contentContainerStyle={{ alignItems: "center", paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
@@ -68,31 +47,32 @@ export default function Profile() {
             {userData.nombre}
           </Text>
           <View style={styles.roleContainer}>
-            <Feather name="award" size={16} color="white" style={{ marginRight: 5 }} />
+            <Feather
+              name="award"
+              size={16}
+              color="white"
+              style={{ marginRight: 5 }}
+            />
             <Text style={styles.roleText}>{userData.role}</Text>
           </View>
         </View>
 
         <View style={styles.statsContainer}>
-          <StatBox 
-            value={userData.stats.serviciosCompletados} 
-            label="Servicios Completados" 
+          <StatBox
+            value={userData.stats.serviciosCompletados}
+            label="Servicios Completados"
           />
           <View style={styles.statsDivider} />
-          <StatBox 
-            value={userData.stats.calificacion} 
-            label="Calificación" 
-          />
+          <StatBox value={userData.stats.calificacion} label="Calificación" />
           <View style={styles.statsDivider} />
-          <StatBox 
-            value={userData.stats.miembroDesde} 
-            label="Miembro Desde" 
-          />
+          <StatBox value={userData.stats.miembroDesde} label="Miembro Desde" />
         </View>
 
         <View style={styles.infoContainer}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
               <Feather name="user" size={20} color={theme.colors.primaryBlue} />
               <Text fontFamily="bold" color="white" size={theme.fontSizes.lg}>
                 Información Personal
@@ -102,7 +82,11 @@ export default function Profile() {
               style={styles.editButton}
               onPress={() => console.log("editar perfil")}
             >
-              <Feather name="edit-2" size={18} color={theme.colors.primaryBlue} />
+              <Feather
+                name="edit-2"
+                size={18}
+                color={theme.colors.primaryBlue}
+              />
               <Text color="primaryBlue" style={styles.editButtonText}>
                 Editar
               </Text>
@@ -111,53 +95,140 @@ export default function Profile() {
 
           <InfoRow icon="mail" label="Email" value={userData.email} />
           <InfoRow icon="phone" label="Teléfono" value={userData.telefono} />
-          <InfoRow icon="map-pin" label="Dirección" value={userData.direccion} />
+          <InfoRow
+            icon="map-pin"
+            label="Dirección"
+            value={userData.direccion}
+          />
         </View>
 
         <View style={styles.infoContainer}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Feather name="settings" size={20} color={theme.colors.primaryBlue} />
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
+              <Feather
+                name="settings"
+                size={20}
+                color={theme.colors.primaryBlue}
+              />
               <Text fontFamily="bold" color="white" size={theme.fontSizes.lg}>
                 Configuración
               </Text>
             </View>
           </View>
 
-          <Pressable style={styles.settingRow} onPress={() => console.log("Notifications")}>
+          <Pressable
+            style={styles.settingRow}
+            onPress={() => console.log("Notifications")}
+          >
             <View style={styles.labelContainer}>
               <Feather name="bell" size={20} color={theme.colors.lightGray} />
-              <Text color="white" style={styles.settingLabel}>Notificaciones</Text>
+              <Text color="white" style={styles.settingLabel}>
+                Notificaciones
+              </Text>
             </View>
-            <Feather name="chevron-right" size={20} color={theme.colors.lightGray} />
+            <Feather
+              name="chevron-right"
+              size={20}
+              color={theme.colors.lightGray}
+            />
           </Pressable>
 
-          <Pressable style={styles.settingRow} onPress={() => console.log("Privacy")}>
+          <Pressable
+            style={styles.settingRow}
+            onPress={() => console.log("Privacy")}
+          >
             <View style={styles.labelContainer}>
               <Feather name="lock" size={20} color={theme.colors.lightGray} />
-              <Text color="white" style={styles.settingLabel}>Privacidad</Text>
+              <Text color="white" style={styles.settingLabel}>
+                Privacidad
+              </Text>
             </View>
-            <Feather name="chevron-right" size={20} color={theme.colors.lightGray} />
+            <Feather
+              name="chevron-right"
+              size={20}
+              color={theme.colors.lightGray}
+            />
           </Pressable>
 
-          <Pressable style={styles.settingRow} onPress={() => console.log("Help")}>
+          <Pressable
+            style={styles.settingRow}
+            onPress={() => console.log("Help")}
+          >
             <View style={styles.labelContainer}>
-              <Feather name="help-circle" size={20} color={theme.colors.lightGray} />
-              <Text color="white" style={styles.settingLabel}>Ayuda</Text>
+              <Feather
+                name="help-circle"
+                size={20}
+                color={theme.colors.lightGray}
+              />
+              <Text color="white" style={styles.settingLabel}>
+                Ayuda
+              </Text>
             </View>
-            <Feather name="chevron-right" size={20} color={theme.colors.lightGray} />
+            <Feather
+              name="chevron-right"
+              size={20}
+              color={theme.colors.lightGray}
+            />
           </Pressable>
         </View>
 
         <Button
           title="Cerrar Sesión"
-          style={[styles.logoutButton, { backgroundColor: theme.colors.darkGray }]}
+          style={[
+            styles.logoutButton,
+            { backgroundColor: theme.colors.darkGray },
+          ]}
           onPress={() => console.log("pa fuera mi loco")}
         />
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const InfoRow = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+}) => (
+  <View style={styles.infoRow}>
+    <View style={styles.labelContainer}>
+      <Feather name={icon} size={20} color={theme.colors.lightGray} />
+      <Text color="lightGray" style={styles.label}>
+        {label}
+      </Text>
+    </View>
+    <Text color="white" style={styles.value}>
+      {value}
+    </Text>
+  </View>
+);
+
+const StatBox = ({
+  value,
+  label,
+}: {
+  value: string | number;
+  label: string;
+}) => (
+  <View style={styles.statBox}>
+    <Text color="white" fontFamily="bold" size={theme.fontSizes.xl}>
+      {value.toString()}
+    </Text>
+    <Text
+      color="lightGray"
+      size={theme.fontSizes.sm}
+      style={{ textAlign: "center" }}
+    >
+      {label}
+    </Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -196,8 +267,8 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 20,
     marginTop: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   roleText: {
     color: "white",
@@ -205,9 +276,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     width: "90%",
     backgroundColor: theme.colors.darkGray,
     borderRadius: 15,
@@ -216,12 +287,12 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   statsDivider: {
     width: 1,
-    height: '70%',
+    height: "70%",
     backgroundColor: theme.colors.lightGray,
     opacity: 0.2,
   },
@@ -264,12 +335,12 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   settingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: "rgba(255,255,255,0.1)",
   },
   settingLabel: {
     fontSize: theme.fontSizes.md,

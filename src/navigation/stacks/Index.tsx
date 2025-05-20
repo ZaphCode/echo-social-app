@@ -1,3 +1,4 @@
+import Chatroom from "@/screens/Chatroom";
 import Home from "@/screens/Home";
 import ServiceOverview from "@/screens/ServiceOverview";
 import { theme } from "@/theme/theme";
@@ -11,6 +12,9 @@ export const IndexStack = createNativeStackNavigator({
   screens: {
     Home: {
       screen: Home,
+    },
+    Chatroom: {
+      screen: Chatroom,
     },
     ServiceOverview: {
       screen: ServiceOverview,

@@ -2,6 +2,13 @@
 
 import { Notification } from "@/models/Notification";
 import { User } from "@/models/User";
+import { RecordFullListOptions } from "pocketbase";
+
+export interface PBClient {
+  collection: (collection: string) => {
+    getFullList: <T>(options?: RecordFullListOptions) => Promise<T[]>;
+  };
+}
 
 const mockUser: User = {
   id: "user123",
