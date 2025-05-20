@@ -32,7 +32,7 @@ export default function ServiceOverview({ route }: Props) {
 
   const handlePress = async () => {
     if (hasRequested) {
-      navigation.navigate("Main", {
+      return navigation.navigate("Main", {
         screen: "Home",
         params: {
           screen: "Chatroom",
@@ -42,7 +42,7 @@ export default function ServiceOverview({ route }: Props) {
     }
 
     try {
-      const res = await create({
+      await create({
         service: service.id,
         client: user.id,
         agreed_price: 10,
@@ -86,6 +86,7 @@ export default function ServiceOverview({ route }: Props) {
         <Button
           title={hasRequested ? "Mensaje" : "Solicitar"}
           onPress={handlePress}
+          loading={mutationState.status === "loading"}
         />
         <Divider />
       </View>
