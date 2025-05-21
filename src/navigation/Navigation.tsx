@@ -2,11 +2,10 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   createStaticNavigation,
   StaticParamList,
-  useNavigation,
 } from "@react-navigation/native";
-import { Tabs } from "./stacks/Tabs";
-import { AuthStack } from "./stacks/Auth";
 import { useAuthCtx } from "@/context/Auth";
+import { AuthStack } from "./stacks/Auth";
+import { MainStack } from "./stacks/Main";
 
 const RootStack = createNativeStackNavigator({
   screenOptions: {
@@ -15,7 +14,7 @@ const RootStack = createNativeStackNavigator({
   initialRouteName: "Auth",
   screens: {
     Main: {
-      screen: Tabs,
+      screen: MainStack,
       if: () => useAuthCtx().authenticated,
     },
     Auth: {

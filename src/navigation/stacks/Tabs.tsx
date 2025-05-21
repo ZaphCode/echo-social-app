@@ -2,8 +2,8 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { IndexStack } from "./Index";
 import { Foundation, MaterialCommunityIcons } from "@expo/vector-icons";
 import Profile from "@/screens/Profile";
-import Requests from "@/screens/Requests";
 import Notifications from "@/screens/Notifications";
+import Requests from "@/screens/Requests";
 
 export const Tabs = createBottomTabNavigator({
   initialRouteName: "Home",

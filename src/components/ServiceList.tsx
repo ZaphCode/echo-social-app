@@ -18,4 +18,4 @@ export default function ServiceList() {
   );
 }
 
-const separator = () => <View style={{ width: 20 }} />;
+const separator = () => <View style={{ width: 24 }} />;

@@ -25,10 +25,13 @@ export default function ServiceCard({ service }: Props) {
 
   const handlePress = () => {
     navigation.navigate("Main", {
-      screen: "Home",
+      screen: "Tabs",
       params: {
-        screen: "ServiceOverview",
-        params: { service },
+        screen: "Home",
+        params: {
+          screen: "ServiceOverview",
+          params: { service },
+        },
       },
     });
   };

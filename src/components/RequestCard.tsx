@@ -1,16 +1,19 @@
-import { View, StyleSheet, Image } from "react-native";
+import { View, StyleSheet, Image, Pressable } from "react-native";
 import React from "react";
 import { ServiceRequest } from "@/models/ServiceRequest";
 import Text from "./ui/Text";
 import { theme } from "@/theme/theme";
 import { Feather } from "@expo/vector-icons";
 import { getFileUrl } from "@/utils/files";
+import { useNavigation } from "@react-navigation/native";
 
 type Props = {
   serviceRequest: ServiceRequest;
 };
 
 export default function RequestCard({ serviceRequest }: Props) {
+  const navigation = useNavigation();
+
   const status = serviceRequest.status;
 
   const statusColors: Record<typeof serviceRequest.status, string> = {
@@ -26,8 +29,15 @@ export default function RequestCard({ serviceRequest }: Props) {
     ? getFileUrl("service", service.id, service.photos[0])
     : "https://via.placeholder.com/100x100";
 
+  const handlePress = () => {
+    navigation.navigate("Main", {
+      screen: "Chatroom",
+      params: { request: serviceRequest },
+    });
+  };
+
   return (
-    <View style={styles.card}>
+    <Pressable onPress={handlePress} style={styles.card}>
       <Image source={{ uri: imageUrl }} style={styles.image} />
       <View style={styles.info}>
         <View style={styles.rowSpace}>
@@ -54,7 +64,7 @@ export default function RequestCard({ serviceRequest }: Props) {
           </View>
         )}
       </View>
-    </View>
+    </Pressable>
   );
 }
 

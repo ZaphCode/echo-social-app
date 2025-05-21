@@ -1,20 +1,16 @@
-import Chatroom from "@/screens/Chatroom";
 import Home from "@/screens/Home";
 import ServiceOverview from "@/screens/ServiceOverview";
 import { theme } from "@/theme/theme";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 export const IndexStack = createNativeStackNavigator({
-  initialRouteName: "Home",
+  initialRouteName: "Inicio",
   screenOptions: {
     headerShown: false,
   },
   screens: {
-    Home: {
+    Inicio: {
       screen: Home,
-    },
-    Chatroom: {
-      screen: Chatroom,
     },
     ServiceOverview: {
       screen: ServiceOverview,

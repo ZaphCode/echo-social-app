@@ -18,10 +18,10 @@ type Props = StaticScreenProps<{ service: Service }>;
 export default function ServiceOverview({ route }: Props) {
   const { service } = route.params;
   const { user } = useAuthCtx();
+  const [hasRequested, setHasRequested] = useState(false);
   const navigation = useNavigation();
 
   const { create, mutationState } = useCreate("service_request");
-  const [hasRequested, setHasRequested] = useState(false);
   const [serviceRequests, fetchData] = useList("service_request", {
     filter: `service="${service.id}" && client="${user.id}"`,
   });
@@ -33,11 +33,8 @@ export default function ServiceOverview({ route }: Props) {
   const handlePress = async () => {
     if (hasRequested) {
       return navigation.navigate("Main", {
-        screen: "Home",
-        params: {
-          screen: "Chatroom",
-          params: { request: serviceRequests[0] },
-        },
+        screen: "Chatroom",
+        params: { request: serviceRequests[0] },
       });
     }
 

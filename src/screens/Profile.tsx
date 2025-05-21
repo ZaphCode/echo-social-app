@@ -6,6 +6,7 @@ import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 import Button from "@/components/ui/Button";
+import useLogout from "@/hooks/auth/useLogout";
 
 const userData = {
   nombre: "Omar Urquidez",
@@ -21,6 +22,7 @@ const userData = {
 };
 
 export default function Profile() {
+  const logout = useLogout();
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -180,7 +182,7 @@ export default function Profile() {
             styles.logoutButton,
             { backgroundColor: theme.colors.darkGray },
           ]}
-          onPress={() => console.log("pa fuera mi loco")}
+          onPress={logout}
         />
       </ScrollView>
     </SafeAreaView>

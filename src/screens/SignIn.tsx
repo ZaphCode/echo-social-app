@@ -13,18 +13,11 @@ import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import useLogin from "@/hooks/auth/useLogin";
 
-type AuthStackParamList = {
-  SignIn: undefined;
-  SignUp: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "SignIn">;
-
 export default function SignIn() {
   useRedirect();
 
   const { login, loginError } = useLogin();
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation();
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -79,7 +72,9 @@ export default function SignIn() {
       </View>
       <View style={styles.createAccountView}>
         <Text>¿Aún no tienes cuenta?</Text>
-        <Pressable onPress={() => navigation.navigate("SignUp")}>
+        <Pressable
+          onPress={() => navigation.navigate("Auth", { screen: "SignUp" })}
+        >
           <Text
             style={styles.createAccountText}
             color={theme.colors.primaryBlue}
