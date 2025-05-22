@@ -1,5 +1,5 @@
 import { Image, ScrollView, StyleSheet, Dimensions } from "react-native";
-import { getFileUrl } from "@/utils/files";
+import { getFileUrl } from "@/utils/format";
 
 const { width } = Dimensions.get("window");
 

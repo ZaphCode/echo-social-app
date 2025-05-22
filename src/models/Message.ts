@@ -5,7 +5,6 @@ export type Message = {
   id: string;
   request: string; // fk: ServiceRequest ID
   sender: string; // fk: User ID
-  receiver: string; // fk: User ID
   content: string;
   created: string;
   updated: string;

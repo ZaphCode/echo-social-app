@@ -13,6 +13,7 @@ interface Props {
   secureTextEntry?: boolean;
   keyboardType?: "default" | "email-address" | "numeric";
   rules?: RegisterOptions;
+  onFocus?: () => void;
   onSubmitEditing?: () => void;
 }
 
@@ -25,6 +26,7 @@ const Field: FC<Props> = ({
   secureTextEntry = false,
   keyboardType = "default",
   rules,
+  onFocus,
   onSubmitEditing,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -56,6 +58,7 @@ const Field: FC<Props> = ({
               secureTextEntry={secureTextEntry && !showPassword}
               keyboardType={keyboardType}
               onBlur={onBlur}
+              onFocus={onFocus}
               onChangeText={onChange}
               value={value}
               autoCapitalize="none"

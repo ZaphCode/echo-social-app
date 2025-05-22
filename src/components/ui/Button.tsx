@@ -42,8 +42,8 @@ const Button: React.FC<ButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     backgroundColor: theme.colors.secondaryBlue,
-    paddingVertical: theme.spacing.md,
-    height: 58,
+    paddingVertical: theme.spacing.sm,
+    height: 50,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",

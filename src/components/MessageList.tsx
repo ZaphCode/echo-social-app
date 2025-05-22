@@ -1,11 +1,14 @@
-import { View } from "react-native";
+import { FlatList, View } from "react-native";
 import React from "react";
 import useList from "@/hooks/useList";
 import Text from "./ui/Text";
+import { useAuthCtx } from "@/context/Auth";
 
 export default function MessageList() {
+  const { user } = useAuthCtx();
+
   const [messages, { status }] = useList("message", {
-    expand: "sender, receiver, request",
+    expand: "sender, request",
   });
 
   if (status === "loading") {
@@ -16,17 +19,17 @@ export default function MessageList() {
     return <Text>Error loading messages</Text>;
   }
 
-  if (!messages || messages.length === 0) {
-    return <Text>No messages found</Text>;
-  }
-
   return (
-    <View>
-      {messages.map((message) => (
-        <View key={message.id}>
-          <Text>{message.content}</Text>
+    <FlatList
+      data={messages}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => (
+        <View>
+          <Text>{item.content}</Text>
         </View>
-      ))}
-    </View>
+      )}
+      contentContainerStyle={{ paddingBottom: 100 }}
+      ListEmptyComponent={() => <Text>No messages yet</Text>}
+    />
   );
 }

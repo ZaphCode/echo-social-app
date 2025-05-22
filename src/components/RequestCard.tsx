@@ -4,7 +4,7 @@ import { ServiceRequest } from "@/models/ServiceRequest";
 import Text from "./ui/Text";
 import { theme } from "@/theme/theme";
 import { Feather } from "@expo/vector-icons";
-import { getFileUrl } from "@/utils/files";
+import { getFileUrl } from "@/utils/format";
 import { useNavigation } from "@react-navigation/native";
 
 type Props = {

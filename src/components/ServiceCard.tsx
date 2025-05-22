@@ -11,7 +11,7 @@ import Text from "./ui/Text";
 import { Service } from "@/models/Service";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
-import { getFileUrl } from "@/utils/files";
+import { getFileUrl } from "@/utils/format";
 import { useNavigation } from "@react-navigation/native";
 
 const DEVICE_WIDTH = Dimensions.get("window").width;
