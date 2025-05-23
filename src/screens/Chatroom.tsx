@@ -1,10 +1,4 @@
-import {
-  StyleSheet,
-  View,
-  Keyboard,
-  Platform,
-  TouchableWithoutFeedback,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
 import React from "react";
 import { StaticScreenProps } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,16 +17,14 @@ export default function Chatroom({ route }: Props) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.container}>
-          <ChatHeader service={service} />
-          <NegotiationBlock request={request} />
-          <View style={styles.messageList}>
-            <MessageList />
-          </View>
-          <ChatInput requestId={request.id} />
+      <View style={styles.container}>
+        <ChatHeader service={service} />
+        <NegotiationBlock request={request} />
+        <View style={styles.messageList}>
+          <MessageList requestId={request.id} />
         </View>
-      </TouchableWithoutFeedback>
+        <ChatInput requestId={request.id} />
+      </View>
     </SafeAreaView>
   );
 }
@@ -49,6 +41,7 @@ const styles = StyleSheet.create({
   },
   messageList: {
     flex: 1,
+    maxHeight: "90%",
     paddingHorizontal: theme.spacing.md,
   },
 });

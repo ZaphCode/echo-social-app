@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { pb } from "../lib/pocketbase";
-import { ClientResponseError } from "pocketbase";
+import { ClientResponseError, RecordOptions } from "pocketbase";
 import { PBCollectionsMap } from "@/utils/collections";
 
 type MutationStatus = "idle" | "loading" | "success" | "error";
@@ -11,7 +11,8 @@ type MutationState = {
 };
 
 export default function useCreate<K extends keyof PBCollectionsMap>(
-  collection: K
+  collection: K,
+  options?: RecordOptions
 ) {
   const [mutationState, setMutationState] = useState<MutationState>({
     status: "idle",
@@ -24,7 +25,7 @@ export default function useCreate<K extends keyof PBCollectionsMap>(
     try {
       const res = await pb
         .collection(collection)
-        .create<PBCollectionsMap[K]>(data);
+        .create<PBCollectionsMap[K]>(data, options || {});
       setMutationState({ status: "success", error: null });
       return res;
     } catch (error) {

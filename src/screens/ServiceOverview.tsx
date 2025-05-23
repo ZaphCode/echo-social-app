@@ -14,6 +14,7 @@ import useList from "@/hooks/useList";
 import useCreate from "@/hooks/useCreate";
 import { SlideModal } from "@/components/ui/SlideModal";
 import RequestForm from "@/components/RequestForm";
+import { ServiceRequest } from "@/models/ServiceRequest";
 
 type Props = StaticScreenProps<{ service: Service }>;
 
@@ -21,12 +22,11 @@ export default function ServiceOverview({ route }: Props) {
   const { service } = route.params;
   const { user } = useAuthCtx();
 
-  const [hasRequested, setHasRequested] = useState(false);
+  const [activeRequest, setActiveRequest] = useState<ServiceRequest | null>();
   const [modalVisible, setModalVisible] = useState(false);
 
   const navigation = useNavigation();
 
-  const { create, mutationState } = useCreate("service_request");
   const [serviceRequests, _] = useList("service_request", {
     filter: `service = "${service.id}" && client = "${user.id}" && status != "COMPLETED"`,
     expand: "service.provider, client",
@@ -34,36 +34,17 @@ export default function ServiceOverview({ route }: Props) {
 
   useEffect(() => {
     if (serviceRequests?.length > 0) {
-      console.log("Service request (Active):", serviceRequests[0].id);
-      setHasRequested(true);
+      setActiveRequest(serviceRequests[0]);
     }
   }, [serviceRequests]);
 
   const requestOrGotoMessage = async () => {
-    return setModalVisible(true);
-    if (hasRequested) {
-      return navigation.navigate("Main", {
-        screen: "Chatroom",
-        params: { request: serviceRequests[0] },
-      });
-    }
+    if (!activeRequest) return setModalVisible(true);
 
-    await create({
-      service: service.id,
-      client: user.id,
-      agreed_price: 10,
-      notes: "Hola, estoy interesado en este servicio",
-      status: "PENDING",
+    return navigation.navigate("Main", {
+      screen: "Chatroom",
+      params: { request: activeRequest },
     });
-
-    if (mutationState.status === "error") {
-      return Alert.alert(
-        "Error",
-        mutationState.error || "No se pudo crear la solicitud"
-      );
-    }
-
-    setHasRequested(true);
   };
 
   return (
@@ -95,14 +76,19 @@ export default function ServiceOverview({ route }: Props) {
           </Text>
         </View>
         <Button
-          title={hasRequested ? "Mensaje" : "Solicitar"}
+          title={activeRequest ? "Mensaje" : "Solicitar"}
           onPress={requestOrGotoMessage}
-          loading={mutationState.status === "loading"}
         />
         <Divider />
       </View>
       <SlideModal visible={modalVisible} onClose={() => setModalVisible(false)}>
-        <RequestForm />
+        <RequestForm
+          service={service}
+          onSuccess={(newRequest) => {
+            setActiveRequest(newRequest);
+            setModalVisible(false);
+          }}
+        />
       </SlideModal>
     </ScrollView>
   );

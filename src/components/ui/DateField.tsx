@@ -5,6 +5,7 @@ import { Controller } from "react-hook-form";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import { formatDate } from "@/utils/format";
+import { validDateRules } from "@/utils/validations";
 
 interface Props {
   name: string;
@@ -20,7 +21,7 @@ export default function DateField({ name, label, control }: Props) {
       control={control}
       name={name}
       defaultValue=""
-      rules={{ required: "Este campo es requerido" }}
+      rules={validDateRules}
       render={({ field: { onChange, value }, fieldState: { error } }) => (
         <View>
           {label && <Text style={styles.label}>{label}</Text>}
@@ -53,6 +54,7 @@ export default function DateField({ name, label, control }: Props) {
             <DateTimePicker
               value={value ? new Date(value) : new Date()}
               mode="date"
+              minimumDate={new Date()}
               textColor="white"
               themeVariant="dark"
               display={Platform.OS === "ios" ? "inline" : "default"}

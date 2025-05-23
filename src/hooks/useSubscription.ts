@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { pb } from "../lib/pocketbase";
-import { RecordSubscription } from "pocketbase";
+import { RecordSubscription, UnsubscribeFunc } from "pocketbase";
 import { PBCollectionsMap } from "@/utils/collections";
 
 export default function useSubscription<K extends keyof PBCollectionsMap>(
@@ -9,17 +9,22 @@ export default function useSubscription<K extends keyof PBCollectionsMap>(
   callback: (data: RecordSubscription<PBCollectionsMap[K]>) => void
 ) {
   useEffect(() => {
-    console.log("Subscribed to ", collection);
+    console.log("Subscribed to", collection);
+
+    let unsubscribe: UnsubscribeFunc | undefined;
 
     pb.collection<PBCollectionsMap[K]>(collection)
       .subscribe(track, callback)
+      .then((result) => {
+        unsubscribe = result;
+      })
       .catch((err) => console.error(err));
 
     return () => {
-      console.log("Unsubscribed");
-      pb.collection(collection)
-        .unsubscribe()
-        .catch((err) => console.error(err));
+      if (unsubscribe) {
+        unsubscribe();
+        console.log("Unsubscribed from", collection);
+      }
     };
-  }, []);
+  }, [collection, track]);
 }

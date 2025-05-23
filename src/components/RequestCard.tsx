@@ -6,6 +6,7 @@ import { theme } from "@/theme/theme";
 import { Feather } from "@expo/vector-icons";
 import { getFileUrl } from "@/utils/format";
 import { useNavigation } from "@react-navigation/native";
+import { useAuthCtx } from "@/context/Auth";
 
 type Props = {
   serviceRequest: ServiceRequest;
@@ -13,6 +14,7 @@ type Props = {
 
 export default function RequestCard({ serviceRequest }: Props) {
   const navigation = useNavigation();
+  const { user } = useAuthCtx();
 
   const status = serviceRequest.status;
 
@@ -24,7 +26,8 @@ export default function RequestCard({ serviceRequest }: Props) {
   };
 
   const service = serviceRequest.expand?.service;
-  const provider = service?.expand?.provider.name;
+  const providerName = service?.expand?.provider.name;
+  const clientName = serviceRequest.expand?.client.name;
   const imageUrl = service?.photos?.[0]
     ? getFileUrl("service", service.id, service.photos[0])
     : "https://via.placeholder.com/100x100";
@@ -49,7 +52,9 @@ export default function RequestCard({ serviceRequest }: Props) {
 
         <View style={styles.row}>
           <Feather name="user" size={14} color={theme.colors.lightGray} />
-          <Text style={styles.sub}>{provider}</Text>
+          <Text style={styles.sub}>
+            {user.role === "client" ? providerName : clientName}
+          </Text>
         </View>
 
         <View style={styles.rowSpace}>

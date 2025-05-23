@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 
 import { theme } from "@/theme/theme";
-import { isValidEmail } from "@/utils/validations";
+import { validEmailRules } from "@/utils/validations";
 import Text from "@/components/ui/Text";
 import Field from "@/components/ui/Field";
 import Button from "@/components/ui/Button";

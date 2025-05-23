@@ -2,10 +2,19 @@ import useList from "@/hooks/useList";
 import { FlatList, VirtualizedList } from "react-native";
 import Text from "./ui/Text";
 import RequestCard from "./RequestCard";
+import { useAuthCtx } from "@/context/Auth";
 
 export default function RequestsList() {
+  const { user } = useAuthCtx();
+
+  const filter =
+    user.role === "client"
+      ? `client = "${user.id}"`
+      : `service.provider = "${user.id}"`;
+
   const [serviceRequests, fetchData] = useList("service_request", {
-    expand: "service.provider",
+    expand: "service.provider, client",
+    filter,
   });
 
   return (

@@ -1,35 +1,58 @@
-import { FlatList, View } from "react-native";
-import React from "react";
-import useList from "@/hooks/useList";
-import Text from "./ui/Text";
+import { useEffect, useRef, useState } from "react";
+import { FlatList } from "react-native";
+
 import { useAuthCtx } from "@/context/Auth";
+import { Message } from "@/models/Message";
+import Text from "./ui/Text";
+import useList from "@/hooks/useList";
+import useSubscription from "@/hooks/useSubscription";
+import MessageField from "./MessageField";
 
-export default function MessageList() {
+type Props = {
+  requestId: string;
+};
+
+export default function MessageList({ requestId }: Props) {
   const { user } = useAuthCtx();
+  const flatListRef = useRef<FlatList<Message>>(null);
 
-  const [messages, { status }] = useList("message", {
-    expand: "sender, request",
+  const [initialMessages, { status }] = useList("message", {
+    expand: "sender, request.service.provider",
+    filter: `request.id = "${requestId}" && request.client = "${user.id}" || request.service.provider = "${user.id}"`,
   });
 
-  if (status === "loading") {
-    return <Text>Loading...</Text>;
-  }
+  const [messages, setMessages] = useState<Message[]>([]);
 
-  if (status === "error") {
-    return <Text>Error loading messages</Text>;
-  }
+  useEffect(() => {
+    if (status === "success") setMessages(initialMessages);
+  }, [status]);
+
+  useSubscription("message", "*", ({ action, record }) => {
+    if (action === "create") {
+      setMessages((prevMessages) => [...prevMessages, record]);
+    }
+  });
+
+  if (status === "loading") return <Text>Loading...</Text>;
+
+  if (status === "error") return <Text>Error loading messages</Text>;
 
   return (
     <FlatList
+      ref={flatListRef}
       data={messages}
       keyExtractor={(item) => item.id}
+      showsVerticalScrollIndicator={false}
       renderItem={({ item }) => (
-        <View>
-          <Text>{item.content}</Text>
-        </View>
+        <MessageField message={item} currentUserId={user.id} />
       )}
-      contentContainerStyle={{ paddingBottom: 100 }}
       ListEmptyComponent={() => <Text>No messages yet</Text>}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      contentContainerStyle={{ flexGrow: 1 }}
+      onContentSizeChange={() => {
+        flatListRef.current?.scrollToEnd({ animated: false });
+      }}
     />
   );
 }

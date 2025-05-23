@@ -1,9 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
@@ -20,11 +18,19 @@ export function SlideModal({ visible, onClose, children }: BottomUpModalProps) {
   const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
-    Animated.timing(slideAnim, {
-      toValue: visible ? 0 : 300,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
+    if (visible) {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 300,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
   }, [visible]);
 
   return (
@@ -38,20 +44,14 @@ export function SlideModal({ visible, onClose, children }: BottomUpModalProps) {
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
 
-      {/* <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        tvParallaxShiftDistanceY={10000}
-        style={styles.keyboardAvoiding}
-      > */}
       <Animated.View
         style={[
-          styles.modalContentWrapper,
+          styles.modalContent,
           { transform: [{ translateY: slideAnim }] },
         ]}
       >
-        <View style={styles.modalContent}>{children}</View>
+        {children}
       </Animated.View>
-      {/* </KeyboardAvoidingView> */}
     </Modal>
   );
 }
@@ -61,18 +61,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  keyboardAvoiding: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  modalContentWrapper: {
-    width: "100%",
-  },
   modalContent: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
     backgroundColor: theme.colors.darkerGray,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     padding: 20,
-    width: "100%",
+    minHeight: "50%",
   },
 });
