@@ -7,11 +7,14 @@ import {
   Platform,
   TouchableOpacity,
   Text,
+  Dimensions,
 } from "react-native";
 import { theme } from "@/theme/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import useCreate from "@/hooks/useCreate";
 import { useAuthCtx } from "@/context/Auth";
+
+const DEVICE_HEIGHT = Dimensions.get("window").height;
 
 type Props = {
   requestId: string;
@@ -23,10 +26,10 @@ export default function ChatInput({ requestId }: Props) {
 
   const { create, mutationState } = useCreate("message");
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (message.trim() === "" || mutationState.status === "loading") return;
 
-    create({
+    await create({
       content: message,
       sender: user.id,
       request: requestId,
@@ -38,7 +41,7 @@ export default function ChatInput({ requestId }: Props) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? DEVICE_HEIGHT * 0.02 : 0}
     >
       <View style={styles.inputContainer}>
         <TextInput
@@ -66,7 +69,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderTopWidth: 1,
     borderColor: theme.colors.darkGray,

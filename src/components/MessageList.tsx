@@ -19,6 +19,7 @@ export default function MessageList({ requestId }: Props) {
   const [initialMessages, { status }] = useList("message", {
     expand: "sender, request.service.provider",
     filter: `request.id = "${requestId}" && request.client = "${user.id}" || request.service.provider = "${user.id}"`,
+    sort: "created",
   });
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -49,6 +50,7 @@ export default function MessageList({ requestId }: Props) {
       ListEmptyComponent={() => <Text>No messages yet</Text>}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
+      automaticallyAdjustKeyboardInsets
       contentContainerStyle={{ flexGrow: 1 }}
       onContentSizeChange={() => {
         flatListRef.current?.scrollToEnd({ animated: false });

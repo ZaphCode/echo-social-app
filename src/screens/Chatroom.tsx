@@ -17,14 +17,14 @@ export default function Chatroom({ route }: Props) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      <View style={{ gap: 20 }}>
         <ChatHeader service={service} />
         <NegotiationBlock request={request} />
-        <View style={styles.messageList}>
-          <MessageList requestId={request.id} />
-        </View>
-        <ChatInput requestId={request.id} />
       </View>
+      <View style={styles.messageList}>
+        <MessageList requestId={request.id} />
+      </View>
+      <ChatInput requestId={request.id} />
     </SafeAreaView>
   );
 }
@@ -34,14 +34,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    gap: theme.spacing.md,
-  },
+
   messageList: {
     flex: 1,
-    maxHeight: "90%",
     paddingHorizontal: theme.spacing.md,
   },
 });
