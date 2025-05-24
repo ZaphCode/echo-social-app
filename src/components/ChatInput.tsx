@@ -11,8 +11,8 @@ import {
 } from "react-native";
 import { theme } from "@/theme/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import useCreate from "@/hooks/useCreate";
 import { useAuthCtx } from "@/context/Auth";
+import useMutate from "@/hooks/useMutate";
 
 const DEVICE_HEIGHT = Dimensions.get("window").height;
 
@@ -24,7 +24,7 @@ export default function ChatInput({ requestId }: Props) {
   const { user } = useAuthCtx();
   const [message, setMessage] = useState("");
 
-  const { create, mutationState } = useCreate("message");
+  const { create, mutationState } = useMutate("message");
 
   const handleSend = async () => {
     if (message.trim() === "" || mutationState.status === "loading") return;

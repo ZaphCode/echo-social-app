@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, View, Alert } from "react-native";
+import { StyleSheet, ScrollView, View } from "react-native";
 import { StaticScreenProps, useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
@@ -6,15 +6,14 @@ import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import { useAuthCtx } from "@/context/Auth";
 import { Service } from "@/models/Service";
+import { ServiceRequest } from "@/models/ServiceRequest";
+import { SlideModal } from "@/components/ui/SlideModal";
 import Text from "@/components/ui/Text";
 import ServicePhotoCarousel from "@/components/ServicePhotoCarousel";
 import Button from "@/components/ui/Button";
 import Divider from "@/components/ui/Divider";
 import useList from "@/hooks/useList";
-import useCreate from "@/hooks/useCreate";
-import { SlideModal } from "@/components/ui/SlideModal";
 import RequestForm from "@/components/RequestForm";
-import { ServiceRequest } from "@/models/ServiceRequest";
 
 type Props = StaticScreenProps<{ service: Service }>;
 

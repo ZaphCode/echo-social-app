@@ -1,4 +1,4 @@
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, Alert } from "react-native";
 import React, { useState } from "react";
 import { theme } from "@/theme/theme";
 import Text from "./ui/Text";
@@ -6,29 +6,63 @@ import { MaterialIcons } from "@expo/vector-icons";
 import useSubscription from "@/hooks/useSubscription";
 import { ServiceRequest } from "@/models/ServiceRequest";
 import { formatDate } from "@/utils/format";
+import useMutate from "@/hooks/useMutate";
+import { useAuthCtx } from "@/context/Auth";
 
 const PERSON_ICON_SIZE = 38;
 
 type Props = {
   request: ServiceRequest;
+  openModalFn?: () => void;
 };
 
-export default function NegotiationBlock({ request }: Props) {
+export default function NegotiationBlock({ request, openModalFn }: Props) {
+  const { user } = useAuthCtx();
+
   const [currentAgreement, setCurrentAgreement] = useState({
     price: request.agreed_price,
     date: formatDate(request.agreed_date),
+    isClientAgreed: request.client_agrees,
+    isProviderAgreed: request.provider_agrees,
   });
 
-  console.log("NegotiationBlock", request.agreed_date);
+  const { update, mutationState } = useMutate("service_request");
 
   useSubscription("service_request", request.id, ({ action, record }) => {
     if (action === "update") {
       setCurrentAgreement({
         price: record.agreed_price,
         date: formatDate(record.agreed_date),
+        isClientAgreed: record.client_agrees,
+        isProviderAgreed: record.provider_agrees,
       });
     }
   });
+
+  const handleAccept = async () => {
+    if (currentAgreement.isClientAgreed && currentAgreement.isProviderAgreed) {
+      return;
+    }
+
+    if (user.role === "client") {
+      await update(request.id, {
+        client_agrees: true,
+      });
+    } else {
+      await update(request.id, {
+        provider_agrees: true,
+      });
+    }
+
+    if (mutationState.status === "error") {
+      return Alert.alert(
+        "Error",
+        "No se pudo crear la solicitud. Intente nuevamente."
+      );
+    }
+
+    await update(request.id, {});
+  };
 
   return (
     <View style={styles.container}>
@@ -37,7 +71,11 @@ export default function NegotiationBlock({ request }: Props) {
           <MaterialIcons
             name="person"
             size={PERSON_ICON_SIZE}
-            color={theme.colors.primaryBlue}
+            color={
+              currentAgreement.isClientAgreed
+                ? "green"
+                : theme.colors.primaryBlue
+            }
           />
         </View>
         <View style={{ alignItems: "center" }}>
@@ -63,15 +101,19 @@ export default function NegotiationBlock({ request }: Props) {
           <MaterialIcons
             name="person-4"
             size={PERSON_ICON_SIZE}
-            color={theme.colors.primaryBlue}
+            color={
+              currentAgreement.isProviderAgreed
+                ? "green"
+                : theme.colors.primaryBlue
+            }
           />
         </View>
       </View>
       <View style={styles.buttonsContainer}>
-        <Pressable style={styles.button}>
+        <Pressable onPress={handleAccept} style={styles.button}>
           <Text>Aceptar</Text>
         </Pressable>
-        <Pressable style={styles.button}>
+        <Pressable onPress={openModalFn} style={styles.button}>
           <Text>Ofertar</Text>
         </Pressable>
         <Pressable style={styles.button}>

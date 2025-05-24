@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { StaticScreenProps } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ChatHeader from "@/components/ChatHeader";
@@ -8,6 +8,9 @@ import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
 import { theme } from "@/theme/theme";
 import { ServiceRequest } from "@/models/ServiceRequest";
+import { SlideModal } from "@/components/ui/SlideModal";
+import RequestForm from "@/components/RequestForm";
+import { set } from "react-hook-form";
 
 type Props = StaticScreenProps<{ request: ServiceRequest }>;
 
@@ -15,16 +18,30 @@ export default function Chatroom({ route }: Props) {
   const { request } = route.params;
   const { service } = request.expand!;
 
+  const [modalVisible, setModalVisible] = useState(false);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={{ gap: 20 }}>
         <ChatHeader service={service} />
-        <NegotiationBlock request={request} />
+        <NegotiationBlock
+          request={request}
+          openModalFn={() => setModalVisible(true)}
+        />
       </View>
       <View style={styles.messageList}>
         <MessageList requestId={request.id} />
       </View>
       <ChatInput requestId={request.id} />
+      <SlideModal visible={modalVisible} onClose={() => setModalVisible(false)}>
+        <View style={{ padding: theme.spacing.md }}>
+          <RequestForm
+            service={service}
+            requestId={request.id}
+            onSuccess={() => setModalVisible(false)}
+          />
+        </View>
+      </SlideModal>
     </SafeAreaView>
   );
 }
