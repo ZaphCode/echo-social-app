@@ -18,7 +18,7 @@ export default function MessageList({ requestId }: Props) {
 
   const [initialMessages, { status }] = useList("message", {
     expand: "sender, request.service.provider",
-    filter: `request.id = "${requestId}" && request.client = "${user.id}" || request.service.provider = "${user.id}"`,
+    filter: `request.id = "${requestId}"`,
     sort: "created",
   });
 
@@ -29,7 +29,7 @@ export default function MessageList({ requestId }: Props) {
   }, [status]);
 
   useSubscription("message", "*", ({ action, record }) => {
-    if (action === "create") {
+    if (action === "create" && record.request === requestId) {
       setMessages((prevMessages) => [...prevMessages, record]);
     }
   });

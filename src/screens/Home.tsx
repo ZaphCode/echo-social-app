@@ -14,15 +14,20 @@ export default function Home() {
   return (
     <ScrollView style={styles.container}>
       <SafeAreaView style={{ gap: theme.spacing.md - 2 }}>
-        <Text fontFamily="bold" color="white" size={theme.fontSizes.xxl}>
-          {"Hola " + user.name}
+        <Text
+          numberOfLines={1}
+          fontFamily="bold"
+          color="white"
+          size={theme.fontSizes.xxl}
+        >
+          {"Bienvenido " + getFirstName(user.name) + "!"}
         </Text>
         <SearchBar />
         <Text color="white" fontFamily="bold" size={theme.fontSizes.lg}>
           Categorías
         </Text>
         <CategoryList />
-        <ServiceList />
+        <ServiceList authUser={user} />
       </SafeAreaView>
     </ScrollView>
   );
@@ -35,3 +40,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
   },
 });
+
+function getFirstName(name: string) {
+  return name.split(" ")[0];
+}

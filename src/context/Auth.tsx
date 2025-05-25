@@ -1,21 +1,23 @@
 import { createContext, useContext, useState } from "react";
 import { pb } from "../lib/pocketbase";
+import { User } from "@/models/User";
 
-const initialUser = {
+const initialUser: User = {
   id: "",
   email: "",
   name: "",
-  role: "",
+  role: "client",
   created: "",
+  updated: "",
   avatar: "",
+  emailVisibility: false,
+  verified: false,
 };
 
-type AuthUser = typeof initialUser;
-
 type AuthContextType = {
-  user: AuthUser;
+  user: User;
   authenticated: boolean;
-  login: (user: AuthUser) => void;
+  login: (user: User) => void;
   logout: () => void;
 };
 
@@ -32,7 +34,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             role: pb.authStore.record!.role,
             created: pb.authStore.record!.created,
             avatar: pb.authStore.record!.avatar,
-          },
+            updated: pb.authStore.record!.updated,
+            emailVisibility: pb.authStore.record!.emailVisibility,
+            verified: pb.authStore.record!.verified,
+          } as User,
           authenticated: true,
         }
       : {
@@ -41,9 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
   );
 
-  //console.log("AuthProvider", pb.authStore.record);
-
-  const login = (user: AuthUser) => setAuthData({ user, authenticated: true });
+  const login = (user: User) => setAuthData({ user, authenticated: true });
   const logout = () => setAuthData({ user: initialUser, authenticated: false });
 
   return (

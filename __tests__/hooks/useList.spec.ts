@@ -4,9 +4,7 @@ import { renderHook } from "@testing-library/react-hooks/native";
 
 describe("useList", () => {
   it("should fetch data successfully", async () => {
-    const { result, waitForNextUpdate } = renderHook(() =>
-      useList("users", {}, mockPBClient)
-    );
+    const { result, waitForNextUpdate } = renderHook(() => useList("users"));
 
     let [users, { status }] = result.current;
 
@@ -25,7 +23,7 @@ describe("useList", () => {
 
   it("should throw be error for invalid collection", async () => {
     const { result, waitForNextUpdate } = renderHook(() =>
-      useList("invalid-collection" as any, {}, mockPBClient)
+      useList("invalid-collection" as any)
     );
 
     let [_, { status, error }] = result.current;

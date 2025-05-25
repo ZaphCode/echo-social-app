@@ -25,10 +25,10 @@ export default function RequestCard({ serviceRequest }: Props) {
     completed: "#2ECC71",
   };
 
-  const service = serviceRequest.expand?.service;
-  const providerName = service?.expand?.provider.name;
-  const clientName = serviceRequest.expand?.client.name;
-  const imageUrl = service?.photos?.[0]
+  const service = serviceRequest.expand!.service;
+  const provider = service!.expand!.provider;
+  const client = serviceRequest.expand!.client;
+  const imageUrl = service!.photos?.[0]
     ? getFileUrl("service", service.id, service.photos[0])
     : "https://via.placeholder.com/100x100";
 
@@ -53,7 +53,7 @@ export default function RequestCard({ serviceRequest }: Props) {
         <View style={styles.row}>
           <Feather name="user" size={14} color={theme.colors.lightGray} />
           <Text style={styles.sub}>
-            {user.role === "client" ? providerName : clientName}
+            {user.id === client?.id ? provider.name : client.name}
           </Text>
         </View>
 

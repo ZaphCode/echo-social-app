@@ -10,7 +10,6 @@ import { theme } from "@/theme/theme";
 import { ServiceRequest } from "@/models/ServiceRequest";
 import { SlideModal } from "@/components/ui/SlideModal";
 import RequestForm from "@/components/RequestForm";
-import { set } from "react-hook-form";
 
 type Props = StaticScreenProps<{ request: ServiceRequest }>;
 

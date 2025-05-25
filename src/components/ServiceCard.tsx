@@ -13,15 +13,19 @@ import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import { getFileUrl } from "@/utils/format";
 import { useNavigation } from "@react-navigation/native";
+import { User } from "@/models/User";
 
 const DEVICE_WIDTH = Dimensions.get("window").width;
 
 type Props = {
+  authUser: User;
   service: Service;
 };
 
-export default function ServiceCard({ service }: Props) {
+export default function ServiceCard({ service, authUser }: Props) {
   const navigation = useNavigation();
+
+  const isProvider = authUser.id === service.provider;
 
   const handlePress = () => {
     navigation.navigate("Main", {
@@ -37,7 +41,15 @@ export default function ServiceCard({ service }: Props) {
   };
 
   return (
-    <Pressable onPress={handlePress} style={styles.card}>
+    <Pressable
+      onPress={handlePress}
+      style={[
+        styles.card,
+        isProvider && {
+          backgroundColor: theme.colors.darkGray,
+        },
+      ]}
+    >
       <Image
         source={{
           uri:
@@ -46,6 +58,16 @@ export default function ServiceCard({ service }: Props) {
         }}
         style={styles.image}
       />
+      {isProvider && (
+        <Pressable
+          style={styles.editButton}
+          onPress={() => Alert.alert("Edit Service")}
+        >
+          <Text color="white">Edit</Text>
+          <Feather name="edit" size={18} color="white" />
+        </Pressable>
+      )}
+
       <View style={styles.info}>
         <Text style={styles.title}>{service.name}</Text>
         <View style={styles.footer}>
@@ -62,10 +84,9 @@ export default function ServiceCard({ service }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.darkerGray,
     borderRadius: 16,
+    backgroundColor: theme.colors.darkerGray,
     overflow: "hidden",
-
     width: DEVICE_WIDTH * 0.87,
   },
   image: {
@@ -99,5 +120,16 @@ const styles = StyleSheet.create({
   price: {
     color: theme.colors.primaryBlue,
     fontSize: theme.fontSizes.md,
+  },
+  editButton: {
+    position: "absolute",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    top: 10,
+    right: 10,
+    backgroundColor: theme.colors.primaryBlue,
+    padding: theme.spacing.sm,
+    borderRadius: 50,
   },
 });

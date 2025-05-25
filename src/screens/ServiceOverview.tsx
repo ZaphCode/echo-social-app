@@ -77,6 +77,7 @@ export default function ServiceOverview({ route }: Props) {
         <Button
           title={activeRequest ? "Mensaje" : "Solicitar"}
           onPress={requestOrGotoMessage}
+          disabled={user.id === service.provider}
         />
         <Divider />
       </View>
