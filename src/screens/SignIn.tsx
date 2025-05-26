@@ -29,11 +29,12 @@ export default function SignIn() {
 
   const { control, handleSubmit, getValues } = useForm({
     defaultValues: {
-      email: "zaph@fapi.com",
+      email: "miguel@gmail.com",
       password: "menosfapi33",
     },
   });
 
+<<<<<<< Updated upstream
   const onSubmit = async () => {
     const { email, password } = getValues();
 
@@ -41,6 +42,14 @@ export default function SignIn() {
 
     if (loginError) Alert.alert("Error", loginError, [{ text: "OK" }]);
   };
+=======
+  const onSubmit = handleSubmit(async ({ email, password }) => {
+    const success = await login(email, password);
+    if (!success && loginError) {
+      Alert.alert("Error", loginError, [{ text: "OK" }]);
+    }
+  });
+>>>>>>> Stashed changes
 
   return (
     <SafeAreaView style={styles.container}>

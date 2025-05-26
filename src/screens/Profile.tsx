@@ -1,4 +1,5 @@
-import { View, StyleSheet, Pressable, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -6,6 +7,7 @@ import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 import Button from "@/components/ui/Button";
+<<<<<<< Updated upstream
 
 const userData = {
   nombre: "Omar Urquidez",
@@ -41,6 +43,54 @@ export default function Profile() {
       </Text>
     </View>
   );
+=======
+import useLogout from "@/hooks/auth/useLogout";
+import useProfile from "@/hooks/auth/useProfile";
+import useUpdateAvatar from "@/hooks/auth/useUpdateAvatar";
+import { useAuthCtx } from "@/context/Auth";
+import { getFileUrl } from "@/utils/format";
+import EditProfileModal from "@/components/EditProfileModal";
+import { ProviderProfile } from "@/models/ProviderProfile";
+
+const formatAvailableDays = (days: string[]) => {
+  const dayMap: { [key: string]: string } = {
+    MON: "Lunes",
+    TUE: "Martes",
+    WED: "Miércoles",
+    THU: "Jueves",
+    FRI: "Viernes",
+    SAT: "Sábado",
+    SUN: "Domingo",
+  };
+  return days.map(day => dayMap[day] || day).join(", ");
+};
+
+export default function Profile() {
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isEditProfessionalModalVisible, setIsEditProfessionalModalVisible] = useState(false);
+  const logout = useLogout();
+  const { user } = useAuthCtx();
+  const { profile, loading: profileLoading, error: profileError, refetch: refetchProfile } = useProfile();
+  const { updateAvatar, loading: avatarLoading, error: avatarError } = useUpdateAvatar();
+
+  if (profileLoading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={theme.colors.primaryBlue} />
+      </SafeAreaView>
+    );
+  }
+
+  if (profileError) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <Text color="white" size={theme.fontSizes.lg}>
+          {profileError}
+        </Text>
+      </SafeAreaView>
+    );
+  }
+>>>>>>> Stashed changes
 
   return (
     <SafeAreaView style={styles.container}>
@@ -51,23 +101,40 @@ export default function Profile() {
       >
         <View style={styles.header}>
           <View style={styles.imageContainer}>
-            <Image
-              source={require("@Assets/balde.png")}
-              contentFit="fill"
-              style={styles.profileImage}
-            />
+            {user.avatar ? (
+              <Image
+                source={{ uri: getFileUrl("users", user.id, user.avatar) }}
+                contentFit="fill"
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={[styles.profileImage, styles.placeholderImage]}>
+                <Feather name="user" size={40} color={theme.colors.lightGray} />
+              </View>
+            )}
             <Pressable
-              style={styles.editImageButton}
-              onPress={() => console.log("editar fotillo")}
+              style={[styles.editImageButton, avatarLoading && styles.disabledButton]}
+              onPress={updateAvatar}
+              disabled={avatarLoading}
             >
-              <Feather name="camera" size={16} color={theme.colors.lightGray} />
+              {avatarLoading ? (
+                <ActivityIndicator size="small" color={theme.colors.lightGray} />
+              ) : (
+                <Feather name="camera" size={16} color={theme.colors.lightGray} />
+              )}
             </Pressable>
+            {avatarError && (
+              <Text color="error" style={styles.errorText}>
+                {avatarError}
+              </Text>
+            )}
           </View>
 
           <Text fontFamily="bold" color="white" size={theme.fontSizes.xl}>
-            {userData.nombre}
+            {user.name}
           </Text>
           <View style={styles.roleContainer}>
+<<<<<<< Updated upstream
             <Feather name="award" size={16} color="white" style={{ marginRight: 5 }} />
             <Text style={styles.roleText}>{userData.role}</Text>
           </View>
@@ -93,30 +160,131 @@ export default function Profile() {
         <View style={styles.infoContainer}>
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+=======
+            <Feather
+              name="award"
+              size={16}
+              color="white"
+              style={{ marginRight: 5 }}
+            />
+            <Text style={styles.roleText}>
+              {user.role === "client" ? "Cliente" : "Prestador de Servicio"}
+            </Text>
+          </View>
+        </View>
+
+        {user.role === "provider" && profile && (
+          <>
+            <View style={styles.statsContainer}>
+              <StatBox
+                value={(profile as ProviderProfile).jobs_done || 0}
+                label="Servicios Completados"
+              />
+              <View style={styles.statsDivider} />
+              <StatBox
+                value={(profile as ProviderProfile).experience_years || 0}
+                label="Años de Experiencia"
+              />
+              <View style={styles.statsDivider} />
+              <StatBox
+                value={new Date(user.created).toLocaleDateString("es-ES", {
+                  month: "long",
+                  year: "numeric",
+                })}
+                label="Miembro Desde"
+              />
+            </View>
+
+            <View style={styles.infoContainer}>
+              <View style={styles.sectionHeader}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Feather name="briefcase" size={20} color={theme.colors.primaryBlue} />
+                  <Text style={{ color: "#FFFFFF", fontSize: theme.fontSizes.lg, fontFamily: theme.fontFamily.bold }}>
+                    Información Profesional
+                  </Text>
+                </View>
+                <Pressable
+                  style={styles.editButton}
+                  onPress={() => setIsEditProfessionalModalVisible(true)}
+                >
+                  <Feather name="edit-2" size={18} color={theme.colors.primaryBlue} />
+                  <Text style={{ color: theme.colors.primaryBlue, fontSize: theme.fontSizes.sm, fontFamily: theme.fontFamily.bold }}>
+                    Editar
+                  </Text>
+                </Pressable>
+              </View>
+
+              {(profile as ProviderProfile).description && (
+                <InfoRow
+                  icon="info"
+                  label="Descripción"
+                  value={(profile as ProviderProfile).description}
+                />
+              )}
+
+              {(profile as ProviderProfile).available_days?.length > 0 && (
+                <InfoRow
+                  icon="calendar"
+                  label="Días Disponibles"
+                  value={formatAvailableDays((profile as ProviderProfile).available_days)}
+                />
+              )}
+            </View>
+          </>
+        )}
+
+        <View style={styles.infoContainer}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+>>>>>>> Stashed changes
               <Feather name="user" size={20} color={theme.colors.primaryBlue} />
-              <Text fontFamily="bold" color="white" size={theme.fontSizes.lg}>
+              <Text style={{ color: "#FFFFFF", fontSize: theme.fontSizes.lg, fontFamily: theme.fontFamily.bold }}>
                 Información Personal
               </Text>
             </View>
             <Pressable
               style={styles.editButton}
-              onPress={() => console.log("editar perfil")}
+              onPress={() => setIsEditModalVisible(true)}
             >
               <Feather name="edit-2" size={18} color={theme.colors.primaryBlue} />
+<<<<<<< Updated upstream
               <Text color="primaryBlue" style={styles.editButtonText}>
+=======
+              <Text style={{ color: theme.colors.primaryBlue, fontSize: theme.fontSizes.sm, fontFamily: theme.fontFamily.bold }}>
+>>>>>>> Stashed changes
                 Editar
               </Text>
             </Pressable>
           </View>
 
+<<<<<<< Updated upstream
           <InfoRow icon="mail" label="Email" value={userData.email} />
           <InfoRow icon="phone" label="Teléfono" value={userData.telefono} />
           <InfoRow icon="map-pin" label="Dirección" value={userData.direccion} />
+=======
+          <InfoRow icon="mail" label="Email" value={user.email || ""} />
+          {profile?.phone && (
+            <InfoRow icon="phone" label="Teléfono" value={profile.phone} />
+          )}
+          {profile?.address && (
+            <InfoRow
+              icon="map-pin"
+              label="Dirección"
+              value={`${profile.address}${profile.city ? `, ${profile.city}` : ""}${
+                profile.state ? `, ${profile.state}` : ""
+              }`}
+            />
+          )}
+>>>>>>> Stashed changes
         </View>
 
         <View style={styles.infoContainer}>
           <View style={styles.sectionHeader}>
+<<<<<<< Updated upstream
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+=======
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+>>>>>>> Stashed changes
               <Feather name="settings" size={20} color={theme.colors.primaryBlue} />
               <Text fontFamily="bold" color="white" size={theme.fontSizes.lg}>
                 Configuración
@@ -143,7 +311,13 @@ export default function Profile() {
           <Pressable style={styles.settingRow} onPress={() => console.log("Help")}>
             <View style={styles.labelContainer}>
               <Feather name="help-circle" size={20} color={theme.colors.lightGray} />
+<<<<<<< Updated upstream
               <Text color="white" style={styles.settingLabel}>Ayuda</Text>
+=======
+              <Text color="white" style={styles.settingLabel}>
+                Ayuda
+              </Text>
+>>>>>>> Stashed changes
             </View>
             <Feather name="chevron-right" size={20} color={theme.colors.lightGray} />
           </Pressable>
@@ -152,13 +326,94 @@ export default function Profile() {
         <Button
           title="Cerrar Sesión"
           style={[styles.logoutButton, { backgroundColor: theme.colors.darkGray }]}
+<<<<<<< Updated upstream
           onPress={() => console.log("pa fuera mi loco")}
+=======
+          onPress={logout}
+>>>>>>> Stashed changes
         />
       </ScrollView>
+
+      {profile && (
+        <>
+          <EditProfileModal
+            visible={isEditModalVisible}
+            onClose={() => setIsEditModalVisible(false)}
+            profile={profile}
+            onUpdate={refetchProfile}
+            mode="personal"
+          />
+          {user.role === "provider" && (
+            <EditProfileModal
+              visible={isEditProfessionalModalVisible}
+              onClose={() => setIsEditProfessionalModalVisible(false)}
+              profile={profile}
+              onUpdate={refetchProfile}
+              mode="professional"
+            />
+          )}
+        </>
+      )}
     </SafeAreaView>
   );
 }
 
+<<<<<<< Updated upstream
+=======
+const InfoRow = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+}) => (
+  <View style={styles.infoRow}>
+    <View style={styles.labelContainer}>
+      <Feather name={icon} size={20} color={theme.colors.lightGray} />
+      <Text style={[styles.label, { color: theme.colors.lightGray }]}>
+        {label}
+      </Text>
+    </View>
+    <Text style={[styles.value, { color: "#FFFFFF" }]}>
+      {value}
+    </Text>
+  </View>
+);
+
+const StatBox = ({
+  value,
+  label,
+}: {
+  value: string | number;
+  label: string;
+}) => (
+  <View style={[styles.statBox, { alignItems: 'center', justifyContent: 'center' }]}>
+    <Text style={{ 
+      color: theme.colors.primaryBlue, 
+      fontFamily: theme.fontFamily.bold, 
+      fontSize: theme.fontSizes.xl,
+      textAlign: 'center',
+      width: '100%'
+    }}>
+      {value.toString()}
+    </Text>
+    <Text
+      style={{ 
+        color: "#FFFFFF",
+        fontSize: theme.fontSizes.sm,
+        textAlign: "center",
+        marginTop: 4,
+        width: '100%'
+      }}
+    >
+      {label}
+    </Text>
+  </View>
+);
+
+>>>>>>> Stashed changes
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -245,7 +500,6 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontSize: theme.fontSizes.sm,
-    fontWeight: "600",
   },
   infoRow: {
     marginBottom: 15,
@@ -259,7 +513,6 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.sm,
   },
   value: {
-    fontSize: theme.fontSizes.md,
     marginLeft: 28,
     marginTop: 5,
   },
@@ -277,5 +530,25 @@ const styles = StyleSheet.create({
   logoutButton: {
     width: "90%",
     marginTop: 20,
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  errorText: {
+    position: "absolute",
+    bottom: -25,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    fontSize: theme.fontSizes.sm,
+  },
+  placeholderImage: {
+    backgroundColor: theme.colors.darkGray,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

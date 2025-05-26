@@ -8,15 +8,21 @@ export default function useLogin() {
 
   const login = async (email: string, password: string) => {
     try {
+      setError(null); // Reset error state before attempting login
       const res = await pb
         .collection<typeof auth.user>("users")
         .authWithPassword(email, password);
 
-      if (!res.record) return setError("No se pudo obtener el usuario");
+      if (!res.record) {
+        setError("No se pudo obtener el usuario");
+        return false;
+      }
 
       auth.login(res.record);
+      return true;
     } catch (error) {
       setError("Credenciales incorrectas");
+      return false;
     }
   };
 
