@@ -1,28 +1,126 @@
-import { View, StyleSheet, Pressable, ScrollView } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, StyleSheet, Pressable, ScrollView, ActivityIndicator, Modal, TextInput, TouchableWithoutFeedback, Alert } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
 
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 import Button from "@/components/ui/Button";
+import EditProfileModal from "@/components/EditProfileModal";
 import useLogout from "@/hooks/auth/useLogout";
+import useClientProfile from "@/hooks/profile/useClientProfile";
+import { useAuthCtx } from "@/context/Auth";
+import { getFileUrl } from "@/utils/format";
+import { pb } from "@/lib/pocketbase";
+import { ProviderProfile } from "@/models/ProviderProfile";
 
-const userData = {
-  nombre: "Omar Urquidez",
-  email: "zaph@gmail.com",
-  telefono: "+1234567890",
-  direccion: "Calle Principal 123",
-  role: "Cliente",
-  stats: {
-    serviciosCompletados: 24,
-    calificacion: 4.8,
-    miembroDesde: "Enero 2024",
-  },
+const formatAvailableDays = (days: string[]) => {
+  const dayMap: { [key: string]: string } = {
+    MON: "Lunes",
+    TUE: "Martes",
+    WED: "Miércoles",
+    THU: "Jueves",
+    FRI: "Viernes",
+    SAT: "Sábado",
+    SUN: "Domingo",
+  };
+  return days.map(day => dayMap[day] || day).join(", ");
 };
 
 export default function Profile() {
   const logout = useLogout();
+  const { user } = useAuthCtx();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { profile, loading, error } = useClientProfile(refreshKey);
+  const [editModal, setEditModal] = useState(false);
+  const [isEditProfessionalModalVisible, setIsEditProfessionalModalVisible] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  const handleRetry = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
+  }, []);
+
+  const openEdit = () => {
+    if (profile) {
+      setEditModal(true);
+    }
+  };
+
+  // Update avatar function implementation
+  const updateAvatar = async () => {
+    try {
+      // Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso denegado', 'Necesitamos acceso a tu galería para cambiar tu foto de perfil.');
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      setAvatarLoading(true);
+      setAvatarError(null);
+
+      // Get the selected image
+      const imageUri = result.assets[0].uri;
+      
+      // Create form data for upload
+      const formData = new FormData();
+      formData.append('avatar', {
+        uri: imageUri,
+        name: 'avatar.jpg',
+        type: 'image/jpeg',
+      } as any);
+
+      // Update user avatar in PocketBase
+      await pb.collection('users').update(user.id, formData);
+
+      // Refresh the profile to show the new avatar
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      setAvatarError(error instanceof Error ? error.message : "Error al actualizar la foto de perfil");
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={theme.colors.primaryBlue} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centered]}>
+        <Text color="white" size={theme.fontSizes.lg}>
+          {error?.message || "No se pudo cargar el perfil"}
+        </Text>
+        <Button
+          title="Reintentar"
+          style={[styles.retryButton, { backgroundColor: theme.colors.primaryBlue }]}
+          onPress={handleRetry}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -32,159 +130,206 @@ export default function Profile() {
       >
         <View style={styles.header}>
           <View style={styles.imageContainer}>
-            <Image
-              source={require("@Assets/balde.png")}
-              contentFit="fill"
-              style={styles.profileImage}
-            />
+            {user.avatar ? (
+              <Image
+                source={{ uri: getFileUrl("users", user.id, user.avatar) }}
+                contentFit="fill"
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={[styles.profileImage, styles.placeholderImage]}>
+                <Feather name="user" size={40} color={theme.colors.lightGray} />
+              </View>
+            )}
             <Pressable
-              style={styles.editImageButton}
-              onPress={() => console.log("editar fotillo")}
+              style={[styles.editImageButton, avatarLoading && styles.disabledButton]}
+              onPress={updateAvatar}
+              disabled={avatarLoading}
             >
-              <Feather name="camera" size={16} color={theme.colors.lightGray} />
+              {avatarLoading ? (
+                <ActivityIndicator size="small" color={theme.colors.lightGray} />
+              ) : (
+                <Feather name="camera" size={16} color={theme.colors.lightGray} />
+              )}
             </Pressable>
+            {avatarError && (
+              <Text color="error" style={styles.errorText}>
+                {avatarError}
+              </Text>
+            )}
           </View>
 
           <Text fontFamily="bold" color="white" size={theme.fontSizes.xl}>
-            {userData.nombre}
+            {user.name}
           </Text>
           <View style={styles.roleContainer}>
-            <Feather
-              name="award"
-              size={16}
-              color="white"
-              style={{ marginRight: 5 }}
-            />
-            <Text style={styles.roleText}>{userData.role}</Text>
+            <Feather name="award" size={16} color="white" style={{ marginRight: 5 }} />
+            <Text style={styles.roleText}>
+              {user.role === "client" ? "Cliente" : "Prestador de Servicio"}
+            </Text>
           </View>
         </View>
 
-        <View style={styles.statsContainer}>
-          <StatBox
-            value={userData.stats.serviciosCompletados}
-            label="Servicios Completados"
-          />
-          <View style={styles.statsDivider} />
-          <StatBox value={userData.stats.calificacion} label="Calificación" />
-          <View style={styles.statsDivider} />
-          <StatBox value={userData.stats.miembroDesde} label="Miembro Desde" />
-        </View>
+        {user.role === "provider" && profile && (
+          <>
+            <View style={styles.statsContainer}>
+              <StatBox
+                value={(profile as ProviderProfile).jobs_done || 0}
+                label="Servicios Completados"
+              />
+              <View style={styles.statsDivider} />
+              <StatBox
+                value={(profile as ProviderProfile).experience_years || 0}
+                label="Años de Experiencia"
+              />
+              <View style={styles.statsDivider} />
+              <StatBox
+                value={new Date(user.created).toLocaleDateString("es-ES", {
+                  month: "long",
+                  year: "numeric",
+                })}
+                label="Miembro Desde"
+              />
+            </View>
+
+            <View style={styles.infoContainer}>
+              <View style={styles.sectionHeader}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Feather name="briefcase" size={20} color={theme.colors.primaryBlue} />
+                  <Text style={{ color: "#FFFFFF", fontSize: theme.fontSizes.lg, fontFamily: theme.fontFamily.bold }}>
+                    Información Profesional
+                  </Text>
+                </View>
+                <Pressable
+                  style={styles.editButton}
+                  onPress={() => setIsEditProfessionalModalVisible(true)}
+                >
+                  <Feather name="edit-2" size={18} color={theme.colors.primaryBlue} />
+                  <Text style={{ color: theme.colors.primaryBlue, fontSize: theme.fontSizes.sm, fontFamily: theme.fontFamily.bold }}>
+                    Editar
+                  </Text>
+                </Pressable>
+              </View>
+
+              {(profile as ProviderProfile).description && (
+                <InfoRow
+                  icon="info"
+                  label="Descripción"
+                  value={(profile as ProviderProfile).description}
+                />
+              )}
+
+              {(profile as ProviderProfile).available_days?.length > 0 && (
+                <InfoRow
+                  icon="calendar"
+                  label="Días Disponibles"
+                  value={formatAvailableDays((profile as ProviderProfile).available_days)}
+                />
+              )}
+            </View>
+          </>
+        )}
 
         <View style={styles.infoContainer}>
           <View style={styles.sectionHeader}>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-            >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <Feather name="user" size={20} color={theme.colors.primaryBlue} />
-              <Text fontFamily="bold" color="white" size={theme.fontSizes.lg}>
+              <Text style={{ color: "#FFFFFF", fontSize: theme.fontSizes.lg, fontFamily: theme.fontFamily.bold }}>
                 Información Personal
               </Text>
             </View>
-            <Pressable
-              style={styles.editButton}
-              onPress={() => console.log("editar perfil")}
-            >
-              <Feather
-                name="edit-2"
-                size={18}
-                color={theme.colors.primaryBlue}
-              />
-              <Text color="primaryBlue" style={styles.editButtonText}>
+            <Pressable style={styles.editButton} onPress={openEdit}>
+              <Feather name="edit-2" size={18} color={theme.colors.primaryBlue} />
+              <Text style={{ color: theme.colors.primaryBlue, fontSize: theme.fontSizes.sm, fontFamily: theme.fontFamily.bold }}>
                 Editar
               </Text>
             </Pressable>
           </View>
 
-          <InfoRow icon="mail" label="Email" value={userData.email} />
-          <InfoRow icon="phone" label="Teléfono" value={userData.telefono} />
-          <InfoRow
-            icon="map-pin"
-            label="Dirección"
-            value={userData.direccion}
-          />
+          <InfoRow icon="mail" label="Email" value={user.email || ""} />
+          {profile?.phone && (
+            <InfoRow icon="phone" label="Teléfono" value={profile.phone} />
+          )}
+          {profile?.address && (
+            <InfoRow
+              icon="map-pin"
+              label="Dirección"
+              value={`${profile.address}${profile.city ? `, ${profile.city}` : ""}${
+                profile.state ? `, ${profile.state}` : ""
+              }`}
+            />
+          )}
         </View>
 
         <View style={styles.infoContainer}>
           <View style={styles.sectionHeader}>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-            >
-              <Feather
-                name="settings"
-                size={20}
-                color={theme.colors.primaryBlue}
-              />
-              <Text fontFamily="bold" color="white" size={theme.fontSizes.lg}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Feather name="settings" size={20} color={theme.colors.primaryBlue} />
+              <Text style={{ color: "#FFFFFF", fontSize: theme.fontSizes.lg, fontFamily: theme.fontFamily.bold }}>
                 Configuración
               </Text>
             </View>
           </View>
 
-          <Pressable
-            style={styles.settingRow}
-            onPress={() => console.log("Notifications")}
-          >
+          <Pressable style={styles.settingRow} onPress={() => console.log("Notifications")}>
             <View style={styles.labelContainer}>
               <Feather name="bell" size={20} color={theme.colors.lightGray} />
-              <Text color="white" style={styles.settingLabel}>
+              <Text style={[styles.settingLabel, { color: "#FFFFFF" }]}>
                 Notificaciones
               </Text>
             </View>
-            <Feather
-              name="chevron-right"
-              size={20}
-              color={theme.colors.lightGray}
-            />
+            <Feather name="chevron-right" size={20} color={theme.colors.lightGray} />
           </Pressable>
 
-          <Pressable
-            style={styles.settingRow}
-            onPress={() => console.log("Privacy")}
-          >
+          <Pressable style={styles.settingRow} onPress={() => console.log("Privacy")}>
             <View style={styles.labelContainer}>
               <Feather name="lock" size={20} color={theme.colors.lightGray} />
-              <Text color="white" style={styles.settingLabel}>
+              <Text style={[styles.settingLabel, { color: "#FFFFFF" }]}>
                 Privacidad
               </Text>
             </View>
-            <Feather
-              name="chevron-right"
-              size={20}
-              color={theme.colors.lightGray}
-            />
+            <Feather name="chevron-right" size={20} color={theme.colors.lightGray} />
           </Pressable>
 
-          <Pressable
-            style={styles.settingRow}
-            onPress={() => console.log("Help")}
-          >
+          <Pressable style={styles.settingRow} onPress={() => console.log("Help")}>
             <View style={styles.labelContainer}>
-              <Feather
-                name="help-circle"
-                size={20}
-                color={theme.colors.lightGray}
-              />
-              <Text color="white" style={styles.settingLabel}>
+              <Feather name="help-circle" size={20} color={theme.colors.lightGray} />
+              <Text style={[styles.settingLabel, { color: "#FFFFFF" }]}>
                 Ayuda
               </Text>
             </View>
-            <Feather
-              name="chevron-right"
-              size={20}
-              color={theme.colors.lightGray}
-            />
+            <Feather name="chevron-right" size={20} color={theme.colors.lightGray} />
           </Pressable>
         </View>
 
         <Button
           title="Cerrar Sesión"
-          style={[
-            styles.logoutButton,
-            { backgroundColor: theme.colors.darkGray },
-          ]}
+          style={[styles.logoutButton, { backgroundColor: theme.colors.darkGray }]}
           onPress={logout}
         />
       </ScrollView>
+
+      <EditProfileModal
+        visible={editModal}
+        onClose={() => setEditModal(false)}
+        profile={profile!}
+        onUpdate={() => {
+          setEditModal(false);
+          setRefreshKey(prev => prev + 1);
+        }}
+        mode="personal"
+      />
+
+      <EditProfileModal
+        visible={isEditProfessionalModalVisible}
+        onClose={() => setIsEditProfessionalModalVisible(false)}
+        profile={profile!}
+        onUpdate={() => {
+          setIsEditProfessionalModalVisible(false);
+          setRefreshKey(prev => prev + 1);
+        }}
+        mode="professional"
+      />
     </SafeAreaView>
   );
 }
@@ -201,11 +346,11 @@ const InfoRow = ({
   <View style={styles.infoRow}>
     <View style={styles.labelContainer}>
       <Feather name={icon} size={20} color={theme.colors.lightGray} />
-      <Text color="lightGray" style={styles.label}>
+      <Text style={[styles.label, { color: theme.colors.lightGray }]}>
         {label}
       </Text>
     </View>
-    <Text color="white" style={styles.value}>
+    <Text style={[styles.value, { color: "#FFFFFF" }]}>
       {value}
     </Text>
   </View>
@@ -218,14 +363,24 @@ const StatBox = ({
   value: string | number;
   label: string;
 }) => (
-  <View style={styles.statBox}>
-    <Text color="white" fontFamily="bold" size={theme.fontSizes.xl}>
+  <View style={[styles.statBox, { alignItems: 'center', justifyContent: 'center' }]}>
+    <Text style={{ 
+      color: theme.colors.primaryBlue, 
+      fontFamily: theme.fontFamily.bold, 
+      fontSize: theme.fontSizes.xl,
+      textAlign: 'center',
+      width: '100%'
+    }}>
       {value.toString()}
     </Text>
     <Text
-      color="lightGray"
-      size={theme.fontSizes.sm}
-      style={{ textAlign: "center" }}
+      style={{ 
+        color: "#FFFFFF",
+        fontSize: theme.fontSizes.sm,
+        textAlign: "center",
+        marginTop: 4,
+        width: '100%'
+      }}
     >
       {label}
     </Text>
@@ -316,10 +471,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 5,
   },
-  editButtonText: {
-    fontSize: theme.fontSizes.sm,
-    fontWeight: "600",
-  },
   infoRow: {
     marginBottom: 15,
   },
@@ -350,5 +501,74 @@ const styles = StyleSheet.create({
   logoutButton: {
     width: "90%",
     marginTop: 20,
+  },
+  centered: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  retryButton: {
+    marginTop: 20,
+    width: "50%",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: theme.colors.darkerGray + 'b3',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: theme.colors.darkGray,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 24,
+    width: '95%',
+    marginHorizontal: '2.5%',
+    maxHeight: '95%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.darkerGray,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+  },
+  inputIcon: {
+    marginRight: 12,
+    paddingVertical: 12,
+  },
+  input: {
+    flex: 1,
+    color: "white",
+    fontSize: 16,
+    paddingVertical: 12,
+  },
+  inputLabel: {
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.lightGray,
+    marginBottom: 4,
+    marginLeft: 4,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  errorText: {
+    position: "absolute",
+    bottom: -25,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    fontSize: theme.fontSizes.sm,
+  },
+  placeholderImage: {
+    backgroundColor: theme.colors.darkGray,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

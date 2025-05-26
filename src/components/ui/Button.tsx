@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleProp,
   ViewStyle,
+  TextStyle,
 } from "react-native";
 import { theme } from "@/theme/theme";
 
@@ -15,6 +16,8 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+  textColor?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -23,6 +26,8 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   loading,
   style,
+  textStyle,
+  textColor,
 }) => {
   return (
     <Pressable
@@ -33,7 +38,7 @@ const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator color={theme.colors.primaryBlue} />
       ) : (
-        <Text style={styles.text}>{title}</Text>
+        <Text style={[styles.text, textStyle, textColor && { color: textColor }]}>{title}</Text>
       )}
     </Pressable>
   );

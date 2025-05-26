@@ -69,6 +69,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     padding: 20,
-    minHeight: "50%",
+    minHeight: "80%",
+    maxHeight: "90%",
   },
 });
