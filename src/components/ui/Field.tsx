@@ -30,6 +30,7 @@ const Field: FC<Props> = ({
   onSubmitEditing,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   return (
     <Controller
@@ -42,12 +43,15 @@ const Field: FC<Props> = ({
       }) => (
         <View>
           {label && <Text style={styles.label}>{label}</Text>}
-          <View style={styles.inputContainer}>
+          <View style={[
+            styles.inputContainer,
+            isFocused && styles.inputContainerFocused
+          ]}>
             {icon && (
               <Feather
                 name={icon}
                 size={20}
-                color={theme.colors.lightGray}
+                color={isFocused ? theme.colors.primaryBlue : theme.colors.lightGray}
                 style={styles.icon}
               />
             )}
@@ -57,8 +61,14 @@ const Field: FC<Props> = ({
               placeholderTextColor={theme.colors.lightGray}
               secureTextEntry={secureTextEntry && !showPassword}
               keyboardType={keyboardType}
-              onBlur={onBlur}
-              onFocus={onFocus}
+              onBlur={() => {
+                setIsFocused(false);
+                onBlur();
+              }}
+              onFocus={() => {
+                setIsFocused(true);
+                onFocus?.();
+              }}
               onChangeText={onChange}
               value={value}
               autoCapitalize="none"
@@ -69,7 +79,7 @@ const Field: FC<Props> = ({
                 <Feather
                   name={showPassword ? "eye-off" : "eye"}
                   size={20}
-                  color={theme.colors.lightGray}
+                  color={isFocused ? theme.colors.primaryBlue : theme.colors.lightGray}
                 />
               </Pressable>
             )}
@@ -96,12 +106,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md - 4,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  inputContainerFocused: {
+    borderColor: theme.colors.primaryBlue,
   },
   input: {
     flex: 1,
     color: "#fff",
     fontSize: theme.fontSizes.md,
     fontFamily: theme.fontFamily.regular,
+    minHeight: 24,
+    padding: 0,
   },
   icon: {
     marginRight: 10,

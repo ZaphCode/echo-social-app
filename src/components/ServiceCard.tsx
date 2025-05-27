@@ -73,7 +73,9 @@ export default function ServiceCard({ service, authUser }: Props) {
         <View style={styles.footer}>
           <View style={styles.userRow}>
             <Feather name="user" size={14} color={theme.colors.lightGray} />
-            <Text style={styles.username}>{service.expand!.provider.name}</Text>
+            <Text style={styles.username}>
+              {service.expand?.provider?.name || "Unknown Provider"}
+            </Text>
           </View>
           <Text style={styles.price}>{"$" + service.base_price}</Text>
         </View>

@@ -10,65 +10,103 @@ import Text from "@/components/ui/Text";
 import Field from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
-import useLogin from "@/hooks/auth/useLogin";
+import useSignUp from "@/hooks/auth/useSignUp";
+import { useState } from "react";
+
+type FormData = {
+  nombre: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
 
 export default function SignUp() {
   useRedirect();
-
-  const { login, loginError } = useLogin();
+  const [selectedRole, setSelectedRole] = useState<"client" | "provider">("client");
+  const { signUp, signUpError, loading } = useSignUp();
   const navigation = useNavigation();
 
-  const { control, handleSubmit, getValues, formState } = useForm({
+  const { control, handleSubmit, getValues, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       nombre: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = async () => {
-    const { email, password } = getValues();
+  const onSubmit = async (data: FormData) => {
+    if (data.password !== data.confirmPassword) {
+      Alert.alert("Error", "Las contraseñas no coinciden");
+      return;
+    }
 
-    await login(email, password);
+    const success = await signUp({
+      name: data.nombre,
+      email: data.email,
+      password: data.password,
+      passwordConfirm: data.confirmPassword,
+      role: selectedRole,
+    });
 
-    if (loginError) Alert.alert("Error", loginError, [{ text: "OK" }]);
+    if (!success && signUpError) {
+      Alert.alert("Error", signUpError);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={{ gap: 5, alignItems: "center", width: "100%" }}>
-          {Object.keys(formState.errors).length === 0 ? (
-            <View>
-              <Image
-                source={require("@Assets/app-logo.png")}
-                contentFit="contain"
-                style={{ width: 120, height: 120 }}
-              />
-            </View>
-          ) : null}
+      <View style={styles.content}>
+        <View>
+          <Image
+            source={require("@Assets/app-logo.png")}
+            contentFit="contain"
+            style={{ width: 120, height: 120 }}
+          />
+        </View>
 
+        <View style={styles.headerContainer}>
           <Text fontFamily="bold" color="white" size={theme.fontSizes.xl + 5}>
             Regístrate Ahora
           </Text>
-
-          <View style={styles.roleButtonContainer}>
-            <Pressable
-              style={styles.roleButton}
-              onPress={() => console.log("Cliente")}
-            >
-              <Text style={styles.roleButtonText}>Cliente</Text>
-            </Pressable>
-            <Pressable
-              style={styles.roleButton}
-              onPress={() => console.log("Prestador de Servicio")}
-            >
-              <Text style={styles.roleButtonText}>Prestador de Servicio</Text>
-            </Pressable>
-          </View>
         </View>
 
-        <View style={{ width: "90%", gap: 20, paddingVertical: 0 }}>
+        <View style={styles.roleButtonContainer}>
+          <Pressable
+            style={[
+              styles.roleButton,
+              selectedRole === "client" && styles.selectedRoleButton,
+            ]}
+            onPress={() => setSelectedRole("client")}
+          >
+            <Text 
+              style={[
+                styles.roleButtonText,
+                selectedRole === "client" && styles.selectedRoleButtonText,
+              ]}
+            >
+              Cliente
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.roleButton,
+              selectedRole === "provider" && styles.selectedRoleButton,
+            ]}
+            onPress={() => setSelectedRole("provider")}
+          >
+            <Text 
+              style={[
+                styles.roleButtonText,
+                selectedRole === "provider" && styles.selectedRoleButtonText,
+              ]}
+            >
+              Prestador de Servicio
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.formContainer}>
           <Field
             name="nombre"
             label="Nombre"
@@ -76,6 +114,13 @@ export default function SignUp() {
             placeholder="Nombre"
             icon="user"
             keyboardType="default"
+            rules={{
+              required: "El nombre es requerido",
+              minLength: {
+                value: 2,
+                message: "El nombre debe tener al menos 2 caracteres",
+              },
+            }}
           />
           <Field
             name="email"
@@ -85,6 +130,7 @@ export default function SignUp() {
             icon="mail"
             keyboardType="email-address"
             secureTextEntry={false}
+            rules={validEmailRules}
           />
           <Field
             name="password"
@@ -93,6 +139,13 @@ export default function SignUp() {
             placeholder="*****"
             icon="lock"
             secureTextEntry={true}
+            rules={{
+              required: "La contraseña es requerida",
+              minLength: {
+                value: 8,
+                message: "La contraseña debe tener al menos 8 caracteres",
+              },
+            }}
           />
           <Field
             name="confirmPassword"
@@ -101,19 +154,25 @@ export default function SignUp() {
             placeholder="*****"
             icon="lock"
             secureTextEntry={true}
+            rules={{
+              required: "Debes confirmar tu contraseña",
+              validate: (value) => 
+                value === getValues("password") || "Las contraseñas no coinciden",
+            }}
           />
           <Button
             title="Continuar"
             style={{ marginTop: 10 }}
             onPress={handleSubmit(onSubmit)}
+            loading={loading}
+            disabled={loading}
           />
         </View>
+
         <View style={styles.loginAccountView}>
           <Text>¿Ya tienes una cuenta?</Text>
           <Pressable
             onPress={() => {
-              console.log("Navigate to SignIn");
-
               navigation.navigate("Auth", { screen: "SignIn" });
             }}
           >
@@ -125,7 +184,7 @@ export default function SignUp() {
             </Text>
           </Pressable>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -133,24 +192,36 @@ export default function SignUp() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
     backgroundColor: theme.colors.background,
-    gap: theme.spacing.sm,
+  },
+  content: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: 20,
+  },
+  headerContainer: {
+    gap: 5,
+    alignItems: "center",
+    marginTop: 10,
   },
   roleButtonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "90%",
-    marginTop: 10,
+    marginTop: 20,
+    marginBottom: 10,
   },
   roleButton: {
     flex: 1,
     borderRadius: 12,
     marginHorizontal: 5,
-    padding: 5,
+    padding: 12,
     backgroundColor: theme.colors.darkGray,
     justifyContent: "center",
     alignItems: "center",
+  },
+  selectedRoleButton: {
+    backgroundColor: theme.colors.primaryBlue,
   },
   roleButtonText: {
     color: theme.colors.lightGray,
@@ -158,12 +229,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
+  selectedRoleButtonText: {
+    color: theme.colors.lightGray,
+  },
+  formContainer: {
+    width: "90%",
+    gap: 20,
+    paddingVertical: 20,
+  },
   loginAccountView: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     gap: 5,
-    marginTop: 30,
+    marginTop: 10,
   },
   loginAccountText: {
     textDecorationLine: "underline",
