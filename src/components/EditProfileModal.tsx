@@ -12,6 +12,7 @@ import { ProfileWithUser } from "@/hooks/profile/useClientProfile";
 import { pb } from "@/lib/pocketbase";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import { FormData } from "./profile/types";
+import { useAuthCtx } from "@/context/Auth";
 
 type Props = {
   visible: boolean;
@@ -23,6 +24,7 @@ type Props = {
 
 export default function EditProfileModal({ visible, onClose, profile, onUpdate, mode }: Props) {
   const [saving, setSaving] = useState(false);
+  const { user } = useAuthCtx();
   
   const { control, handleSubmit, reset } = useForm<FormData>({
     defaultValues: {
@@ -42,11 +44,34 @@ export default function EditProfileModal({ visible, onClose, profile, onUpdate, 
   const handleSave = handleSubmit(async (data) => {
     setSaving(true);
     try {
-      await pb.collection('profiles').update(profile.id, data);
+      const updateData = {
+        ...data,
+        ...(mode === "professional" && {
+          experience_years: parseInt(data.experience_years || "0", 10),
+        }),
+      };
+
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key as keyof typeof updateData] === "" || updateData[key as keyof typeof updateData] === undefined) {
+          delete updateData[key as keyof typeof updateData];
+        }
+      });
+
+      const collection = user.role === "provider" ? "provider_profile" : "client_profile";
+      await pb.collection(collection).update(profile.id, updateData);
+      
       onUpdate();
       onClose();
-    } catch (error) {
-      Alert.alert("Error", "No se pudo actualizar el perfil");
+    } catch (error: any) {
+      if (error.data?.data) {
+        const errors = error.data.data;
+        const errorMessage = Object.values(errors)
+          .map((err: any) => err.message)
+          .join("\n");
+        Alert.alert("Error", errorMessage || "No se pudo actualizar el perfil");
+      } else {
+        Alert.alert("Error", "No se pudo actualizar el perfil. Por favor, intenta nuevamente.");
+      }
     } finally {
       setSaving(false);
     }
