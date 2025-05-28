@@ -1,61 +1,61 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { theme } from '@/theme/theme';
-import FormInput from '../ui/FormInput';
+import { useForm, Control } from 'react-hook-form';
+import Field from '../ui/Field';
 import { FormData } from './types';
 
 type ProfileFormSectionProps = {
   mode: 'personal' | 'professional';
   form: FormData;
   onFormChange: (field: keyof FormData, value: string) => void;
+  control: Control<FormData>;
 };
 
-export default function ProfileFormSection({ mode, form, onFormChange }: ProfileFormSectionProps) {
-  const handleChange = (field: keyof FormData) => (value: string) => {
-    onFormChange(field, value);
-  };
-
+export default function ProfileFormSection({ mode, control }: ProfileFormSectionProps) {
   if (mode === 'personal') {
     return (
       <>
-        <FormInput
+        <Field
           label="Teléfono"
           icon="phone"
-          value={form.phone}
-          onChangeText={handleChange('phone')}
+          name="phone"
+          control={control}
           placeholder="Tu teléfono"
+          keyboardType="numeric"
         />
 
-        <FormInput
+        <Field
           label="Dirección"
           icon="map-pin"
-          value={form.address}
-          onChangeText={handleChange('address')}
+          name="address"
+          control={control}
           placeholder="Tu dirección"
         />
 
-        <FormInput
+        <Field
           label="Ciudad"
           icon="map"
-          value={form.city}
-          onChangeText={handleChange('city')}
+          name="city"
+          control={control}
           placeholder="Tu ciudad"
         />
 
-        <FormInput
+        <Field
           label="Estado"
           icon="map"
-          value={form.state}
-          onChangeText={handleChange('state')}
+          name="state"
+          control={control}
           placeholder="Tu estado"
         />
 
-        <FormInput
+        <Field
           label="Código Postal"
           icon="hash"
-          value={form.zip}
-          onChangeText={handleChange('zip')}
+          name="zip"
+          control={control}
           placeholder="Tu código postal"
+          keyboardType="numeric"
         />
       </>
     );
@@ -63,21 +63,19 @@ export default function ProfileFormSection({ mode, form, onFormChange }: Profile
 
   return (
     <>
-      <FormInput
+      <Field
         label="Descripción"
         icon="info"
-        value={form.description}
-        onChangeText={handleChange('description')}
+        name="description"
+        control={control}
         placeholder="Describe tus servicios y experiencia"
-        multiline
-        numberOfLines={4}
       />
 
-      <FormInput
+      <Field
         label="Años de Experiencia"
         icon="clock"
-        value={form.experience_years}
-        onChangeText={handleChange('experience_years')}
+        name="experience_years"
+        control={control}
         placeholder="0"
         keyboardType="numeric"
       />

@@ -3,7 +3,7 @@ import { ClientProfile } from "@/models/ClientProfile";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import { User } from "@/models/User";
 import { pb } from "@/lib/pocketbase";
-import { useAuth } from "@/hooks/auth/useAuth";
+import { useAuthCtx } from "@/context/Auth";
 
 export type ProfileWithUser = (ClientProfile | ProviderProfile) & {
   expand: {
@@ -15,7 +15,7 @@ export default function useClientProfile(refreshKey: number = 0) {
   const [profile, setProfile] = useState<ProfileWithUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const { user } = useAuth();
+  const { user } = useAuthCtx();
 
   useEffect(() => {
     async function fetchProfile() {
@@ -67,7 +67,7 @@ export default function useClientProfile(refreshKey: number = 0) {
             throw err;
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching/creating profile:", err);
         setError(err instanceof Error ? err : new Error("Failed to fetch/create profile"));
       } finally {
