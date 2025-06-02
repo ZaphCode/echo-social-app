@@ -8,6 +8,7 @@ import { ServiceRequest } from "@/models/ServiceRequest";
 import { formatDate } from "@/utils/format";
 import useMutate from "@/hooks/useMutate";
 import { useAuthCtx } from "@/context/Auth";
+import AlertModal from "./ui/AlertModal";
 
 const PERSON_ICON_SIZE = 38;
 
@@ -18,6 +19,7 @@ type Props = {
 
 export default function NegotiationBlock({ request, openModalFn }: Props) {
   const { user } = useAuthCtx();
+  const [modalAlertVisible, setModalAlertVisible] = useState(false);
 
   const [currentAgreement, setCurrentAgreement] = useState({
     price: request.agreed_price,
@@ -116,10 +118,19 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
         <Pressable onPress={openModalFn} style={styles.button}>
           <Text>Ofertar</Text>
         </Pressable>
-        <Pressable style={styles.button}>
+        <Pressable
+          onPress={() => setModalAlertVisible(true)}
+          style={styles.button}
+        >
           <Text>Rechazar</Text>
         </Pressable>
       </View>
+      <AlertModal
+        visible={modalAlertVisible}
+        onClose={() => setModalAlertVisible(false)}
+      >
+        <Text>Hi</Text>
+      </AlertModal>
     </View>
   );
 }

@@ -10,6 +10,8 @@ import { theme } from "@/theme/theme";
 import { ServiceRequest } from "@/models/ServiceRequest";
 import { SlideModal } from "@/components/ui/SlideModal";
 import RequestForm from "@/components/RequestForm";
+import AlertModal from "@/components/ui/AlertModal";
+import Text from "@/components/ui/Text";
 
 type Props = StaticScreenProps<{ request: ServiceRequest }>;
 
@@ -37,7 +39,9 @@ export default function Chatroom({ route }: Props) {
           <RequestForm
             service={service}
             requestId={request.id}
-            onSuccess={() => setModalVisible(false)}
+            onSuccess={() => {
+              setModalVisible(false);
+            }}
           />
         </View>
       </SlideModal>

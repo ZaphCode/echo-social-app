@@ -8,13 +8,13 @@ import {
 } from "react-native";
 import { theme } from "@/theme/theme";
 
-type BottomUpModalProps = {
+type Props = {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
 };
 
-export function SlideModal({ visible, onClose, children }: BottomUpModalProps) {
+export function SlideModal({ visible, onClose, children }: Props) {
   const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {

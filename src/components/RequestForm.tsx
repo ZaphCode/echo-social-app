@@ -18,7 +18,7 @@ const DEVICE_HEIGHT = Dimensions.get("window").height;
 
 type Props = {
   service: Service;
-  onSuccess: (request: ServiceRequest) => void;
+  onSuccess: (request?: ServiceRequest) => void;
   requestId?: string;
 };
 
@@ -57,6 +57,7 @@ export default function RequestForm({ service, requestId, onSuccess }: Props) {
           "No se pudo crear la solicitud. Intente nuevamente."
         );
       }
+      onSuccess();
     } else {
       const newRequest = await create({
         service: service.id,

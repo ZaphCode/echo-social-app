@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { pb } from "../lib/pocketbase";
+import { pb as client } from "../lib/pocketbase";
 import { ClientResponseError, RecordFullListOptions } from "pocketbase";
 import { PBCollectionsMap } from "@/utils/collections";
-import { PBClient } from "@/utils/testing";
 
 type QueryStatus = "idle" | "loading" | "success" | "error";
 
@@ -11,14 +10,14 @@ type QueryState = {
   error: string | null;
 };
 
-export default function useList<K extends keyof PBCollectionsMap>(
+export default function useView<K extends keyof PBCollectionsMap>(
   collection: K,
-  options?: RecordFullListOptions,
-  client: typeof pb | PBClient = pb
+  id: string,
+  options?: RecordFullListOptions
 ) {
-  const [data, setData] = useState<PBCollectionsMap[K][]>([]);
+  const [data, setData] = useState<PBCollectionsMap[K] | null>(null);
   const [queryState, setQueryState] = useState<QueryState>({
-    status: "loading",
+    status: "idle",
     error: null,
   });
 
@@ -27,7 +26,7 @@ export default function useList<K extends keyof PBCollectionsMap>(
     try {
       const res = await client
         .collection(collection)
-        .getFullList<PBCollectionsMap[K]>(options);
+        .getOne<PBCollectionsMap[K]>(id, options);
       setData(res);
       setQueryState({ status: "success", error: null });
     } catch (error) {
@@ -39,8 +38,6 @@ export default function useList<K extends keyof PBCollectionsMap>(
   };
 
   useEffect(() => {
-    console.log(`fetching ${collection}`);
-
     getData();
   }, []);
 
