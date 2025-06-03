@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, StyleSheet, Pressable, ScrollView, ActivityIndicator, Modal, TextInput, TouchableWithoutFeedback, Alert } from "react-native";
+import { View, StyleSheet, Pressable, ScrollView, ActivityIndicator, Modal, TextInput, TouchableWithoutFeedback, Alert, Switch } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -9,6 +9,8 @@ import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 import Button from "@/components/ui/Button";
 import EditProfileModal from "@/components/EditProfileModal";
+import PrivacyContractModal from "@/components/PrivacyContractModal";
+import HelpFormModal from "@/components/HelpFormModal";
 import useLogout from "@/hooks/auth/useLogout";
 import useClientProfile from "@/hooks/profile/useClientProfile";
 import { useAuthCtx } from "@/context/Auth";
@@ -38,6 +40,9 @@ export default function Profile() {
   const [isEditProfessionalModalVisible, setIsEditProfessionalModalVisible] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [isPrivacyModalVisible, setIsPrivacyModalVisible] = useState(false);
+  const [isHelpModalVisible, setIsHelpModalVisible] = useState(false);
 
   const handleRetry = useCallback(() => {
     setRefreshKey(prev => prev + 1);
@@ -97,6 +102,12 @@ export default function Profile() {
       setAvatarLoading(false);
     }
   };
+
+  const toggleNotifications = useCallback((value: boolean) => {
+    setNotificationsEnabled(value);
+    // TODO: Implement actual notifications toggle logic
+    console.log('Notifications toggled:', value);
+  }, []);
 
   if (loading) {
     return (
@@ -182,14 +193,6 @@ export default function Profile() {
                 value={(profile as ProviderProfile).experience_years || 0}
                 label="Años de Experiencia"
               />
-              <View style={styles.statsDivider} />
-              <StatBox
-                value={new Date(user.created).toLocaleDateString("es-ES", {
-                  month: "long",
-                  year: "numeric",
-                })}
-                label="Miembro Desde"
-              />
             </View>
 
             <View style={styles.infoContainer}>
@@ -271,17 +274,23 @@ export default function Profile() {
             </View>
           </View>
 
-          <Pressable style={styles.settingRow} onPress={() => console.log("Notifications")}>
+          <View style={styles.settingRow}>
             <View style={styles.labelContainer}>
               <Feather name="bell" size={20} color={theme.colors.lightGray} />
               <Text style={[styles.settingLabel, { color: "#FFFFFF" }]}>
                 Notificaciones
               </Text>
             </View>
-            <Feather name="chevron-right" size={20} color={theme.colors.lightGray} />
-          </Pressable>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={toggleNotifications}
+              trackColor={{ false: theme.colors.darkerGray, true: theme.colors.primaryBlue }}
+              thumbColor={notificationsEnabled ? "#FFFFFF" : theme.colors.lightGray}
+              ios_backgroundColor={theme.colors.darkerGray}
+            />
+          </View>
 
-          <Pressable style={styles.settingRow} onPress={() => console.log("Privacy")}>
+          <Pressable style={styles.settingRow} onPress={() => setIsPrivacyModalVisible(true)}>
             <View style={styles.labelContainer}>
               <Feather name="lock" size={20} color={theme.colors.lightGray} />
               <Text style={[styles.settingLabel, { color: "#FFFFFF" }]}>
@@ -291,7 +300,7 @@ export default function Profile() {
             <Feather name="chevron-right" size={20} color={theme.colors.lightGray} />
           </Pressable>
 
-          <Pressable style={styles.settingRow} onPress={() => console.log("Help")}>
+          <Pressable style={styles.settingRow} onPress={() => setIsHelpModalVisible(true)}>
             <View style={styles.labelContainer}>
               <Feather name="help-circle" size={20} color={theme.colors.lightGray} />
               <Text style={[styles.settingLabel, { color: "#FFFFFF" }]}>
@@ -329,6 +338,16 @@ export default function Profile() {
           setRefreshKey(prev => prev + 1);
         }}
         mode="professional"
+      />
+
+      <PrivacyContractModal
+        visible={isPrivacyModalVisible}
+        onClose={() => setIsPrivacyModalVisible(false)}
+      />
+
+      <HelpFormModal
+        visible={isHelpModalVisible}
+        onClose={() => setIsHelpModalVisible(false)}
       />
     </SafeAreaView>
   );

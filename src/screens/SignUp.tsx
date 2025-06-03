@@ -26,13 +26,14 @@ export default function SignUp() {
   const { signUp, signUpError, loading } = useSignUp();
   const navigation = useNavigation();
 
-  const { control, handleSubmit, getValues, formState: { errors } } = useForm<FormData>({
+  const { control, handleSubmit, getValues, formState: { errors, isValid } } = useForm<FormData>({
     defaultValues: {
       nombre: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
+    mode: "onChange",
   });
 
   const onSubmit = async (data: FormData) => {
@@ -165,7 +166,7 @@ export default function SignUp() {
             style={{ marginTop: 10 }}
             onPress={handleSubmit(onSubmit)}
             loading={loading}
-            disabled={loading}
+            disabled={loading || !isValid}
           />
         </View>
 
