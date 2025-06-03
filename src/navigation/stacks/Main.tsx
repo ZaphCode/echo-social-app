@@ -20,6 +20,12 @@ export const MainStack = createNativeStackNavigator({
       screen: ServiceEditor,
       options: {
         headerShown: true,
+        title: "Editor de Servicio",
+        headerTitleStyle: {
+          color: "white",
+          fontSize: theme.fontSizes.lg,
+          fontFamily: theme.fontFamily.bold,
+        },
         headerStyle: {
           backgroundColor: theme.colors.darkerGray,
         },

@@ -32,12 +32,6 @@
             "./assets/fonts/Geist-Bold.ttf",
             "./assets/fonts/Geist-Regular.ttf"
           ]
-        },
-        "expo-image-picker",
-        {
-          "photosPermission": "custom photos permission",
-          "cameraPermission": "Allow to open the camera",
-          "microphonePermission": false
         }
       ]
     ]

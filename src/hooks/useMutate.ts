@@ -19,7 +19,7 @@ export default function useMutate<K extends keyof PBCollectionsMap>(
     error: null,
   });
 
-  const create = async (data: Partial<PBCollectionsMap[K]>) => {
+  const create = async (data: Partial<PBCollectionsMap[K]> | FormData) => {
     setMutationState({ status: "loading", error: null });
 
     try {
@@ -37,7 +37,10 @@ export default function useMutate<K extends keyof PBCollectionsMap>(
     }
   };
 
-  const update = async (id: string, data: Partial<PBCollectionsMap[K]>) => {
+  const update = async (
+    id: string,
+    data: Partial<PBCollectionsMap[K]> | FormData
+  ) => {
     setMutationState({ status: "loading", error: null });
 
     try {
