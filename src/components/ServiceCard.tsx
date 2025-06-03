@@ -61,7 +61,12 @@ export default function ServiceCard({ service, authUser }: Props) {
       {isProvider && (
         <Pressable
           style={styles.editButton}
-          onPress={() => Alert.alert("Edit Service")}
+          onPress={() =>
+            navigation.navigate("Main", {
+              screen: "ServiceEditor",
+              params: { serviceToEdit: service },
+            })
+          }
         >
           <Text color="white">Edit</Text>
           <Feather name="edit" size={18} color="white" />

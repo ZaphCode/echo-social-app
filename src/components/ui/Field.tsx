@@ -61,6 +61,7 @@ const Field: FC<Props> = ({
               onFocus={onFocus}
               onChangeText={onChange}
               value={value}
+              numberOfLines={3}
               autoCapitalize="none"
               onSubmitEditing={onSubmitEditing}
             />

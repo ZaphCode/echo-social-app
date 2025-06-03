@@ -6,6 +6,7 @@ const { width } = Dimensions.get("window");
 type Props = {
   photos: string[];
   serviceId: string;
+  editing?: boolean;
 };
 
 export default function ServicePhotoCarousel({ photos, serviceId }: Props) {
