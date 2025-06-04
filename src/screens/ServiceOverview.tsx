@@ -21,6 +21,7 @@ type Props = StaticScreenProps<{ service: Service }>;
 export default function ServiceOverview({ route }: Props) {
   const { service } = route.params;
   const { user } = useAuthCtx();
+  const [ableToReview, setAbleToReview] = useState(false);
 
   const [activeRequest, setActiveRequest] = useState<ServiceRequest | null>();
   const [modalVisible, setModalVisible] = useState(false);
@@ -28,13 +29,20 @@ export default function ServiceOverview({ route }: Props) {
   const navigation = useNavigation();
 
   const [serviceRequests, _] = useList("service_request", {
-    filter: `service = "${service.id}" && client = "${user.id}" && status != "COMPLETED"`,
+    filter: `service = "${service.id}" && client = "${user.id}"`,
     expand: "service.provider, client",
   });
 
   useEffect(() => {
     if (serviceRequests?.length > 0) {
-      setActiveRequest(serviceRequests[0]);
+      for (const request of serviceRequests) {
+        if (request.status === "COMPLETED") {
+          setAbleToReview(true);
+          return;
+        } else {
+          setActiveRequest(request);
+        }
+      }
     }
   }, [serviceRequests]);
 
@@ -81,7 +89,7 @@ export default function ServiceOverview({ route }: Props) {
           disabled={user.id === service.provider}
         />
         <Divider />
-        <ReviewSection />
+        <ReviewSection ableToReview serviceId={service.id} authUser={user} />
       </View>
       <SlideModal visible={modalVisible} onClose={() => setModalVisible(false)}>
         <RequestForm

@@ -7,27 +7,28 @@ import { Feather } from "@expo/vector-icons";
 import { getFileUrl } from "@/utils/format";
 import { useNavigation } from "@react-navigation/native";
 import { useAuthCtx } from "@/context/Auth";
+import { clientAgreed, providerAgreed } from "@/utils/negotiation";
 
 type Props = {
-  serviceRequest: ServiceRequest;
+  request: ServiceRequest;
 };
 
-export default function RequestCard({ serviceRequest }: Props) {
+export default function RequestCard({ request }: Props) {
   const navigation = useNavigation();
   const { user } = useAuthCtx();
 
-  const status = serviceRequest.status;
+  const status = request.request_state;
 
-  const statusColors: Record<typeof serviceRequest.status, string> = {
+  const statusColors: Record<typeof status, string> = {
     PENDING: theme.colors.lightGray,
-    accepted: theme.colors.primaryBlue,
-    rejected: "#FF4C4C",
-    completed: "#2ECC71",
+    ACCEPTED: theme.colors.primaryBlue,
+    CANCELED: "#FF4C4C",
+    FINISHED: "#2ECC71",
   };
 
-  const service = serviceRequest.expand!.service;
+  const service = request.expand!.service;
   const provider = service!.expand!.provider;
-  const client = serviceRequest.expand!.client;
+  const client = request.expand!.client;
   const imageUrl = service!.photos?.[0]
     ? getFileUrl("service", service.id, service.photos[0])
     : "https://via.placeholder.com/100x100";
@@ -35,7 +36,7 @@ export default function RequestCard({ serviceRequest }: Props) {
   const handlePress = () => {
     navigation.navigate("Main", {
       screen: "Chatroom",
-      params: { request: serviceRequest },
+      params: { request },
     });
   };
 
@@ -59,10 +60,10 @@ export default function RequestCard({ serviceRequest }: Props) {
 
         <View style={styles.rowSpace}>
           <Text style={styles.label}>Propuesta:</Text>
-          <Text style={styles.price}>{`$${serviceRequest.agreed_price}`}</Text>
+          <Text style={styles.price}>{`$${request.agreed_price}`}</Text>
         </View>
 
-        {serviceRequest.client_agrees && serviceRequest.provider_agrees && (
+        {clientAgreed(request) && providerAgreed(request) && (
           <View style={styles.agreedBox}>
             <Feather name="check-circle" size={16} color="#2ECC71" />
             <Text style={styles.agreedText}>Ambas partes confirmaron</Text>

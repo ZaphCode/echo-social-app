@@ -45,18 +45,16 @@ export default function RequestForm({ service, requestId, onSuccess }: Props) {
       await update(requestId, {
         agreed_price: parseFloat(data.price),
         agreed_date: data.date,
-
-        // reset the agreement status
-        client_agrees: false,
-        provider_agrees: false,
+        client_offer_status: "PENDING",
+        provider_offer_status: "PENDING",
       });
 
-      if (mutationState.status === "error") {
+      if (mutationState.status === "error")
         return Alert.alert(
           "Error",
           "No se pudo crear la solicitud. Intente nuevamente."
         );
-      }
+
       onSuccess();
     } else {
       const newRequest = await create({
@@ -65,15 +63,16 @@ export default function RequestForm({ service, requestId, onSuccess }: Props) {
         agreed_price: parseFloat(data.price),
         agreed_date: data.date,
         notes: data.notes,
-        status: "PENDING",
+        request_state: "PENDING",
+        client_offer_status: "PENDING",
+        provider_offer_status: "PENDING",
       });
 
-      if (mutationState.status === "error" || !newRequest) {
+      if (mutationState.status === "error" || !newRequest)
         return Alert.alert(
           "Error",
           "No se pudo crear la solicitud. Intente nuevamente."
         );
-      }
 
       onSuccess(newRequest);
     }

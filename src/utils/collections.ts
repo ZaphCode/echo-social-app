@@ -1,6 +1,7 @@
 import { Category } from "@/models/Category";
 import { Message } from "@/models/Message";
 import { Notification } from "@/models/Notification";
+import { Review } from "@/models/Review";
 import { Service } from "@/models/Service";
 import { ServiceRequest } from "@/models/ServiceRequest";
 import { User } from "@/models/User";
@@ -12,4 +13,5 @@ export type PBCollectionsMap = {
   service_request: ServiceRequest;
   notification: Notification;
   message: Message;
+  review: Review;
 };

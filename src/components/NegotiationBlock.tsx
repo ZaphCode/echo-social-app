@@ -1,14 +1,17 @@
 import { View, StyleSheet, Pressable, Alert } from "react-native";
-import React, { useState } from "react";
-import { theme } from "@/theme/theme";
-import Text from "./ui/Text";
 import { MaterialIcons } from "@expo/vector-icons";
-import useSubscription from "@/hooks/useSubscription";
-import { ServiceRequest } from "@/models/ServiceRequest";
+import { useState } from "react";
+
+import { theme } from "@/theme/theme";
 import { formatDate } from "@/utils/format";
-import useMutate from "@/hooks/useMutate";
 import { useAuthCtx } from "@/context/Auth";
+import { ServiceRequest } from "@/models/ServiceRequest";
+import Text from "./ui/Text";
+import useSubscription from "@/hooks/useSubscription";
+import useMutate from "@/hooks/useMutate";
 import AlertModal from "./ui/AlertModal";
+import useModal from "@/hooks/useModal";
+import { bothAgreed, clientAgreed, providerAgreed } from "@/utils/negotiation";
 
 const PERSON_ICON_SIZE = 38;
 
@@ -18,42 +21,28 @@ type Props = {
 };
 
 export default function NegotiationBlock({ request, openModalFn }: Props) {
-  const { user } = useAuthCtx();
-  const [modalAlertVisible, setModalAlertVisible] = useState(false);
+  const { user: authUser } = useAuthCtx();
+  const [visible, open, close] = useModal();
 
-  const [currentAgreement, setCurrentAgreement] = useState({
-    price: request.agreed_price,
-    date: formatDate(request.agreed_date),
-    isClientAgreed: request.client_agrees,
-    isProviderAgreed: request.provider_agrees,
+  const [currentRequestData, setCurrentRequestData] = useState(request);
+
+  const { update, mutationState } = useMutate("service_request", {
+    expand: "service",
   });
-
-  const { update, mutationState } = useMutate("service_request");
 
   useSubscription("service_request", request.id, ({ action, record }) => {
     if (action === "update") {
-      setCurrentAgreement({
-        price: record.agreed_price,
-        date: formatDate(record.agreed_date),
-        isClientAgreed: record.client_agrees,
-        isProviderAgreed: record.provider_agrees,
-      });
+      setCurrentRequestData(record);
     }
   });
 
   const handleAccept = async () => {
-    if (currentAgreement.isClientAgreed && currentAgreement.isProviderAgreed) {
-      return;
-    }
+    if (bothAgreed(currentRequestData)) return;
 
-    if (user.role === "client") {
-      await update(request.id, {
-        client_agrees: true,
-      });
+    if (authUser.role === "client") {
+      await update(request.id, { client_offer_status: "ACCEPTED" });
     } else {
-      await update(request.id, {
-        provider_agrees: true,
-      });
+      await update(request.id, { provider_offer_status: "ACCEPTED" });
     }
 
     if (mutationState.status === "error") {
@@ -62,9 +51,14 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
         "No se pudo crear la solicitud. Intente nuevamente."
       );
     }
-
-    await update(request.id, {});
   };
+
+  const provider = request.expand?.service.provider;
+  const client = request.client;
+
+  const acceptBtnDisabled =
+    (authUser.id === client && clientAgreed(currentRequestData)) ||
+    (authUser.id === provider && providerAgreed(currentRequestData));
 
   return (
     <View style={styles.container}>
@@ -73,9 +67,10 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
           <MaterialIcons
             name="person"
             size={PERSON_ICON_SIZE}
+            style={{ marginTop: 16 }}
             color={
-              currentAgreement.isClientAgreed
-                ? "green"
+              clientAgreed(currentRequestData)
+                ? theme.colors.successGreen
                 : theme.colors.primaryBlue
             }
           />
@@ -89,12 +84,12 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
               <Text>Precio: </Text>
               <Text
                 color={theme.colors.primaryBlue}
-              >{`$${currentAgreement.price}`}</Text>
+              >{`$${currentRequestData.agreed_price}`}</Text>
             </View>
             <View style={{ flexDirection: "row" }}>
               <Text>Fecha: </Text>
               <Text color={theme.colors.primaryBlue}>
-                {currentAgreement.date}
+                {formatDate(currentRequestData.agreed_date)}
               </Text>
             </View>
           </View>
@@ -104,31 +99,33 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
             name="person-4"
             size={PERSON_ICON_SIZE}
             color={
-              currentAgreement.isProviderAgreed
-                ? "green"
+              providerAgreed(currentRequestData)
+                ? theme.colors.successGreen
                 : theme.colors.primaryBlue
             }
           />
         </View>
       </View>
       <View style={styles.buttonsContainer}>
-        <Pressable onPress={handleAccept} style={styles.button}>
-          <Text>Aceptar</Text>
-        </Pressable>
-        <Pressable onPress={openModalFn} style={styles.button}>
-          <Text>Ofertar</Text>
+        <Pressable
+          onPress={handleAccept}
+          style={[styles.button, { opacity: acceptBtnDisabled ? 0.25 : 1 }]}
+          disabled={acceptBtnDisabled}
+        >
+          <Text color={theme.colors.successGreen}>Aceptar</Text>
         </Pressable>
         <Pressable
-          onPress={() => setModalAlertVisible(true)}
-          style={styles.button}
+          onPress={openModalFn}
+          disabled={acceptBtnDisabled}
+          style={[styles.button, { opacity: acceptBtnDisabled ? 0.25 : 1 }]}
         >
-          <Text>Rechazar</Text>
+          <Text color={theme.colors.primaryBlue}>Ofertar</Text>
+        </Pressable>
+        <Pressable onPress={open} style={styles.button}>
+          <Text color={theme.colors.redError}>Rechazar</Text>
         </Pressable>
       </View>
-      <AlertModal
-        visible={modalAlertVisible}
-        onClose={() => setModalAlertVisible(false)}
-      >
+      <AlertModal visible={visible} onClose={close}>
         <Text>Hi</Text>
       </AlertModal>
     </View>

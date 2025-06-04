@@ -3,14 +3,19 @@ import { User } from "./User";
 
 export type ServiceRequest = {
   id: string;
-  client: string; // fk: User ID
-  service: string; // fk: Service ID
+  client: string;
+  service: string;
   notes: string;
-  status: "PENDING" | "accepted" | "rejected" | "completed";
-  client_agrees: boolean;
-  provider_agrees: boolean;
+  request_state: "PENDING" | "ACCEPTED" | "CANCELED" | "FINISHED";
+
+  client_offer_status: "PENDING" | "ACCEPTED" | "REJECTED";
+  provider_offer_status: "PENDING" | "ACCEPTED" | "REJECTED";
+
   agreed_price: number;
   agreed_date: string;
+
+  finished?: string;
+
   requested: string;
   updated: string;
 

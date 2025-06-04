@@ -19,7 +19,7 @@ export default function RequestsList() {
   return (
     <FlatList
       data={serviceRequests}
-      renderItem={({ item }) => <RequestCard serviceRequest={item} />}
+      renderItem={({ item }) => <RequestCard request={item} />}
       keyExtractor={(item) => item.id}
       showsVerticalScrollIndicator={false}
       ListEmptyComponent={<Text>No hay solicitudes</Text>}
