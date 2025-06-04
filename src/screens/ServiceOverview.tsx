@@ -14,6 +14,7 @@ import Button from "@/components/ui/Button";
 import Divider from "@/components/ui/Divider";
 import useList from "@/hooks/useList";
 import RequestForm from "@/components/RequestForm";
+import ReviewSection from "@/components/ReviewSection";
 
 type Props = StaticScreenProps<{ service: Service }>;
 
@@ -80,6 +81,7 @@ export default function ServiceOverview({ route }: Props) {
           disabled={user.id === service.provider}
         />
         <Divider />
+        <ReviewSection />
       </View>
       <SlideModal visible={modalVisible} onClose={() => setModalVisible(false)}>
         <RequestForm

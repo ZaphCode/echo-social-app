@@ -69,14 +69,15 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: theme.spacing.sm,
+    paddingTop: theme.spacing.sm + 4,
+    paddingBottom: Platform.OS === "android" ? theme.spacing.md + 1 : 3,
     paddingHorizontal: theme.spacing.md,
     borderTopWidth: 1,
     borderColor: theme.colors.darkGray,
   },
   input: {
     flex: 1,
-    height: 40,
+    height: 44,
     borderRadius: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md + 2,
     backgroundColor: theme.colors.darkGray,

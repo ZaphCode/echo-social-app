@@ -6,7 +6,7 @@ import RequestCard from "./RequestCard";
 export default function RequestsList() {
   const [serviceRequests, { status }] = useList("service_request", {
     expand: "service.provider, client",
-    cache: "no-cache",
+    sort: "-updated",
   });
 
   if (status === "loading")

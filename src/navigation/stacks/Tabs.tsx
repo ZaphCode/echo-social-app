@@ -4,6 +4,7 @@ import { Foundation, MaterialCommunityIcons } from "@expo/vector-icons";
 import Profile from "@/screens/Profile";
 import Notifications from "@/screens/Notifications";
 import Requests from "@/screens/Requests";
+import { Platform } from "react-native";
 
 export const Tabs = createBottomTabNavigator({
   initialRouteName: "Home",
@@ -12,6 +13,10 @@ export const Tabs = createBottomTabNavigator({
     tabBarStyle: {
       backgroundColor: "#1F1F1F",
       borderTopWidth: 0,
+      height: Platform.OS === "ios" ? 90 : 70,
+    },
+    tabBarLabelStyle: {
+      fontSize: 12,
     },
   },
   screens: {

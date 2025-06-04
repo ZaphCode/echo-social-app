@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import React from "react";
 import Text from "./ui/Text";
 import { theme } from "@/theme/theme";
@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    paddingTop: Platform.OS === "android" ? 16 : 0,
     paddingHorizontal: theme.spacing.md,
   },
   image: {

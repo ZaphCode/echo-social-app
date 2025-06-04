@@ -92,14 +92,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: theme.colors.darkerGray,
     overflow: "hidden",
-    width: DEVICE_WIDTH * 0.87,
+    width: DEVICE_WIDTH * 0.89,
   },
   image: {
     width: "100%",
     height: 200,
   },
   info: {
-    padding: theme.spacing.md,
+    padding: theme.spacing.lg,
   },
   title: {
     color: "#fff",

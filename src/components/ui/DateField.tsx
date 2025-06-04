@@ -58,7 +58,7 @@ export default function DateField({ name, label, control }: Props) {
               textColor="white"
               themeVariant="dark"
               display={Platform.OS === "ios" ? "inline" : "default"}
-              onChange={(event, selectedDate) => {
+              onChange={(_, selectedDate) => {
                 if (selectedDate) {
                   onChange(selectedDate.toISOString());
                   setShowPicker(false);
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.darkGray,
     borderRadius: 12,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md - 4,
+    paddingVertical: Platform.OS === "android" ? 17 : 14,
   },
   icon: {
     marginRight: 10,

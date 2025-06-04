@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
-import { pb } from "../lib/pocketbase";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { ClientResponseError, RecordFullListOptions } from "pocketbase";
+
+import { pb } from "../lib/pocketbase";
 import { PBCollectionsMap } from "@/utils/collections";
 import { PBClient } from "@/utils/testing";
 
@@ -22,12 +24,12 @@ export default function useList<K extends keyof PBCollectionsMap>(
     error: null,
   });
 
-  const getData = async () => {
+  const getData = async (opts?: RecordFullListOptions) => {
     setQueryState({ status: "loading", error: null });
     try {
       const res = await client
         .collection(collection)
-        .getFullList<PBCollectionsMap[K]>(options);
+        .getFullList<PBCollectionsMap[K]>(opts || options);
       setData(res);
       setQueryState({ status: "success", error: null });
     } catch (error) {
@@ -38,11 +40,12 @@ export default function useList<K extends keyof PBCollectionsMap>(
     }
   };
 
-  useEffect(() => {
-    console.log(`fetching ${collection}`);
-
-    getData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      console.log(`fetching ${collection} on focus`);
+      getData();
+    }, [])
+  );
 
   return [data, queryState, getData] as const;
 }

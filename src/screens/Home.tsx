@@ -7,9 +7,11 @@ import { useAuthCtx } from "@/context/Auth";
 import SearchBar from "@/components/SearchBar";
 import CategoryList from "@/components/CategoryList";
 import ServiceList from "@/components/ServiceList";
+import { useState } from "react";
 
 export default function Home() {
   const { user } = useAuthCtx();
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
 
   return (
     <ScrollView style={styles.container}>
@@ -26,8 +28,11 @@ export default function Home() {
         <Text color="white" fontFamily="bold" size={theme.fontSizes.lg}>
           Categorías
         </Text>
-        <CategoryList />
-        <ServiceList authUser={user} />
+        <CategoryList
+          selectedCategoryId={selectedCategoryId}
+          setSelectedCategoryId={setSelectedCategoryId}
+        />
+        <ServiceList authUser={user} category={selectedCategoryId} />
       </SafeAreaView>
     </ScrollView>
   );

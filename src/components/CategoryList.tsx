@@ -3,11 +3,19 @@ import { FlatList, Pressable, StyleSheet } from "react-native";
 import { theme } from "@/theme/theme";
 import Text from "./ui/Text";
 import useList from "@/hooks/useList";
-import { useState } from "react";
 
-export default function CategoryList() {
-  const [categories, fetchData] = useList("service_category");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+type Props = {
+  selectedCategoryId: string;
+  setSelectedCategoryId: (id: string) => void;
+};
+
+export default function CategoryList({
+  selectedCategoryId,
+  setSelectedCategoryId,
+}: Props) {
+  const [categories, fetchData] = useList("service_category", {
+    cache: "force-cache",
+  });
 
   if (fetchData.status === "loading") {
     return <Text>Loading...</Text>;

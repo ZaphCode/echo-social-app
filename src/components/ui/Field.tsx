@@ -1,5 +1,12 @@
 import React, { FC, useState } from "react";
-import { View, TextInput, Text, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  Pressable,
+  Platform,
+} from "react-native";
 import { Controller, RegisterOptions } from "react-hook-form";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
@@ -95,14 +102,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: theme.colors.darkGray,
     borderRadius: 12,
+    paddingVertical: Platform.OS === "android" ? 6 : 4,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md - 4,
   },
   input: {
     flex: 1,
     color: "#fff",
     fontSize: theme.fontSizes.md,
     fontFamily: theme.fontFamily.regular,
+    minHeight: 30,
+    paddingVertical: theme.spacing.sm,
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   icon: {
     marginRight: 10,
