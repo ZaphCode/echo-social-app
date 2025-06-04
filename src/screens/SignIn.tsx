@@ -27,7 +27,10 @@ export default function SignIn() {
   });
 
   const onSubmit = handleSubmit(async ({ email, password }) => {
+    console.log("Submitting login with:", { email, password });
+
     await login(email, password);
+
     if (loginError) Alert.alert("Error", loginError, [{ text: "OK" }]);
   });
 

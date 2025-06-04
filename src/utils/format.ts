@@ -1,3 +1,4 @@
+import { pb } from "@/lib/pocketbase";
 import { PBCollectionsMap } from "./collections";
 
 export const getFileUrl = (
@@ -5,7 +6,7 @@ export const getFileUrl = (
   recordId: string,
   fileName: string
 ): string => {
-  return `http://127.0.0.1:8090/api/files/${coll}/${recordId}/${fileName}`;
+  return pb.files.getURL({ id: recordId, collectionName: coll }, fileName);
 };
 
 export const formatDate = (date: string): string => {
