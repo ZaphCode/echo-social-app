@@ -7,6 +7,7 @@ import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 import Button from "@/components/ui/Button";
 import useLogout from "@/hooks/auth/useLogout";
+import { useNavigation } from "@react-navigation/native";
 
 const userData = {
   nombre: "Omar Urquidez",
@@ -23,6 +24,13 @@ const userData = {
 
 export default function Profile() {
   const logout = useLogout();
+  const navigation = useNavigation();
+
+  const onLogout = async () => {
+    await logout();
+    navigation.navigate("Auth", { screen: "SignIn" });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -182,7 +190,7 @@ export default function Profile() {
             styles.logoutButton,
             { backgroundColor: theme.colors.darkGray },
           ]}
-          onPress={logout}
+          onPress={onLogout}
         />
       </ScrollView>
     </SafeAreaView>

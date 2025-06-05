@@ -1,21 +1,20 @@
-import { View, StyleSheet, ScrollView, Alert } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
 import { StaticScreenProps } from "@react-navigation/native";
-import * as Location from "expo-location";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useForm } from "react-hook-form";
+import { Feather } from "@expo/vector-icons";
 
 import { User } from "@/models/User";
 import { theme } from "@/theme/theme";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-import AvatarPicker from "@/components/AvatarPicker";
-import { set, useForm } from "react-hook-form";
+import { validYearsRules } from "@/utils/validations";
 import Button from "@/components/ui/Button";
-import { useEffect, useState } from "react";
 import Field from "@/components/ui/Field";
 import Divider from "@/components/ui/Divider";
 import useRegister from "@/hooks/auth/useRegister";
 import WeekDaysPicker from "@/components/WeekdaysPicker";
 import Text from "@/components/ui/Text";
-import { Feather } from "@expo/vector-icons";
+import Dropdown from "@/components/ui/Dropdown";
+import useList from "@/hooks/useList";
 
 type Props = StaticScreenProps<{
   userData: {
@@ -29,7 +28,7 @@ type Props = StaticScreenProps<{
     address: string;
     city: string;
     state: string;
-    zipCode: string;
+    zip: string;
     location?: { lat: number; lon: number };
   };
 }>;
@@ -37,43 +36,43 @@ type Props = StaticScreenProps<{
 export default function ProviderData({ route }: Props) {
   const { userData } = route.params;
 
-  const { control, handleSubmit, setValue } = useForm({
+  const { control, handleSubmit } = useForm({
     defaultValues: {
       description: "",
       available_days: [] as string[],
-      experience_years: "",
+      specialty: "",
+      experience_years: 0,
     },
   });
 
-  const { registerProvider } = useRegister();
+  const [categories, { status }] = useList("service_category", {});
+
+  const { registerProvider, loading } = useRegister();
 
   const onContinue = handleSubmit(async (data) => {
     const error = await registerProvider({
       ...userData,
       ...data,
-      experience_years: parseInt(data.experience_years),
     });
 
+    // TODO: handle error properly
     if (error) {
       Alert.alert(
         "Error",
         "No se pudo registrar el proveedor. Inténtalo de nuevo."
       );
-    } else {
-      Alert.alert("Éxito", "Proveedor registrado correctamente.");
     }
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <View>
         <View style={styles.fieldsContainer}>
           <View style={styles.headerContainer}>
             <Feather
               name="briefcase"
               size={44}
               color={theme.colors.primaryBlue}
-              style={{ marginBottom: 6 }}
             />
             <Text color="white" fontFamily="bold" size={theme.fontSizes.xl + 6}>
               ¡Ya casi terminas!
@@ -89,11 +88,27 @@ export default function ProviderData({ route }: Props) {
             label="Descripción personal"
             placeholder="Escribe una breve descripción"
           />
+          {status === "loading" ? (
+            <Text>Loading categories...</Text>
+          ) : status === "error" ? (
+            <Text>Error loading categories</Text>
+          ) : (
+            <Dropdown
+              control={control}
+              name="specialty"
+              icon="tag"
+              label="Especialidad"
+              options={categories}
+              getLabel={(c) => c.name}
+              getValue={(c) => c.id}
+            />
+          )}
           <Field
             name="experience_years"
             control={control}
             label="Años de experiencia"
             placeholder="Ej: 5"
+            rules={validYearsRules}
           />
           <WeekDaysPicker
             control={control}
@@ -103,11 +118,12 @@ export default function ProviderData({ route }: Props) {
           />
           <Button
             title="Registrar"
+            loading={loading}
             onPress={onContinue}
             style={{ marginTop: 2 }}
           />
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -120,13 +136,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
   },
   fieldsContainer: {
-    gap: theme.spacing.md,
+    gap: theme.spacing.md - 4,
     paddingBottom: theme.spacing.lg + 24,
   },
   headerContainer: {
-    marginBottom: theme.spacing.sm,
     alignItems: "center",
-    paddingTop: theme.spacing.md,
     gap: theme.spacing.sm,
   },
   headerMsg: {

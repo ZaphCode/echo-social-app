@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 
 import { theme } from "@/theme/theme";
-import { validEmailRules } from "@/utils/validations";
+import * as rules from "@/utils/validations";
 import Text from "@/components/ui/Text";
 import Field from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
@@ -86,6 +86,7 @@ export default function SignUp() {
             placeholder="Nombre"
             icon="user"
             keyboardType="default"
+            rules={rules.validNameRules}
           />
           <Field
             name="email"
@@ -95,7 +96,7 @@ export default function SignUp() {
             icon="mail"
             keyboardType="email-address"
             secureTextEntry={false}
-            rules={validEmailRules}
+            rules={rules.validEmailRules}
           />
           <Field
             name="password"
@@ -104,6 +105,7 @@ export default function SignUp() {
             placeholder="*****"
             icon="lock"
             secureTextEntry={true}
+            rules={rules.validPasswordRules}
           />
           <Field
             name="confirmPassword"
@@ -112,11 +114,7 @@ export default function SignUp() {
             placeholder="*****"
             icon="lock"
             secureTextEntry={true}
-            rules={{
-              validate: (value) =>
-                value === signInForm.getValues("password") ||
-                "Las contraseñas no coinciden",
-            }}
+            rules={rules.validConfirmPasswordRules}
           />
           <Button
             title="Continuar"

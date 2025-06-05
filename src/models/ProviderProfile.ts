@@ -1,8 +1,10 @@
+import { Category } from "./Category";
 import { User } from "./User";
 
 export type ProviderProfile = {
   id: string;
   user: string; // fk: User ID
+  specialty: string; // fk: ServiceCategory ID
   phone: string;
   description: string;
   state: string;
@@ -21,5 +23,6 @@ export type ProviderProfile = {
 
   expand?: {
     user: User;
+    specialty: Category;
   };
 };

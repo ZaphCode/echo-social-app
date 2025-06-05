@@ -1,38 +1,35 @@
 import { useAuthCtx } from "@/context/Auth";
 import { pb } from "@/lib/pocketbase";
-import { ClientResponseError } from "pocketbase";
+import { logPBError } from "@/utils/testing";
 import { useState } from "react";
 
 export default function useLogin() {
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const auth = useAuthCtx();
 
   const login = async (email: string, password: string) => {
+    setLoading(true);
     try {
       const res = await pb
         .collection<typeof auth.user>("users")
         .authWithPassword(email, password);
 
-      if (!res.record) return setError("No se pudo obtener el usuario");
+      if (!res.record) return "Usuario no encontrado";
 
       auth.login(res.record);
     } catch (error) {
-      if (error instanceof ClientResponseError) {
-        console.log("Login message:", error.message);
-        console.log("Login data:", error.data);
-        console.log("Login error:", error.originalError);
-        console.log("Login cause:", error.cause);
-        console.log("Login name:", error.name);
-        console.log("Login status:", error.status);
-        console.log("Login response:", error.response);
+      if (error instanceof Error) {
+        logPBError(error);
+        return error.message;
       }
-
-      setError("Credenciales incorrectas");
+      return "Credenciales incorrectas";
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
     login,
-    loginError: error,
+    loading,
   };
 }

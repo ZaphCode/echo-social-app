@@ -2,7 +2,7 @@
 
 import { Notification } from "@/models/Notification";
 import { User } from "@/models/User";
-import { RecordFullListOptions } from "pocketbase";
+import { ClientResponseError, RecordFullListOptions } from "pocketbase";
 
 export interface PBClient {
   collection: (collection: string) => {
@@ -27,6 +27,9 @@ const mockUsers: User[] = [
     avatar: "https://example.com/avatar.jpg",
     emailVisibility: true,
     role: "client",
+    verified: true,
+    created: "2023-02-01T00:00:00.000Z",
+    updated: "2023-02-02T00:00:00.000Z",
   },
   {
     id: "user456",
@@ -35,56 +38,22 @@ const mockUsers: User[] = [
     avatar: "https://example.com/avatar2.jpg",
     emailVisibility: false,
     role: "client",
+    verified: false,
+    created: "2023-02-01T00:00:00.000Z",
+    updated: "2023-02-02T00:00:00.000Z",
   },
 ];
 
-export const mockNotifications: Notification[] = [
-  {
-    id: "notif1",
-    user: "user123",
-    message: "Has recibido una nueva oferta en tu publicación.",
-    type: "offer",
-    read: false,
-    created: "2025-05-18T10:30:00Z",
-    updated: "2025-05-18T10:30:00Z",
-    expand: {
-      user: mockUsers[0],
-    },
-  },
-  {
-    id: "notif2",
-    user: "user123",
-    message: "Tienes un nuevo mensaje del cliente.",
-    type: "message",
-    read: true,
-    created: "2025-05-17T15:45:00Z",
-    updated: "2025-05-17T16:00:00Z",
-    expand: {
-      user: mockUsers[0],
-    },
-  },
-  {
-    id: "notif3",
-    user: "user123",
-    message: "Tu solicitud ha cambiado de estado a 'completada'.",
-    type: "status",
-    read: false,
-    created: "2025-05-16T09:20:00Z",
-    updated: "2025-05-16T09:20:00Z",
-    expand: {
-      user: mockUsers[0],
-    },
-  },
-  {
-    id: "notif4",
-    user: "user123",
-    message: "Has recibido una nueva reseña.",
-    type: "review",
-    read: true,
-    created: "2025-05-15T08:00:00Z",
-    updated: "2025-05-15T08:00:00Z",
-    expand: {
-      user: mockUsers[0],
-    },
-  },
-];
+export function logPBError(error: unknown) {
+  if (error instanceof ClientResponseError) {
+    console.log("PB Error message:", error.message);
+    console.log("PB Error data:", error.data);
+    console.log("PB Error originalError:", error.originalError);
+    console.log("PB Error cause:", error.cause);
+    console.log("PB Error name:", error.name);
+    console.log("PB Error status:", error.status);
+    console.log("PB Error response:", error.response);
+  } else {
+    console.log("Unknown error:", error);
+  }
+}

@@ -7,11 +7,13 @@ import * as Loc from "expo-location";
 
 import { User } from "@/models/User";
 import { theme } from "@/theme/theme";
+import * as rules from "@/utils/validations";
 import AvatarPicker from "@/components/AvatarPicker";
 import Button from "@/components/ui/Button";
 import Field from "@/components/ui/Field";
 import Divider from "@/components/ui/Divider";
 import useRegister from "@/hooks/auth/useRegister";
+import useRedirect from "@/hooks/auth/useRedirect";
 
 type Props = StaticScreenProps<{
   userData: {
@@ -31,15 +33,15 @@ export default function ProfileCreation({ route }: Props) {
 
   const { control, handleSubmit, setValue } = useForm({
     defaultValues: {
-      phone: "",
+      phone: "+52 123 456 7890",
       address: "",
       state: "",
       city: "",
-      zipCode: "",
+      zip: "",
     },
   });
 
-  const { registerClient } = useRegister();
+  const { registerClient, loading } = useRegister();
 
   const [locationCords, setLocationCords] = useState<Loc.LocationObject>();
   const [locationData, setLocationData] =
@@ -53,7 +55,7 @@ export default function ProfileCreation({ route }: Props) {
     if (locationData) {
       setValue("city", locationData.city || "");
       setValue("state", locationData.region || "");
-      setValue("zipCode", locationData.postalCode || "");
+      setValue("zip", locationData.postalCode || "");
     }
   }, [locationData]);
 
@@ -96,7 +98,6 @@ export default function ProfileCreation({ route }: Props) {
       const error = await registerClient(allData);
 
       if (error) {
-        console.log("Error al registrar cliente:", error);
         Alert.alert(
           "Error al registrar cliente",
           "Hubo un problema al crear tu perfil. Por favor, intenta nuevamente más tarde."
@@ -116,9 +117,9 @@ export default function ProfileCreation({ route }: Props) {
             label="Teléfono"
             placeholder="+52 123 456 7890"
             keyboardType="numeric"
+            rules={rules.validPhoneRules}
           />
           <Divider />
-
           <Field
             name="address"
             control={control}
@@ -138,15 +139,17 @@ export default function ProfileCreation({ route }: Props) {
             placeholder="Ciudad de México"
           />
           <Field
-            name="zipCode"
+            name="zip"
             control={control}
             label="Código Postal"
             placeholder="12345"
             keyboardType="numeric"
+            rules={rules.validZipCodeRules}
           />
           <Button
             title={userData.role === "provider" ? "Continuar" : "Registrar"}
             onPress={onContinue}
+            loading={loading}
             style={{ marginTop: 18 }}
           />
         </View>

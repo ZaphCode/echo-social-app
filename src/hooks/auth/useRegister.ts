@@ -1,13 +1,16 @@
-import { useAuthCtx } from "@/context/Auth";
 import { pb } from "@/lib/pocketbase";
 import { User } from "@/models/User";
-import { ClientResponseError } from "pocketbase";
+import { logPBError } from "@/utils/testing";
+import useLogin from "./useLogin";
+import { useState } from "react";
+import { set } from "react-hook-form";
+import { loadAsync } from "expo-font";
 
 export default function useRegister() {
-  const { user, login } = useAuthCtx();
+  const { login, loading: loginLoading } = useLogin();
+  const [registrationLoading, setRegistrationLoading] = useState(false);
 
-  // Función interna para crear usuario y autenticar
-  const createUserAndLogin = async (params: RegisterClientParams) => {
+  const createUser = async (params: RegisterClientParams) => {
     const formData = new FormData();
 
     formData.append("name", params.name);
@@ -27,75 +30,60 @@ export default function useRegister() {
 
     const newUser = await pb.collection("users").create<User>(formData);
 
-    const authUser = await pb
-      .collection<typeof user>("users")
-      .authWithPassword(params.email, params.password);
-
-    login(authUser.record);
-
     return newUser;
   };
 
   const registerClient = async (params: RegisterClientParams) => {
+    setRegistrationLoading(true);
     try {
-      const newUser = await createUserAndLogin(params);
+      const newUser = await createUser(params);
 
       await pb.collection("client_profile").create({
         user: newUser.id,
-        phone: params.phone,
-        address: params.address,
-        state: params.state,
-        city: params.city,
-        zip: params.zipCode,
-        location: params.location,
+        ...params,
       });
+
+      const loginError = await login(params.email, params.password);
+
+      if (loginError) return new Error("Login failed after registration");
 
       return null;
     } catch (error) {
-      handlePBError(error);
+      logPBError(error);
       return error;
+    } finally {
+      setRegistrationLoading(false);
     }
   };
 
   const registerProvider = async (params: RegisterProviderParams) => {
+    setRegistrationLoading(true);
     try {
-      const newUser = await createUserAndLogin(params);
+      const { id } = await createUser(params);
 
       await pb.collection("provider_profile").create({
-        user: newUser.id,
-        phone: params.phone,
-        address: params.address,
-        state: params.state,
-        city: params.city,
-        zip: params.zipCode,
-        location: params.location,
-        description: params.description,
-        experience_years: params.experience_years,
-        available_days: params.available_days,
+        user: id,
+        ...params,
       });
+
+      const loginError = await login(params.email, params.password);
+
+      if (loginError) return new Error("Login failed after registration");
 
       return null;
     } catch (error) {
-      handlePBError(error);
+      logPBError(error);
       return error;
+    } finally {
+      setRegistrationLoading(false);
     }
   };
 
-  return { registerClient, registerProvider };
-}
-
-function handlePBError(error: unknown) {
-  if (error instanceof ClientResponseError) {
-    console.log("PB Error message:", error.message);
-    console.log("PB Error data:", error.data);
-    console.log("PB Error originalError:", error.originalError);
-    console.log("PB Error cause:", error.cause);
-    console.log("PB Error name:", error.name);
-    console.log("PB Error status:", error.status);
-    console.log("PB Error response:", error.response);
-  } else {
-    console.log("Unknown error:", error);
-  }
+  return {
+    registerClient,
+    registerProvider,
+    loading: registrationLoading || loginLoading,
+  };
 }
 
 // Types
@@ -111,7 +99,7 @@ type RegisterClientParams = {
   address: string;
   state: string;
   city: string;
-  zipCode: string;
+  zip: string;
   location?: {
     lat: number;
     lon: number;
@@ -120,6 +108,7 @@ type RegisterClientParams = {
 
 type RegisterProviderParams = RegisterClientParams & {
   description: string;
+  specialty: string;
   experience_years: number;
   available_days: string[];
 };

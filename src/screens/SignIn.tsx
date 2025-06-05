@@ -3,36 +3,38 @@ import { Image } from "expo-image";
 import { useForm } from "react-hook-form";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { theme } from "@/theme/theme";
 import { validEmailRules } from "@/utils/validations";
+import { getDevPassword, getDevEmail } from "@/utils/constants";
 import Text from "@/components/ui/Text";
 import Field from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import useLogin from "@/hooks/auth/useLogin";
-import { DEV_USER_EMAIL, DEV_USER_PASSWORD } from "@/utils/constants";
 
 export default function SignIn() {
   useRedirect();
 
-  const { login, loginError } = useLogin();
+  const { login, loading } = useLogin();
   const navigation = useNavigation();
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
-      email: __DEV__ ? DEV_USER_EMAIL : "",
-      password: __DEV__ ? DEV_USER_PASSWORD : "",
+      email: __DEV__ ? getDevEmail() : "",
+      password: __DEV__ ? getDevPassword() : "",
     },
   });
 
   const onSubmit = handleSubmit(async ({ email, password }) => {
     console.log("Submitting login with:", { email, password });
 
-    await login(email, password);
+    const error = await login(email, password);
 
-    if (loginError) Alert.alert("Error", loginError, [{ text: "OK" }]);
+    if (error) {
+      // TODO: Handle error more gracefully in the future
+      Alert.alert("Error", error);
+    }
   });
 
   return (
@@ -66,9 +68,15 @@ export default function SignIn() {
           control={control}
           placeholder="*****"
           icon="lock"
+          rules={{ required: "La contraseña es requerida" }}
           secureTextEntry={true}
         />
-        <Button title="Ingresar" style={{ marginTop: 10 }} onPress={onSubmit} />
+        <Button
+          loading={loading}
+          title="Ingresar"
+          style={{ marginTop: 10 }}
+          onPress={onSubmit}
+        />
       </View>
       <View style={styles.createAccountView}>
         <Text>¿Aún no tienes cuenta?</Text>
