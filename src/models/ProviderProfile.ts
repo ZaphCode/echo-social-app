@@ -14,6 +14,10 @@ export type ProviderProfile = {
   available_days: string[]; // ["MON", "TUE", ...]
   updated: string;
   created: string;
+  location?: {
+    lat: number;
+    lon: number;
+  };
 
   expand?: {
     user: User;

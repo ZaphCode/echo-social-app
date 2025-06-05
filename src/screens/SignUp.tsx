@@ -12,6 +12,7 @@ import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import RoleSelector from "@/components/RoleSelector";
 import { User } from "@/models/User";
+import { pb } from "@/lib/pocketbase";
 
 export default function SignUp() {
   useRedirect();
@@ -28,7 +29,28 @@ export default function SignUp() {
     },
   });
 
+  // TODO: Move this to a separate utility file
+  async function emailExists(email: string): Promise<boolean> {
+    try {
+      console.log("Checking if email exists:", email);
+
+      const users = await pb.collection("users").getList(1, 1, {
+        filter: `email = "${email}"`,
+      });
+      return users.items.length > 0;
+    } catch (err) {
+      return false;
+    }
+  }
+
   const onSubmit = handleSubmit(async (data) => {
+    if (await emailExists(data.email)) {
+      Alert.alert("Error", "El correo electrónico ya está en uso", [
+        { text: "OK" },
+      ]);
+      return;
+    }
+
     navigation.navigate("Auth", {
       screen: "ProfileCreation",
       params: { userData: data },

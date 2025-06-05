@@ -1,15 +1,14 @@
 import { View, StyleSheet, ScrollView, Alert } from "react-native";
-import { StaticScreenProps } from "@react-navigation/native";
-import * as Location from "expo-location";
+import { StaticScreenProps, useNavigation } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { SafeAreaView } from "react-native-safe-area-context";
+import * as Loc from "expo-location";
 
 import { User } from "@/models/User";
 import { theme } from "@/theme/theme";
-import { SafeAreaView } from "react-native-safe-area-context";
-
 import AvatarPicker from "@/components/AvatarPicker";
-import { set, useForm } from "react-hook-form";
 import Button from "@/components/ui/Button";
-import { useEffect, useState } from "react";
 import Field from "@/components/ui/Field";
 import Divider from "@/components/ui/Divider";
 import useRegister from "@/hooks/auth/useRegister";
@@ -28,6 +27,7 @@ type Props = StaticScreenProps<{
 export default function ProfileCreation({ route }: Props) {
   const { userData } = route.params;
   const [avatarSrc, setAvatarSrc] = useState<string>();
+  const navigation = useNavigation();
 
   const { control, handleSubmit, setValue } = useForm({
     defaultValues: {
@@ -41,9 +41,9 @@ export default function ProfileCreation({ route }: Props) {
 
   const { registerClient } = useRegister();
 
-  const [locationCords, setLocationCords] = useState<Location.LocationObject>();
+  const [locationCords, setLocationCords] = useState<Loc.LocationObject>();
   const [locationData, setLocationData] =
-    useState<Location.LocationGeocodedAddress>();
+    useState<Loc.LocationGeocodedAddress>();
 
   useEffect(() => {
     getLocation();
@@ -58,42 +58,42 @@ export default function ProfileCreation({ route }: Props) {
   }, [locationData]);
 
   const getLocation = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    const { status } = await Loc.requestForegroundPermissionsAsync();
 
     if (status !== "granted") {
       Alert.alert("Permiso denegado", "Se requiere acceso a la ubicación.");
       return;
     }
 
-    const location = await Location.getCurrentPositionAsync({});
+    const location = await Loc.getCurrentPositionAsync({});
 
     setLocationCords(location);
 
     const { latitude, longitude } = location.coords;
 
-    const address = await Location.reverseGeocodeAsync({ latitude, longitude });
+    const address = await Loc.reverseGeocodeAsync({ latitude, longitude });
 
     setLocationData(address[0]);
   };
 
   const onContinue = handleSubmit(async (profileData) => {
+    const allData = {
+      ...userData,
+      ...profileData,
+      avatar: avatarSrc,
+      location: locationCords && {
+        lat: locationCords.coords.latitude,
+        lon: locationCords.coords.longitude,
+      },
+    };
+
     if (userData.role === "provider") {
-      Alert.alert(
-        "Perfil de Proveedor",
-        "Tu perfil ha sido creado exitosamente. Ahora puedes empezar a ofrecer tus servicios."
-      );
-    } else {
-      const error = await registerClient({
-        ...userData,
-        ...profileData,
-        avatar: avatarSrc,
-        location: locationCords
-          ? {
-              lat: locationCords.coords.latitude,
-              lon: locationCords.coords.longitude,
-            }
-          : undefined,
+      navigation.navigate("Auth", {
+        screen: "ProviderData",
+        params: { userData: allData },
       });
+    } else {
+      const error = await registerClient(allData);
 
       if (error) {
         console.log("Error al registrar cliente:", error);
@@ -145,7 +145,7 @@ export default function ProfileCreation({ route }: Props) {
             keyboardType="numeric"
           />
           <Button
-            title="Continuar"
+            title={userData.role === "provider" ? "Continuar" : "Registrar"}
             onPress={onContinue}
             style={{ marginTop: 18 }}
           />

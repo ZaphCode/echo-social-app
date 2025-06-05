@@ -13,6 +13,10 @@ export type Notification = {
   created: string;
   updated: string;
 
+  // Optional fields for relationships
+  request?: string; // fk: ServiceRequest ID
+  service?: string; // fk: Service ID
+
   expand?: {
     user: User;
   };

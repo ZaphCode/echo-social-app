@@ -80,7 +80,7 @@ export default function RequestForm({ service, requestId, onSuccess }: Props) {
 
       await notificationMutation.create({
         user: service.provider,
-        message: `Nueva solicitud de servicio de ${user.name}`,
+        message: `Nueva solicitud de servicio de *${user.name}*.`,
         type: "PROVIDER:NEW_REQUEST",
         read: false,
       });
