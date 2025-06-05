@@ -17,3 +17,13 @@ export const formatDate = (date: string): string => {
   };
   return new Date(date).toLocaleDateString("es-ES", options);
 };
+
+export function formatDateLong(dateStr: string) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("es-MX", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

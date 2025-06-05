@@ -1,163 +1,102 @@
-import React from "react";
-import { StyleSheet, View, TouchableOpacity } from "react-native";
+import { View, StyleSheet, Text as RNText } from "react-native";
 import { theme } from "@/theme/theme";
-import Text from "@/components/ui/Text";
-// import { Ionicons } from "@expo/vector-icons";
+
+import Text from "./ui/Text";
 import { Notification } from "@/models/Notification";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { formatDateLong } from "@/utils/format";
 
-const getNotificationIcon = (type: Notification["type"]) => {
-  switch (type) {
-    case "application":
-      return "document-text";
-    case "offer":
-      return "briefcase";
-    case "message":
-      return "chatbubble";
-    case "status":
-      return "checkmark-circle";
-    case "review":
-      return "star";
-    default:
-      return "notifications";
-  }
-};
-
-const getNotificationColor = (type: Notification["type"]) => {
-  switch (type) {
-    case "application":
-      return theme.colors.primaryBlue;
-    case "offer":
-      return theme.colors.secondaryBlue;
-    case "message":
-      return theme.colors.primaryBlue;
-    case "status":
-      return "#4CAF50";
-    case "review":
-      return "#FFC107";
-    default:
-      return theme.colors.lightGray;
-  }
-};
-
-type Props = {
+interface Props {
   notification: Notification;
-};
+}
 
 export default function NotificationCard({ notification }: Props) {
-  return (
-    <TouchableOpacity style={styles.notificationItem} onPress={() => {}}>
-      <Text>{notification.message}</Text>
+  const { icon, color } = getIconAndColor(notification.type, notification.read);
 
-      {/* <View style={styles.notificationContent}>
-        <View style={styles.avatarContainer}>
-          <View
-            style={[
-              styles.iconContainer,
-              { backgroundColor: getNotificationColor(notification.type) },
-            ]}
-          >
-            <Ionicons
-              name={getNotificationIcon(notification.type)}
-              size={16}
-              color="white"
-            />
-          </View>
-        </View>
-        <View style={styles.textContainer}>
-          <View style={styles.notificationText}>
-            <Text fontFamily="bold" color="white" size={theme.fontSizes.sm}>
-              {`${notification.user.name} `}
-            </Text>
-            <Text color="white" size={theme.fontSizes.sm}>
-              {data.content}
-            </Text>
-            {data.job && (
-              <>
-                <Text color="white" size={theme.fontSizes.sm}>
-                  {" "}
-                </Text>
-                <Text fontFamily="bold" color="white" size={theme.fontSizes.sm}>
-                  {`"${data.job}"`}
-                </Text>
-              </>
-            )}
-            {data.budget && (
-              <>
-                <Text color="white" size={theme.fontSizes.sm}>
-                  {" "}
-                </Text>
-                <Text color="lightGray" size={theme.fontSizes.sm}>
-                  {`(${data.budget})`}
-                </Text>
-              </>
-            )}
-            {data.message && (
-              <>
-                <Text color="white" size={theme.fontSizes.sm}>
-                  {" "}
-                </Text>
-                <Text color="lightGray" size={theme.fontSizes.sm}>
-                  {`"${data.message}"`}
-                </Text>
-              </>
-            )}
-            {data.rating && (
-              <>
-                <Text color="white" size={theme.fontSizes.sm}>
-                  {" "}
-                </Text>
-                <View style={styles.ratingContainer}>
-                  {[...Array(data.rating)].map((_, i) => (
-                    <Ionicons key={i} name="star" size={12} color="#FFC107" />
-                  ))}
-                </View>
-              </>
-            )}
-          </View>
-          <Text color="lightGray" size={theme.fontSizes.sm}>
-            {data.time}
-          </Text>
-        </View>
-      </View> */}
-    </TouchableOpacity>
+  return (
+    <View style={[styles.card, notification.read && styles.cardRead]}>
+      <MaterialCommunityIcons
+        name={icon as any}
+        size={28}
+        color={color}
+        style={{ marginRight: 10 }}
+      />
+      <View style={{ flex: 1 }}>
+        <RNText>
+          {parseBold(notification.message, {
+            color: notification.read ? theme.colors.lightGray : "#fff",
+            fontSize: theme.fontSizes.md,
+          })}
+        </RNText>
+        <Text color={theme.colors.lightGray} size={theme.fontSizes.sm}>
+          {formatDateLong(notification.created)}
+        </Text>
+      </View>
+      {!notification.read && (
+        <MaterialIcons
+          name="fiber-manual-record"
+          size={14}
+          color="#4bb543"
+          style={{ marginLeft: 6 }}
+        />
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  notificationItem: {
-    paddingVertical: theme.spacing.sm,
-  },
-  notificationContent: {
+  card: {
     flexDirection: "row",
     alignItems: "flex-start",
+    backgroundColor: theme.colors.darkerGray,
+    borderRadius: theme.spacing.md,
+    padding: theme.spacing.md,
     gap: theme.spacing.sm,
+    marginVertical: 2,
   },
-  avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.darkGray,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  textContainer: {
-    flex: 1,
-    gap: 2,
-  },
-  notificationText: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 2,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    gap: 2,
+  cardRead: {
+    opacity: 0.7,
   },
 });
+
+function getIconAndColor(type: Notification["type"], read: boolean) {
+  switch (type) {
+    case "PROVIDER:NEW_REQUEST":
+      return {
+        icon: "account-plus",
+        color: read ? "#999" : theme.colors.primaryBlue,
+      };
+    case "CLIENT:NEW_OFFER":
+      return { icon: "handshake", color: read ? "#999" : "#e6b800" };
+    case "PROVIDER:NEW_OFFER":
+      return {
+        icon: "account-cash",
+        color: read ? "#999" : theme.colors.successGreen,
+      };
+    case "SYSTEM:INFO":
+    default:
+      return { icon: "information", color: read ? "#999" : "#888" };
+  }
+}
+
+export function parseBold(text: string, baseStyle?: any) {
+  const parts = text.split(/(\*[^*]+\*)/g);
+
+  return parts.map((part, idx) => {
+    if (part.startsWith("*") && part.endsWith("*")) {
+      return (
+        <Text
+          key={idx}
+          style={[baseStyle, { fontFamily: theme.fontFamily.bold }]}
+        >
+          {part.slice(1, -1)}
+        </Text>
+      );
+    }
+    return (
+      <Text key={idx} style={baseStyle}>
+        {part}
+      </Text>
+    );
+  });
+}

@@ -36,20 +36,23 @@ export default function RequestForm({ service, requestId, onSuccess }: Props) {
     },
   });
 
-  const { create, update, mutationState } = useMutate("service_request", {
+  const requestMutation = useMutate("service_request", {
     expand: "service.provider, client",
   });
 
+  const notificationMutation = useMutate("notification");
+
   const onSubmit = handleSubmit(async (data) => {
     if (offeringMode) {
-      await update(requestId, {
+      await requestMutation.update(requestId, {
         agreed_price: parseFloat(data.price),
         agreed_date: data.date,
         client_offer_status: "PENDING",
         provider_offer_status: "PENDING",
+        last_offer_user: user.id,
       });
 
-      if (mutationState.status === "error")
+      if (requestMutation.mutationState.status === "error")
         return Alert.alert(
           "Error",
           "No se pudo crear la solicitud. Intente nuevamente."
@@ -57,21 +60,35 @@ export default function RequestForm({ service, requestId, onSuccess }: Props) {
 
       onSuccess();
     } else {
-      const newRequest = await create({
+      const newRequest = await requestMutation.create({
         service: service.id,
         client: user.id,
+        last_offer_user: user.id,
         agreed_price: parseFloat(data.price),
         agreed_date: data.date,
         notes: data.notes,
-        request_state: "PENDING",
+        agreement_state: "PENDING",
         client_offer_status: "PENDING",
         provider_offer_status: "PENDING",
       });
 
-      if (mutationState.status === "error" || !newRequest)
+      if (requestMutation.mutationState.status === "error" || !newRequest)
         return Alert.alert(
           "Error",
           "No se pudo crear la solicitud. Intente nuevamente."
+        );
+
+      await notificationMutation.create({
+        user: service.provider,
+        message: `Nueva solicitud de servicio de ${user.name}`,
+        type: "PROVIDER:NEW_REQUEST",
+        read: false,
+      });
+
+      if (notificationMutation.mutationState.status === "error")
+        return Alert.alert(
+          "Error",
+          "No se pudo enviar la notificación al proveedor. Intente nuevamente."
         );
 
       onSuccess(newRequest);
@@ -108,7 +125,7 @@ export default function RequestForm({ service, requestId, onSuccess }: Props) {
         )}
         <View style={{ height: keyboardVisible ? offsetHeight : 0 }}></View>
         <Button
-          loading={mutationState.status === "loading"}
+          loading={requestMutation.mutationState.status === "loading"}
           title="Enviar"
           onPress={onSubmit}
         />

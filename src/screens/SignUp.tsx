@@ -10,65 +10,52 @@ import Text from "@/components/ui/Text";
 import Field from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
-import useLogin from "@/hooks/auth/useLogin";
+import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
+import RoleSelector from "@/components/RoleSelector";
 
 export default function SignUp() {
   useRedirect();
 
-  const { login, loginError } = useLogin();
   const navigation = useNavigation();
 
-  const { control, handleSubmit, getValues, formState } = useForm({
+  const { control, handleSubmit, ...signInForm } = useForm({
     defaultValues: {
       nombre: "",
       email: "",
       password: "",
+      confirmPassword: "",
+      role: "client",
     },
   });
 
-  const onSubmit = async () => {
-    const { email, password } = getValues();
-
-    await login(email, password);
-
-    if (loginError) Alert.alert("Error", loginError, [{ text: "OK" }]);
-  };
+  const onSubmit = handleSubmit(async () => {
+    Alert.alert("Información", "Registro exitoso", [{ text: "OK" }]);
+  });
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        <View style={{ gap: 5, alignItems: "center", width: "100%" }}>
-          {Object.keys(formState.errors).length === 0 ? (
+        <View style={{ gap: 5, alignItems: "center" }}>
+          {Object.keys(signInForm.formState.errors).length === 0 && (
             <View>
               <Image
                 source={require("@Assets/app-logo.png")}
                 contentFit="contain"
-                style={{ width: 120, height: 120 }}
+                style={{ width: 130, height: 50, marginBottom: 10 }}
               />
             </View>
-          ) : null}
-
+          )}
           <Text fontFamily="bold" color="white" size={theme.fontSizes.xl + 5}>
             Regístrate Ahora
           </Text>
 
-          <View style={styles.roleButtonContainer}>
-            <Pressable
-              style={styles.roleButton}
-              onPress={() => console.log("Cliente")}
-            >
-              <Text style={styles.roleButtonText}>Cliente</Text>
-            </Pressable>
-            <Pressable
-              style={styles.roleButton}
-              onPress={() => console.log("Prestador de Servicio")}
-            >
-              <Text style={styles.roleButtonText}>Prestador de Servicio</Text>
-            </Pressable>
-          </View>
+          <RoleSelector
+            onChange={(role) => signInForm.setValue("role", role)}
+          />
         </View>
 
-        <View style={{ width: "90%", gap: 20, paddingVertical: 0 }}>
+        <View style={{ width: "100%", gap: 20, marginTop: 20 }}>
           <Field
             name="nombre"
             label="Nombre"
@@ -85,6 +72,7 @@ export default function SignUp() {
             icon="mail"
             keyboardType="email-address"
             secureTextEntry={false}
+            rules={validEmailRules}
           />
           <Field
             name="password"
@@ -101,11 +89,16 @@ export default function SignUp() {
             placeholder="*****"
             icon="lock"
             secureTextEntry={true}
+            rules={{
+              validate: (value) =>
+                value === signInForm.getValues("password") ||
+                "Las contraseñas no coinciden",
+            }}
           />
           <Button
             title="Continuar"
             style={{ marginTop: 10 }}
-            onPress={handleSubmit(onSubmit)}
+            onPress={onSubmit}
           />
         </View>
         <View style={styles.loginAccountView}>
@@ -113,7 +106,6 @@ export default function SignUp() {
           <Pressable
             onPress={() => {
               console.log("Navigate to SignIn");
-
               navigation.navigate("Auth", { screen: "SignIn" });
             }}
           >
@@ -136,27 +128,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: theme.colors.background,
     gap: theme.spacing.sm,
-  },
-  roleButtonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "90%",
-    marginTop: 10,
-  },
-  roleButton: {
-    flex: 1,
-    borderRadius: 12,
-    marginHorizontal: 5,
-    padding: 5,
-    backgroundColor: theme.colors.darkGray,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  roleButtonText: {
-    color: theme.colors.lightGray,
-    fontSize: theme.fontSizes.md - 2,
-    fontWeight: "600",
-    textAlign: "center",
+    paddingTop: theme.spacing.tabPT,
   },
   loginAccountView: {
     flexDirection: "row",

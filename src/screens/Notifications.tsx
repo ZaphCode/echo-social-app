@@ -1,8 +1,8 @@
-import React from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native";
+
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
-import { SafeAreaView } from "react-native-safe-area-context";
 import NotificationList from "@/components/NotificationList";
 
 export default function Notifications() {
@@ -21,5 +21,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     padding: theme.spacing.md,
     height: "100%",
+    paddingTop: theme.spacing.tabPT,
   },
 });

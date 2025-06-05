@@ -4,7 +4,11 @@ export type Notification = {
   id: string;
   user: string; // fk: User ID
   message: string;
-  type: string; // TODO: define specific notification types (e.g., "offer", "message", "status", "review")
+  type:
+    | "PROVIDER:NEW_REQUEST"
+    | "CLIENT:NEW_OFFER"
+    | "PROVIDER:NEW_OFFER"
+    | "SYSTEM:INFO";
   read: boolean;
   created: string;
   updated: string;

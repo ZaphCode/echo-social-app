@@ -40,7 +40,7 @@ export default function SignIn() {
         <Image
           source={require("@Assets/app-logo.png")}
           contentFit="contain"
-          style={{ width: 120, height: 120 }}
+          style={{ width: 130, height: 50, marginBottom: 20 }}
         />
       </View>
       <View style={{ gap: 5, alignItems: "center" }}>
@@ -96,6 +96,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: theme.colors.background,
     gap: theme.spacing.sm,
+    paddingTop: theme.spacing.tabPT,
   },
   createAccountView: {
     flexDirection: "row",

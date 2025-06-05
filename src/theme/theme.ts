@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+
 export const theme = {
   colors: {
     primaryBlue: "#63C3FFFF",
@@ -25,5 +27,6 @@ export const theme = {
     sm: 10,
     md: 16,
     lg: 24,
+    tabPT: Platform.OS === "android" ? 48 : 16,
   },
 };

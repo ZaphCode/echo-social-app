@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 
@@ -43,6 +43,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     flexDirection: "column",
     padding: theme.spacing.md,
+    paddingTop: theme.spacing.tabPT,
   },
 });
 

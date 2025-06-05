@@ -17,7 +17,7 @@ export default function RequestCard({ request }: Props) {
   const navigation = useNavigation();
   const { user } = useAuthCtx();
 
-  const status = request.request_state;
+  const status = request.agreement_state;
 
   const statusColors: Record<typeof status, string> = {
     PENDING: theme.colors.lightGray,

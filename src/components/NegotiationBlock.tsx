@@ -6,12 +6,12 @@ import { theme } from "@/theme/theme";
 import { formatDate } from "@/utils/format";
 import { useAuthCtx } from "@/context/Auth";
 import { ServiceRequest } from "@/models/ServiceRequest";
+import { bothAgreed, clientAgreed, providerAgreed } from "@/utils/negotiation";
 import Text from "./ui/Text";
 import useSubscription from "@/hooks/useSubscription";
 import useMutate from "@/hooks/useMutate";
 import AlertModal from "./ui/AlertModal";
 import useModal from "@/hooks/useModal";
-import { bothAgreed, clientAgreed, providerAgreed } from "@/utils/negotiation";
 
 const PERSON_ICON_SIZE = 38;
 
@@ -55,25 +55,38 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
 
   const provider = request.expand?.service.provider;
   const client = request.client;
+  const lastOfferUser = currentRequestData.last_offer_user;
 
   const acceptBtnDisabled =
     (authUser.id === client && clientAgreed(currentRequestData)) ||
     (authUser.id === provider && providerAgreed(currentRequestData));
 
+  const offerBtnDisabled =
+    authUser.id === lastOfferUser || bothAgreed(currentRequestData);
+
+  const rejectBtnDisabled = bothAgreed(currentRequestData);
+
   return (
     <View style={styles.container}>
       <View style={styles.agreementsDataContainer}>
-        <View>
+        <View style={styles.userContainer}>
           <MaterialIcons
             name="person"
             size={PERSON_ICON_SIZE}
-            style={{ marginTop: 16 }}
             color={
               clientAgreed(currentRequestData)
                 ? theme.colors.successGreen
                 : theme.colors.primaryBlue
             }
           />
+          {lastOfferUser === client && (
+            <MaterialIcons
+              name="arrow-right"
+              size={32}
+              color="white"
+              style={{ position: "absolute", left: 32 }}
+            />
+          )}
         </View>
         <View style={{ alignItems: "center" }}>
           <Text fontFamily="bold" color="white">
@@ -94,7 +107,15 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
             </View>
           </View>
         </View>
-        <View>
+        <View style={styles.userContainer}>
+          {lastOfferUser === provider && (
+            <MaterialIcons
+              name="arrow-left"
+              size={32}
+              color="white"
+              style={{ position: "absolute", right: 32 }}
+            />
+          )}
           <MaterialIcons
             name="person-4"
             size={PERSON_ICON_SIZE}
@@ -116,12 +137,16 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
         </Pressable>
         <Pressable
           onPress={openModalFn}
-          disabled={acceptBtnDisabled}
-          style={[styles.button, { opacity: acceptBtnDisabled ? 0.25 : 1 }]}
+          disabled={offerBtnDisabled}
+          style={[styles.button, { opacity: offerBtnDisabled ? 0.25 : 1 }]}
         >
           <Text color={theme.colors.primaryBlue}>Ofertar</Text>
         </Pressable>
-        <Pressable onPress={open} style={styles.button}>
+        <Pressable
+          disabled={rejectBtnDisabled}
+          onPress={open}
+          style={[styles.button, { opacity: rejectBtnDisabled ? 0.25 : 1 }]}
+        >
           <Text color={theme.colors.redError}>Rechazar</Text>
         </Pressable>
       </View>
@@ -158,4 +183,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
   },
+
+  userContainer: { alignItems: "center", flexDirection: "row", marginTop: 20 },
 });

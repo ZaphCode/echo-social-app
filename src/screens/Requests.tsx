@@ -20,6 +20,8 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.background,
     padding: theme.spacing.md,
+    paddingTop: theme.spacing.tabPT,
+
     height: "100%",
     gap: theme.spacing.md,
   },
