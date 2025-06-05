@@ -1,14 +1,15 @@
 import { StyleSheet, View } from "react-native";
-import React, { useState } from "react";
+import { useState } from "react";
 import { StaticScreenProps } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { theme } from "@/theme/theme";
+import { SlideModal } from "@/components/ui/SlideModal";
+import { ServiceRequest } from "@/models/ServiceRequest";
 import ChatHeader from "@/components/ChatHeader";
 import NegotiationBlock from "@/components/NegotiationBlock";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
-import { theme } from "@/theme/theme";
-import { ServiceRequest } from "@/models/ServiceRequest";
-import { SlideModal } from "@/components/ui/SlideModal";
 import RequestForm from "@/components/RequestForm";
 
 type Props = StaticScreenProps<{ request: ServiceRequest }>;

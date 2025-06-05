@@ -10,9 +10,8 @@ import Text from "@/components/ui/Text";
 import Field from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
-import { Feather } from "@expo/vector-icons";
-import { useState } from "react";
 import RoleSelector from "@/components/RoleSelector";
+import { User } from "@/models/User";
 
 export default function SignUp() {
   useRedirect();
@@ -21,16 +20,19 @@ export default function SignUp() {
 
   const { control, handleSubmit, ...signInForm } = useForm({
     defaultValues: {
-      nombre: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      role: "client",
+      name: "Bob bob",
+      email: "b@b.com",
+      password: "password",
+      confirmPassword: "password",
+      role: "client" as User["role"],
     },
   });
 
-  const onSubmit = handleSubmit(async () => {
-    Alert.alert("Información", "Registro exitoso", [{ text: "OK" }]);
+  const onSubmit = handleSubmit(async (data) => {
+    navigation.navigate("Auth", {
+      screen: "ProfileCreation",
+      params: { userData: data },
+    });
   });
 
   return (
@@ -49,7 +51,6 @@ export default function SignUp() {
           <Text fontFamily="bold" color="white" size={theme.fontSizes.xl + 5}>
             Regístrate Ahora
           </Text>
-
           <RoleSelector
             onChange={(role) => signInForm.setValue("role", role)}
           />
@@ -57,7 +58,7 @@ export default function SignUp() {
 
         <View style={{ width: "100%", gap: 20, marginTop: 20 }}>
           <Field
-            name="nombre"
+            name="name"
             label="Nombre"
             control={control}
             placeholder="Nombre"
@@ -104,10 +105,7 @@ export default function SignUp() {
         <View style={styles.loginAccountView}>
           <Text>¿Ya tienes una cuenta?</Text>
           <Pressable
-            onPress={() => {
-              console.log("Navigate to SignIn");
-              navigation.navigate("Auth", { screen: "SignIn" });
-            }}
+            onPress={() => navigation.navigate("Auth", { screen: "SignIn" })}
           >
             <Text
               style={styles.loginAccountText}

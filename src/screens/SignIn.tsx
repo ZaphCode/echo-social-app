@@ -12,6 +12,7 @@ import Field from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import useLogin from "@/hooks/auth/useLogin";
+import { DEV_USER_EMAIL, DEV_USER_PASSWORD } from "@/utils/constants";
 
 export default function SignIn() {
   useRedirect();
@@ -21,8 +22,8 @@ export default function SignIn() {
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
-      email: "zaph@fapi.com",
-      password: "menosfapi33",
+      email: __DEV__ ? DEV_USER_EMAIL : "",
+      password: __DEV__ ? DEV_USER_PASSWORD : "",
     },
   });
 
@@ -67,11 +68,7 @@ export default function SignIn() {
           icon="lock"
           secureTextEntry={true}
         />
-        <Button
-          title="Iniciar sesión"
-          style={{ marginTop: 10 }}
-          onPress={onSubmit}
-        />
+        <Button title="Ingresar" style={{ marginTop: 10 }} onPress={onSubmit} />
       </View>
       <View style={styles.createAccountView}>
         <Text>¿Aún no tienes cuenta?</Text>
