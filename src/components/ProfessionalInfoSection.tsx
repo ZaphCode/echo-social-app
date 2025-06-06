@@ -1,5 +1,6 @@
 import { View, StyleSheet, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
 
 import { theme } from "@/theme/theme";
 import { ProviderProfile } from "@/models/ProviderProfile";
@@ -9,8 +10,6 @@ import InfoRow from "./InfoRow";
 import Divider from "./ui/Divider";
 import useModal from "@/hooks/useModal";
 import EditProviderInfoView from "./EditProviderInfoView";
-import { useState } from "react";
-import { set } from "react-hook-form";
 
 interface Props {
   providerProfile: ProviderProfile;

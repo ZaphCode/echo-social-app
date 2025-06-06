@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 import NotificationList from "@/components/NotificationList";
+import Divider from "@/components/ui/Divider";
 
 export default function Notifications() {
   return (
@@ -11,6 +12,7 @@ export default function Notifications() {
       <Text fontFamily="bold" color="white" size={theme.fontSizes.xxl}>
         Notificaciones
       </Text>
+      <Divider />
       <NotificationList />
     </SafeAreaView>
   );
@@ -22,5 +24,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     height: "100%",
     paddingTop: theme.spacing.tabPT,
+    gap: theme.spacing.sm,
   },
 });

@@ -2,7 +2,6 @@ import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import { theme } from "@/theme/theme";
-import { useNavigation } from "@react-navigation/native";
 
 import { useAuthCtx } from "@/context/Auth";
 import Text from "@/components/ui/Text";
@@ -35,7 +34,11 @@ export default function Home() {
           setSelectedCategoryId={setSelectedCategoryId}
         />
         <Divider />
-        <ServiceList authUser={user} category={selectedCategoryId} />
+        <ServiceList
+          key={selectedCategoryId}
+          authUser={user}
+          category={selectedCategoryId}
+        />
       </SafeAreaView>
     </ScrollView>
   );

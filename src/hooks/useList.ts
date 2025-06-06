@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { ClientResponseError, RecordFullListOptions } from "pocketbase";
 
@@ -15,7 +15,7 @@ type QueryState = {
 
 export default function useList<K extends keyof PBCollectionsMap>(
   collection: K,
-  options?: RecordFullListOptions,
+  options?: RecordFullListOptions & { notRefreshOnFocus?: boolean },
   client: typeof pb | PBClient = pb
 ) {
   const [data, setData] = useState<PBCollectionsMap[K][]>([]);
@@ -43,12 +43,19 @@ export default function useList<K extends keyof PBCollectionsMap>(
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      console.log(`fetching ${collection} on focus`);
+  if (options?.notRefreshOnFocus) {
+    useEffect(() => {
+      console.log(`fetching ${collection} once`);
       getData();
-    }, [])
-  );
+    }, []);
+  } else {
+    useFocusEffect(
+      useCallback(() => {
+        console.log(`fetching ${collection} on focus`);
+        getData();
+      }, [collection])
+    );
+  }
 
   return [data, queryState, getData] as const;
 }

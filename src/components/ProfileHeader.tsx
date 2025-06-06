@@ -5,6 +5,7 @@ import { theme } from "@/theme/theme";
 import AvatarPicker from "@/components/forms/AvatarPicker";
 import { getFileUrl } from "@/utils/format";
 import { User } from "@/models/User";
+import useMutate from "@/hooks/useMutate";
 
 interface Props {
   user: User;
@@ -12,11 +13,34 @@ interface Props {
 }
 
 export default function ProfileHeader({ user, editable }: Props) {
+  const { update, mutationState } = useMutate("users");
+
+  const onAvatarChange = async (imgSrc: string) => {
+    if (!editable) return;
+
+    const formData = new FormData();
+
+    formData.append("avatar", {
+      uri: imgSrc,
+      type: "image/jpeg",
+      name: `avatar-${user.id}.jpg`,
+    });
+
+    const result = await update(user.id, formData);
+
+    if (mutationState.status === "error") {
+      console.error("Error updating avatar:", mutationState.error);
+      return;
+    }
+
+    console.log("Avatar updated successfully:", result);
+  };
+
   return (
     <View style={styles.header}>
       <AvatarPicker
         image={user.avatar && getFileUrl("users", user.id, user.avatar)}
-        onChange={(img) => console.log("Avatar changed:", img)}
+        onChange={onAvatarChange}
         viewOnly={!editable}
       />
       <Text fontFamily="bold" color="white" style={styles.userName}>

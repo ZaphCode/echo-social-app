@@ -4,15 +4,12 @@ import { useNavigation } from "@react-navigation/native";
 
 import { theme } from "@/theme/theme";
 import { useAuthCtx } from "@/context/Auth";
-import { SlideModal } from "@/components/ui/SlideModal";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import Text from "@/components/ui/Text";
 import Button from "@/components/ui/Button";
 import useLogout from "@/hooks/auth/useLogout";
 import ProfileConfigSection from "@/components/ProfileConfigSection";
 import useProfile from "@/hooks/useProfile";
-import useModal from "@/hooks/useModal";
-import EditProfileView from "@/components/EditProfileView";
 import ProfessionalInfoSection from "@/components/ProfessionalInfoSection";
 import ProfileHeader from "@/components/ProfileHeader";
 import PersonalInfoSection from "./PersonalInfoSection";
