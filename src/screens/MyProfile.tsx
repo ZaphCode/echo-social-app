@@ -1,13 +1,15 @@
 import { View, StyleSheet, Pressable, ScrollView } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 
 import { theme } from "@/theme/theme";
+import { getFileUrl } from "@/utils/format";
+import { useAuthCtx } from "@/context/Auth";
 import Text from "@/components/ui/Text";
 import Button from "@/components/ui/Button";
 import useLogout from "@/hooks/auth/useLogout";
-import { useNavigation } from "@react-navigation/native";
+import AvatarPicker from "@/components/forms/AvatarPicker";
 
 const userData = {
   nombre: "Omar Urquidez",
@@ -22,7 +24,11 @@ const userData = {
   },
 };
 
-export default function Profile() {
+export default function MyProfile() {
+  const { user } = useAuthCtx();
+
+  console.log("user in profile:", user);
+
   const logout = useLogout();
   const navigation = useNavigation();
 
@@ -39,43 +45,19 @@ export default function Profile() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <View style={styles.imageContainer}>
-            <Image
-              source={require("@Assets/balde.png")}
-              contentFit="fill"
-              style={styles.profileImage}
-            />
-            <Pressable
-              style={styles.editImageButton}
-              onPress={() => console.log("editar fotillo")}
-            >
-              <Feather name="camera" size={16} color={theme.colors.lightGray} />
-            </Pressable>
-          </View>
-
-          <Text fontFamily="bold" color="white" size={theme.fontSizes.xl}>
-            {userData.nombre}
+          <AvatarPicker
+            image={user.avatar && getFileUrl("users", user.id, user.avatar)}
+            onChange={(img) => console.log("Avatar changed:", img)}
+          />
+          <Text fontFamily="bold" color="white" style={styles.userName}>
+            {user.name}
           </Text>
           <View style={styles.roleContainer}>
-            <Feather
-              name="award"
-              size={16}
-              color="white"
-              style={{ marginRight: 5 }}
-            />
-            <Text style={styles.roleText}>{userData.role}</Text>
+            <Feather name="award" size={17} color="white" />
+            <Text color="white" size={theme.fontSizes.sm + 1}>
+              {user.role}
+            </Text>
           </View>
-        </View>
-
-        <View style={styles.statsContainer}>
-          <StatBox
-            value={userData.stats.serviciosCompletados}
-            label="Servicios Completados"
-          />
-          <View style={styles.statsDivider} />
-          <StatBox value={userData.stats.calificacion} label="Calificación" />
-          <View style={styles.statsDivider} />
-          <StatBox value={userData.stats.miembroDesde} label="Miembro Desde" />
         </View>
 
         <View style={styles.infoContainer}>
@@ -97,13 +79,17 @@ export default function Profile() {
                 size={18}
                 color={theme.colors.primaryBlue}
               />
-              <Text color="primaryBlue" style={styles.editButtonText}>
+              <Text
+                color={theme.colors.primaryBlue}
+                style={styles.editButtonText}
+              >
                 Editar
               </Text>
             </Pressable>
           </View>
 
-          <InfoRow icon="mail" label="Email" value={userData.email} />
+          <InfoRow icon="mail" label="Email" value={user.email} />
+          {/* //TODO: Change */}
           <InfoRow icon="phone" label="Teléfono" value={userData.telefono} />
           <InfoRow
             icon="map-pin"
@@ -209,33 +195,10 @@ const InfoRow = ({
   <View style={styles.infoRow}>
     <View style={styles.labelContainer}>
       <Feather name={icon} size={20} color={theme.colors.lightGray} />
-      <Text color="lightGray" style={styles.label}>
-        {label}
-      </Text>
+      <Text style={styles.label}>{label}</Text>
     </View>
     <Text color="white" style={styles.value}>
       {value}
-    </Text>
-  </View>
-);
-
-const StatBox = ({
-  value,
-  label,
-}: {
-  value: string | number;
-  label: string;
-}) => (
-  <View style={styles.statBox}>
-    <Text color="white" fontFamily="bold" size={theme.fontSizes.xl}>
-      {value.toString()}
-    </Text>
-    <Text
-      color="lightGray"
-      size={theme.fontSizes.sm}
-      style={{ textAlign: "center" }}
-    >
-      {label}
     </Text>
   </View>
 );
@@ -247,43 +210,26 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 18,
+    gap: 4,
     width: "100%",
   },
-  imageContainer: {
-    position: "relative",
-    marginBottom: 15,
-  },
-  profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: theme.colors.primaryBlue,
-  },
-  editImageButton: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: theme.colors.darkGray,
-    padding: 8,
-    borderRadius: 20,
-    borderWidth: 3,
-    borderColor: theme.colors.background,
+  userName: {
+    color: "white",
+    fontSize: theme.fontSizes.xl,
+    fontFamily: theme.fontFamily.bold,
+    textAlign: "center",
+    maxWidth: "80%",
   },
   roleContainer: {
-    backgroundColor: theme.colors.primaryBlue,
-    paddingHorizontal: 15,
-    paddingVertical: 5,
+    backgroundColor: theme.colors.secondaryBlue,
+    paddingHorizontal: 16,
+    gap: 5,
+    paddingVertical: 6,
     borderRadius: 20,
     marginTop: 5,
     flexDirection: "row",
     alignItems: "center",
-  },
-  roleText: {
-    color: "white",
-    fontSize: theme.fontSizes.sm,
-    fontWeight: "600",
   },
   statsContainer: {
     flexDirection: "row",

@@ -8,12 +8,12 @@ import { User } from "@/models/User";
 import { theme } from "@/theme/theme";
 import { validYearsRules } from "@/utils/validations";
 import Button from "@/components/ui/Button";
-import Field from "@/components/ui/Field";
+import Field from "@/components/forms/Field";
 import Divider from "@/components/ui/Divider";
 import useRegister from "@/hooks/auth/useRegister";
-import WeekDaysPicker from "@/components/WeekdaysPicker";
+import WeekDaysPicker from "@/components/forms/WeekdaysPicker";
 import Text from "@/components/ui/Text";
-import Dropdown from "@/components/ui/Dropdown";
+import Dropdown from "@/components/forms/Dropdown";
 import useList from "@/hooks/useList";
 
 type Props = StaticScreenProps<{

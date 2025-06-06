@@ -1,16 +1,16 @@
 import { Alert, KeyboardAvoidingView, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { StaticScreenProps } from "@react-navigation/native";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
 import Text from "@/components/ui/Text";
-import Field from "@/components/ui/Field";
+import Field from "@/components/forms/Field";
 import useList from "@/hooks/useList";
-import Dropdown from "@/components/ui/Dropdown";
+import Dropdown from "@/components/forms/Dropdown";
 import Button from "@/components/ui/Button";
-import PhotoPicker from "@/components/PhotoPicker";
+import PhotoPicker from "@/components/forms/PhotoPicker";
 import useMutate from "@/hooks/useMutate";
 import { validPriceRules } from "@/utils/validations";
 import { useAuthCtx } from "@/context/Auth";

@@ -8,10 +8,10 @@ import { ServiceRequest } from "@/models/ServiceRequest";
 import { Service } from "@/models/Service";
 import { useAuthCtx } from "@/context/Auth";
 import { validPriceRules } from "@/utils/validations";
-import Field from "./ui/Field";
-import Text from "./ui/Text";
-import Button from "./ui/Button";
-import DateField from "./ui/DateField";
+import Field from "./Field";
+import Text from "../ui/Text";
+import Button from "../ui/Button";
+import DateField from "./DateField";
 import useMutate from "@/hooks/useMutate";
 
 const DEVICE_HEIGHT = Dimensions.get("window").height;

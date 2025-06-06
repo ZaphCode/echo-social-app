@@ -10,10 +10,6 @@ export type ClientProfile = {
   zip: string;
   updated: string;
   created: string;
-  location?: {
-    lat: number;
-    lon: number;
-  };
 
   expand?: {
     user: User;

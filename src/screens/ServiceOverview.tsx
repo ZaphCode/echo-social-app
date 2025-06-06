@@ -13,7 +13,7 @@ import ServicePhotoCarousel from "@/components/ServicePhotoCarousel";
 import Button from "@/components/ui/Button";
 import Divider from "@/components/ui/Divider";
 import useList from "@/hooks/useList";
-import RequestForm from "@/components/RequestForm";
+import RequestForm from "@/components/forms/RequestForm";
 import ReviewSection from "@/components/ReviewSection";
 
 type Props = StaticScreenProps<{ service: Service }>;
@@ -36,7 +36,7 @@ export default function ServiceOverview({ route }: Props) {
   useEffect(() => {
     if (serviceRequests?.length > 0) {
       for (const request of serviceRequests) {
-        if (request.status === "COMPLETED") {
+        if (request.agreement_state === "FINISHED") {
           setAbleToReview(true);
           return;
         } else {

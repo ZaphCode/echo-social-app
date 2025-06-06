@@ -10,7 +10,7 @@ import ChatHeader from "@/components/ChatHeader";
 import NegotiationBlock from "@/components/NegotiationBlock";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
-import RequestForm from "@/components/RequestForm";
+import RequestForm from "@/components/forms/RequestForm";
 
 type Props = StaticScreenProps<{ request: ServiceRequest }>;
 

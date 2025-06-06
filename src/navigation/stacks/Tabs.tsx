@@ -1,10 +1,11 @@
+import { Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { IndexStack } from "./Index";
 import { Foundation, MaterialCommunityIcons } from "@expo/vector-icons";
-import Profile from "@/screens/Profile";
+
+import { IndexStack } from "./Index";
+import MyProfile from "@/screens/MyProfile";
 import Notifications from "@/screens/Notifications";
 import Requests from "@/screens/Requests";
-import { Platform } from "react-native";
 
 export const Tabs = createBottomTabNavigator({
   initialRouteName: "Home",
@@ -63,7 +64,7 @@ export const Tabs = createBottomTabNavigator({
       },
     },
     Profile: {
-      screen: Profile,
+      screen: MyProfile,
       options: {
         tabBarLabel: "Perfil",
         tabBarIcon: ({ color }) => (

@@ -37,6 +37,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             updated: pb.authStore.record!.updated,
             emailVisibility: pb.authStore.record!.emailVisibility,
             verified: pb.authStore.record!.verified,
+            location: pb.authStore.record!.location
+              ? pb.authStore.record!.location
+              : undefined,
           } as User,
           authenticated: true,
         }

@@ -100,11 +100,16 @@ export const validZipCodeRules: RegisterOptions = {
 };
 
 export const validYearsRules: RegisterOptions = {
-  required: "Los años son requeridos",
+  required: "Este campo es obligatorio",
+  pattern: {
+    value: /^[0-9]+$/,
+    message: "Solo se permiten números enteros",
+  },
   validate: (value) => {
-    const years = parseInt(value, 10);
-    if (isNaN(years)) return "Los años deben ser un número válido";
+    const num = parseInt(value, 10);
+    if (isNaN(num)) return "Debe ser un número";
+    if (num < 0) return "No puede ser negativo";
+    if (num > 100) return "¿Seguro que tienes más de 100 años de experiencia?";
     return true;
   },
-  valueAsNumber: true,
 };

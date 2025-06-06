@@ -1,13 +1,13 @@
 import { ScrollView, StyleSheet } from "react-native";
-import { theme } from "@/theme/theme";
-import Text from "@/components/ui/Text";
-
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useState } from "react";
+import { theme } from "@/theme/theme";
+
 import { useAuthCtx } from "@/context/Auth";
-import SearchBar from "@/components/SearchBar";
+import Text from "@/components/ui/Text";
 import CategoryList from "@/components/CategoryList";
 import ServiceList from "@/components/ServiceList";
-import { useState } from "react";
+import SearchBar from "@/components/forms/SearchBar";
 
 export default function Home() {
   const { user } = useAuthCtx();

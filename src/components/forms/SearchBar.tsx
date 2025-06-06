@@ -1,8 +1,8 @@
-import { View, Alert } from "react-native";
+import { View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { useForm } from "react-hook-form";
 
-import Field from "./ui/Field";
-import { useNavigation } from "@react-navigation/native";
+import Field from "./Field";
 
 export default function SearchBar() {
   const navigation = useNavigation();

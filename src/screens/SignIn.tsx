@@ -8,7 +8,7 @@ import { theme } from "@/theme/theme";
 import { validEmailRules } from "@/utils/validations";
 import { getDevPassword, getDevEmail } from "@/utils/constants";
 import Text from "@/components/ui/Text";
-import Field from "@/components/ui/Field";
+import Field from "@/components/forms/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import useLogin from "@/hooks/auth/useLogin";

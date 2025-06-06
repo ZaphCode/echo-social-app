@@ -1,10 +1,9 @@
+import { useState } from "react";
+
 import { pb } from "@/lib/pocketbase";
 import { User } from "@/models/User";
 import { logPBError } from "@/utils/testing";
 import useLogin from "./useLogin";
-import { useState } from "react";
-import { set } from "react-hook-form";
-import { loadAsync } from "expo-font";
 
 export default function useRegister() {
   const { login, loading: loginLoading } = useLogin();
@@ -19,6 +18,10 @@ export default function useRegister() {
     formData.append("passwordConfirm", params.confirmPassword);
     formData.append("role", params.role);
     formData.append("emailVisibility", true);
+
+    if (params.location) {
+      formData.append("location", JSON.stringify(params.location));
+    }
 
     if (params.avatar) {
       formData.append("avatar", {

@@ -7,10 +7,10 @@ import { useNavigation } from "@react-navigation/native";
 import { theme } from "@/theme/theme";
 import * as rules from "@/utils/validations";
 import Text from "@/components/ui/Text";
-import Field from "@/components/ui/Field";
+import Field from "@/components/forms/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
-import RoleSelector from "@/components/RoleSelector";
+import RoleSelector from "@/components/forms/RoleSelector";
 import { User } from "@/models/User";
 import { pb } from "@/lib/pocketbase";
 

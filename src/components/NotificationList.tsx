@@ -43,7 +43,7 @@ function EmptyListComponent() {
     <View style={styles.emptyListContainer}>
       <MaterialCommunityIcons
         name="bell-remove"
-        size={44}
+        size={32}
         color={theme.colors.lightGray}
       />
       <Text size={theme.fontSizes.lg}>No tienes notificaciones</Text>

@@ -1,6 +1,6 @@
 export type User = {
   id: string;
-  email?: string;
+  email: string;
   avatar: string;
   name: string;
   role: "client" | "provider";
@@ -8,4 +8,8 @@ export type User = {
   verified: boolean;
   created: string;
   updated: string;
+  location?: {
+    lat: number;
+    lon: number;
+  };
 };
