@@ -7,22 +7,36 @@ import Text from "@/components/ui/Text";
 import useList from "@/hooks/useList";
 import ServiceCard from "@/components/ServiceCard";
 import { pb } from "@/lib/pocketbase";
+import SearchBar from "@/components/forms/SearchBar";
+import Divider from "@/components/ui/Divider";
+import { useMemo, useState } from "react";
+import Loader from "@/components/ui/Loader";
 
 type Props = StaticScreenProps<{ search: string }>;
 
 export default function SearchService({ route }: Props) {
   const { user } = useAuthCtx();
-  const { search } = route.params;
+  const initialSearch = route.params.search;
+  const [search, setSearch] = useState(initialSearch);
 
-  const filter = pb.filter(
-    "name ~ {:search} || description ~ {:search} || category.name ~ {:search}",
-    { search }
-  );
+  const getFilter = (search: string) =>
+    pb.filter(
+      "name ~ {:search} || description ~ {:search} || category.name ~ {:search}",
+      { search }
+    );
 
   const [services, { status }, refetch] = useList("service", {
+    filter: getFilter(search),
     expand: "provider, category",
-    filter,
   });
+
+  async function handleSearch(newSearch: string) {
+    setSearch(newSearch);
+    await refetch({
+      filter: getFilter(newSearch),
+      expand: "provider, category",
+    });
+  }
 
   return (
     <View style={styles.container}>
@@ -35,15 +49,21 @@ export default function SearchService({ route }: Props) {
           color={theme.colors.primaryBlue}
         >{`"${search}"`}</Text>
       </View>
-      <FlatList
-        data={services}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ServiceCard authUser={user} service={item} />
-        )}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      <SearchBar onSearch={handleSearch} />
+      <Divider />
+      {status === "loading" ? (
+        <Loader />
+      ) : (
+        <FlatList
+          data={services}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <ServiceCard authUser={user} service={item} />
+          )}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 }

@@ -14,6 +14,7 @@ interface ButtonProps {
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
+  labelColor?: string;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -23,6 +24,7 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   loading,
   style,
+  labelColor = theme.colors.primaryBlue,
 }) => {
   return (
     <Pressable
@@ -33,7 +35,7 @@ const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator color={theme.colors.primaryBlue} />
       ) : (
-        <Text style={styles.text}>{title}</Text>
+        <Text style={[styles.text, { color: labelColor }]}>{title}</Text>
       )}
     </Pressable>
   );
@@ -49,7 +51,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   text: {
-    color: theme.colors.primaryBlue,
     fontFamily: theme.fontFamily.bold,
     fontSize: theme.fontSizes.md,
   },

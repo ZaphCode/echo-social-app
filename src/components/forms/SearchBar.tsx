@@ -4,7 +4,11 @@ import { useForm } from "react-hook-form";
 
 import Field from "./Field";
 
-export default function SearchBar() {
+type Props = {
+  onSearch?: (search: string) => void;
+};
+
+export default function SearchBar({ onSearch }: Props) {
   const navigation = useNavigation();
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -13,6 +17,8 @@ export default function SearchBar() {
   });
 
   const onSubmit = handleSubmit(({ search }) => {
+    if (onSearch) return onSearch(search);
+
     navigation.navigate("Main", {
       screen: "Tabs",
       params: {

@@ -1,19 +1,16 @@
-import { View, StyleSheet, ScrollView, Alert } from "react-native";
+import { StyleSheet, ScrollView, Alert } from "react-native";
 import { StaticScreenProps, useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Loc from "expo-location";
 
 import { User } from "@/models/User";
 import { theme } from "@/theme/theme";
-import * as rules from "@/utils/validations";
 import AvatarPicker from "@/components/forms/AvatarPicker";
-import Button from "@/components/ui/Button";
-import Field from "@/components/forms/Field";
-import Divider from "@/components/ui/Divider";
 import useRegister from "@/hooks/auth/useRegister";
 import useRedirect from "@/hooks/auth/useRedirect";
+import useLocation from "@/hooks/useLocation";
+import ProfileForm from "@/components/forms/ProfileForm";
 
 type Props = StaticScreenProps<{
   userData: {
@@ -27,8 +24,9 @@ type Props = StaticScreenProps<{
 }>;
 
 export default function ProfileCreation({ route }: Props) {
+  useRedirect();
   const { userData } = route.params;
-  const [avatarSrc, setAvatarSrc] = useState<string>();
+  const [avatar, setAvatar] = useState<string>();
   const navigation = useNavigation();
 
   const { control, handleSubmit, setValue } = useForm({
@@ -42,51 +40,27 @@ export default function ProfileCreation({ route }: Props) {
   });
 
   const { registerClient, loading } = useRegister();
-
-  const [locationCords, setLocationCords] = useState<Loc.LocationObject>();
-  const [locationData, setLocationData] =
-    useState<Loc.LocationGeocodedAddress>();
+  const { coords, address } = useLocation(true);
 
   useEffect(() => {
-    getLocation();
-  }, []);
-
-  useEffect(() => {
-    if (locationData) {
-      setValue("city", locationData.city || "");
-      setValue("state", locationData.region || "");
-      setValue("zip", locationData.postalCode || "");
+    if (address) {
+      setValue("city", address.city || "");
+      setValue("state", address.region || "");
+      setValue("zip", address.postalCode || "");
     }
-  }, [locationData]);
-
-  const getLocation = async () => {
-    const { status } = await Loc.requestForegroundPermissionsAsync();
-
-    if (status !== "granted") {
-      Alert.alert("Permiso denegado", "Se requiere acceso a la ubicación.");
-      return;
-    }
-
-    const location = await Loc.getCurrentPositionAsync({});
-
-    setLocationCords(location);
-
-    const { latitude, longitude } = location.coords;
-
-    const address = await Loc.reverseGeocodeAsync({ latitude, longitude });
-
-    setLocationData(address[0]);
-  };
+  }, [address]);
 
   const onContinue = handleSubmit(async (profileData) => {
     const allData = {
       ...userData,
       ...profileData,
-      avatar: avatarSrc,
-      location: locationCords && {
-        lat: locationCords.coords.latitude,
-        lon: locationCords.coords.longitude,
-      },
+      avatar,
+      location: coords
+        ? {
+            lat: coords.latitude,
+            lon: coords.longitude,
+          }
+        : undefined,
     };
 
     if (userData.role === "provider") {
@@ -109,50 +83,13 @@ export default function ProfileCreation({ route }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        <AvatarPicker onChange={setAvatarSrc} />
-        <View style={styles.fieldsContainer}>
-          <Field
-            name="phone"
-            control={control}
-            label="Teléfono"
-            placeholder="+52 123 456 7890"
-            keyboardType="numeric"
-            rules={rules.validPhoneRules}
-          />
-          <Divider />
-          <Field
-            name="address"
-            control={control}
-            label="Dirección"
-            placeholder="Calle Reforma, Número 123"
-          />
-          <Field
-            name="city"
-            control={control}
-            label="Ciudad"
-            placeholder="Ciudad de México"
-          />
-          <Field
-            name="state"
-            control={control}
-            label="Estado"
-            placeholder="Ciudad de México"
-          />
-          <Field
-            name="zip"
-            control={control}
-            label="Código Postal"
-            placeholder="12345"
-            keyboardType="numeric"
-            rules={rules.validZipCodeRules}
-          />
-          <Button
-            title={userData.role === "provider" ? "Continuar" : "Registrar"}
-            onPress={onContinue}
-            loading={loading}
-            style={{ marginTop: 18 }}
-          />
-        </View>
+        <AvatarPicker onChange={setAvatar} />
+        <ProfileForm
+          submitBtnLabel="Continuar"
+          control={control}
+          onContinue={onContinue}
+          loading={loading}
+        />
       </ScrollView>
     </SafeAreaView>
   );

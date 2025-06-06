@@ -5,11 +5,12 @@ import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 
 interface Props {
-  image?: string;
   onChange: (uri: string) => void;
+  image?: string;
+  viewOnly?: boolean;
 }
 
-export default function AvatarPicker({ image, onChange }: Props) {
+export default function AvatarPicker({ image, viewOnly, onChange }: Props) {
   const [img, setImg] = useState(image);
 
   const pickImage = async () => {
@@ -36,7 +37,7 @@ export default function AvatarPicker({ image, onChange }: Props) {
 
   return (
     <View style={styles.center}>
-      <Pressable onPress={pickImage}>
+      <Pressable onPress={pickImage} disabled={viewOnly}>
         {img ? (
           <Image
             source={{ uri: img }}
@@ -50,9 +51,11 @@ export default function AvatarPicker({ image, onChange }: Props) {
             <Feather name="user" size={48} color={theme.colors.lightGray} />
           </View>
         )}
-        <View style={styles.iconContainer}>
-          <Feather name="camera" size={18} color={theme.colors.primaryBlue} />
-        </View>
+        {!viewOnly && (
+          <View style={styles.iconContainer}>
+            <Feather name="camera" size={18} color={theme.colors.primaryBlue} />
+          </View>
+        )}
       </Pressable>
     </View>
   );

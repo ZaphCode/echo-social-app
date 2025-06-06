@@ -29,7 +29,10 @@ export default function useList<K extends keyof PBCollectionsMap>(
     try {
       const res = await client
         .collection(collection)
-        .getFullList<PBCollectionsMap[K]>(opts || options);
+        .getFullList<PBCollectionsMap[K]>(opts ? opts : options);
+
+      if (opts) console.log("Refetching with options:", opts);
+
       setData(res);
       setQueryState({ status: "success", error: null });
     } catch (error) {

@@ -1,11 +1,4 @@
-import {
-  View,
-  Image,
-  StyleSheet,
-  Dimensions,
-  Pressable,
-  Alert,
-} from "react-native";
+import { View, Image, StyleSheet, Dimensions, Pressable } from "react-native";
 import React from "react";
 import Text from "./ui/Text";
 import { Service } from "@/models/Service";
@@ -25,7 +18,7 @@ type Props = {
 export default function ServiceCard({ service, authUser }: Props) {
   const navigation = useNavigation();
 
-  const isProvider = authUser.id === service.provider;
+  const isOwnerProvider = authUser.id === service.provider;
 
   const handlePress = () => {
     navigation.navigate("Main", {
@@ -41,15 +34,7 @@ export default function ServiceCard({ service, authUser }: Props) {
   };
 
   return (
-    <Pressable
-      onPress={handlePress}
-      style={[
-        styles.card,
-        isProvider && {
-          backgroundColor: theme.colors.darkGray,
-        },
-      ]}
-    >
+    <Pressable onPress={handlePress} style={[styles.card]}>
       <Image
         source={{
           uri:
@@ -58,7 +43,7 @@ export default function ServiceCard({ service, authUser }: Props) {
         }}
         style={styles.image}
       />
-      {isProvider && (
+      {isOwnerProvider && (
         <Pressable
           style={styles.editButton}
           onPress={() =>
@@ -68,8 +53,8 @@ export default function ServiceCard({ service, authUser }: Props) {
             })
           }
         >
-          <Text color="white">Edit</Text>
-          <Feather name="edit" size={18} color="white" />
+          <Text color={theme.colors.primaryBlue}>Edit</Text>
+          <Feather name="edit" size={18} color={theme.colors.primaryBlue} />
         </Pressable>
       )}
 
@@ -77,8 +62,25 @@ export default function ServiceCard({ service, authUser }: Props) {
         <Text style={styles.title}>{service.name}</Text>
         <View style={styles.footer}>
           <View style={styles.userRow}>
-            <Feather name="user" size={14} color={theme.colors.lightGray} />
-            <Text style={styles.username}>{service.expand!.provider.name}</Text>
+            {isOwnerProvider ? (
+              <>
+                <Feather
+                  name="user"
+                  size={14}
+                  color={theme.colors.primaryBlue}
+                />
+                <Text color={theme.colors.primaryBlue} style={styles.username}>
+                  Tú
+                </Text>
+              </>
+            ) : (
+              <>
+                <Feather name="user" size={14} color={theme.colors.lightGray} />
+                <Text style={styles.username}>
+                  {service.expand!.provider.name}
+                </Text>
+              </>
+            )}
           </View>
           <Text style={styles.price}>{"$" + service.base_price}</Text>
         </View>
@@ -118,7 +120,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   username: {
-    color: theme.colors.lightGray,
     fontFamily: theme.fontFamily.regular,
     fontSize: theme.fontSizes.sm,
   },
@@ -133,7 +134,7 @@ const styles = StyleSheet.create({
     gap: 5,
     top: 10,
     right: 10,
-    backgroundColor: theme.colors.primaryBlue,
+    backgroundColor: theme.colors.secondaryBlue,
     padding: theme.spacing.sm,
     borderRadius: 50,
   },
