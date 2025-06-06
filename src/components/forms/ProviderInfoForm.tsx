@@ -11,6 +11,7 @@ import useList from "@/hooks/useList";
 type Props = {
   control: any;
   submitBtnLabel: string;
+  loading?: boolean;
   onContinue: () => void;
 };
 
@@ -18,6 +19,7 @@ export default function ProviderInfoForm({
   control,
   onContinue,
   submitBtnLabel,
+  loading,
 }: Props) {
   const [categories, { status }] = useList("service_category", {});
 
@@ -61,7 +63,7 @@ export default function ProviderInfoForm({
       />
       <Button
         title={submitBtnLabel}
-        loading={status === "loading"}
+        loading={status === "loading" || loading}
         onPress={onContinue}
         style={{ marginTop: 2 }}
       />

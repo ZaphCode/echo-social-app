@@ -9,6 +9,8 @@ import InfoRow from "./InfoRow";
 import Divider from "./ui/Divider";
 import useModal from "@/hooks/useModal";
 import EditProviderInfoView from "./EditProviderInfoView";
+import { useState } from "react";
+import { set } from "react-hook-form";
 
 interface Props {
   providerProfile: ProviderProfile;
@@ -16,23 +18,25 @@ interface Props {
 }
 
 const weekDays = [
+  { key: "SUN", label: "Dom" },
   { key: "MON", label: "Lun" },
   { key: "TUE", label: "Mar" },
   { key: "WED", label: "Mié" },
   { key: "THU", label: "Jue" },
   { key: "FRI", label: "Vie" },
   { key: "SAT", label: "Sáb" },
-  { key: "SUN", label: "Dom" },
 ];
 
 export default function ProfessionalInfoSection({
   providerProfile,
   editable,
 }: Props) {
-  const specialty = providerProfile.expand?.specialty?.name;
-  const rating = 0;
-
   const [modalVisible, openModal, closeModal] = useModal();
+  const [optimisticProfile, setOptimisticProfile] = useState(providerProfile);
+
+  const { available_days, jobs_done, experience_years } = optimisticProfile;
+  const specialty = optimisticProfile.expand?.specialty?.name;
+  const rating = 0; // TODO: Replace with actual rating logic
 
   return (
     <View style={styles.block}>
@@ -65,7 +69,7 @@ export default function ProfessionalInfoSection({
         </View>
         <View style={styles.daysRow}>
           {weekDays.map((d) => {
-            const selected = providerProfile.available_days?.includes(d.key);
+            const selected = available_days?.includes(d.key);
             return (
               <View key={d.key} style={styles.dayCol}>
                 {selected ? (
@@ -92,12 +96,12 @@ export default function ProfessionalInfoSection({
       <View style={styles.numbersRow}>
         <StatBox
           label="Experiencia"
-          value={`${providerProfile.experience_years} años`}
+          value={`${experience_years} años`}
           icon="award"
         />
         <StatBox
           label="Servicios"
-          value={providerProfile.jobs_done}
+          value={jobs_done}
           icon="check-circle"
           iconColor={theme.colors.successGreen}
         />
@@ -110,7 +114,13 @@ export default function ProfessionalInfoSection({
       </View>
       {editable && (
         <SlideModal visible={modalVisible} onClose={closeModal}>
-          <EditProviderInfoView providerProfile={providerProfile} />
+          <EditProviderInfoView
+            providerProfile={optimisticProfile}
+            onSuccess={(data) => {
+              setOptimisticProfile(data);
+              closeModal();
+            }}
+          />
         </SlideModal>
       )}
     </View>

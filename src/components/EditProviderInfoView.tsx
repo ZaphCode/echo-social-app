@@ -1,16 +1,21 @@
-import { StyleSheet, View } from "react-native";
-
-import ProviderInfoForm from "./forms/ProviderInfoForm";
+import { Alert, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
+
+import { theme } from "@/theme/theme";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import Text from "./ui/Text";
-import { theme } from "@/theme/theme";
+import ProviderInfoForm from "./forms/ProviderInfoForm";
+import useMutate from "@/hooks/useMutate";
 
 type Props = {
   providerProfile: ProviderProfile;
+  onSuccess?: (profile: ProviderProfile) => void;
 };
 
-export default function EditProviderInfoView({ providerProfile }: Props) {
+export default function EditProviderInfoView({
+  providerProfile,
+  onSuccess,
+}: Props) {
   const { control, handleSubmit } = useForm({
     defaultValues: {
       description: providerProfile.description,
@@ -20,8 +25,33 @@ export default function EditProviderInfoView({ providerProfile }: Props) {
     },
   });
 
+  const { update, mutationState } = useMutate("provider_profile", {
+    expand: "specialty",
+  });
+
   const onContinue = handleSubmit(async (data) => {
-    console.log("Submitting provider info:", data);
+    const result = await update(providerProfile.id, {
+      ...data,
+      experience_years: parseInt(data.experience_years),
+    });
+
+    // TODO: Proper error handling
+    if (mutationState.status === "error") {
+      console.error("Error updating profile:", mutationState.error);
+      return Alert.alert(
+        "Error",
+        "No se pudieron guardar los cambios. Intente nuevamente."
+      );
+    }
+
+    if (!result) {
+      return Alert.alert(
+        "Error",
+        "No se pudieron guardar los cambios. Intente nuevamente."
+      );
+    }
+
+    onSuccess?.(result);
   });
 
   return (
@@ -33,6 +63,7 @@ export default function EditProviderInfoView({ providerProfile }: Props) {
       </View>
       <ProviderInfoForm
         control={control}
+        loading={mutationState.status === "loading"}
         onContinue={onContinue}
         submitBtnLabel="Guardar Cambios"
       />
