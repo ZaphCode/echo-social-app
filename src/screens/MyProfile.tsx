@@ -52,7 +52,9 @@ export default function MyProfile() {
         showsVerticalScrollIndicator={false}
       >
         <ProfileHeader user={user} editable />
+
         <PersonalInfoSection user={user} profile={profile} editable />
+
         {user.role === "provider" && (
           <ProfessionalInfoSection
             providerProfile={profile as ProviderProfile}
@@ -60,6 +62,7 @@ export default function MyProfile() {
           />
         )}
         <ProfileConfigSection />
+
         <Button
           title="Cerrar Sesión"
           style={styles.logoutButton}

@@ -10,6 +10,7 @@ import InfoRow from "@/components/InfoRow";
 import Text from "@/components/ui/Text";
 import EditProfileView from "@/components/EditProfileView";
 import useModal from "@/hooks/useModal";
+import { useState } from "react";
 
 interface Props {
   user: User;
@@ -23,6 +24,9 @@ export default function PersonalInfoSection({
   editable,
 }: Props) {
   const [modalVisible, openModal, closeModal] = useModal();
+  const [optimisticProfile, setOptimisticProfile] = useState(profile);
+
+  const { address, phone, city, state, zip } = optimisticProfile;
 
   return (
     <View style={styles.infoContainer}>
@@ -46,15 +50,22 @@ export default function PersonalInfoSection({
         )}
       </View>
       <InfoRow icon="mail" label="Email" value={user.email} />
-      <InfoRow icon="phone" label="Teléfono" value={profile.phone} />
+      <InfoRow icon="phone" label="Teléfono" value={phone} />
       <InfoRow
         icon="map-pin"
         label="Dirección"
-        value={`${profile.address}, ${profile.city}, ${profile.state}, CP ${profile.zip}`}
+        value={`${address}, ${city}, ${state}, CP ${zip}`}
       />
       {editable && (
         <SlideModal visible={modalVisible} onClose={closeModal}>
-          <EditProfileView profile={profile} />
+          <EditProfileView
+            profile={optimisticProfile}
+            userRole={user.role}
+            onSuccess={(newData) => {
+              setOptimisticProfile(newData);
+              closeModal();
+            }}
+          />
         </SlideModal>
       )}
     </View>
