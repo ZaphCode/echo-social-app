@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   chipSelected: {
-    backgroundColor: theme.colors.darkerGray,
+    backgroundColor: theme.colors.secondaryBlue,
   },
   chipText: {
     color: theme.colors.lightGray,

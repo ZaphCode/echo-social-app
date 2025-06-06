@@ -6,15 +6,10 @@ import { Feather } from "@expo/vector-icons";
 
 import { User } from "@/models/User";
 import { theme } from "@/theme/theme";
-import { validYearsRules } from "@/utils/validations";
-import Button from "@/components/ui/Button";
-import Field from "@/components/forms/Field";
 import Divider from "@/components/ui/Divider";
 import useRegister from "@/hooks/auth/useRegister";
-import WeekDaysPicker from "@/components/forms/WeekdaysPicker";
 import Text from "@/components/ui/Text";
-import Dropdown from "@/components/forms/Dropdown";
-import useList from "@/hooks/useList";
+import ProviderInfoForm from "@/components/forms/ProviderInfoForm";
 
 type Props = StaticScreenProps<{
   userData: {
@@ -36,6 +31,8 @@ type Props = StaticScreenProps<{
 export default function ProviderData({ route }: Props) {
   const { userData } = route.params;
 
+  const { registerProvider, loading } = useRegister();
+
   const { control, handleSubmit } = useForm({
     defaultValues: {
       description: "",
@@ -44,10 +41,6 @@ export default function ProviderData({ route }: Props) {
       experience_years: 0,
     },
   });
-
-  const [categories, { status }] = useList("service_category", {});
-
-  const { registerProvider, loading } = useRegister();
 
   const onContinue = handleSubmit(async (data) => {
     const error = await registerProvider({
@@ -82,45 +75,10 @@ export default function ProviderData({ route }: Props) {
             </Text>
             <Divider />
           </View>
-          <Field
-            name="description"
+          <ProviderInfoForm
             control={control}
-            label="Descripción personal"
-            placeholder="Escribe una breve descripción"
-          />
-          {status === "loading" ? (
-            <Text>Loading categories...</Text>
-          ) : status === "error" ? (
-            <Text>Error loading categories</Text>
-          ) : (
-            <Dropdown
-              control={control}
-              name="specialty"
-              icon="tag"
-              label="Especialidad"
-              options={categories}
-              getLabel={(c) => c.name}
-              getValue={(c) => c.id}
-            />
-          )}
-          <Field
-            name="experience_years"
-            control={control}
-            label="Años de experiencia"
-            placeholder="Ej: 5"
-            rules={validYearsRules}
-          />
-          <WeekDaysPicker
-            control={control}
-            name="available_days"
-            label="Días disponibles"
-            rules={{ required: "Selecciona al menos un día" }}
-          />
-          <Button
-            title="Registrar"
-            loading={loading}
-            onPress={onContinue}
-            style={{ marginTop: 2 }}
+            onContinue={onContinue}
+            submitBtnLabel="Registrar"
           />
         </View>
       </View>

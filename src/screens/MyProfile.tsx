@@ -22,8 +22,6 @@ export default function MyProfile() {
   const logout = useLogout();
   const navigation = useNavigation();
   const [profile, profileState] = useProfile(user, { expand: "specialty" });
-  const [personalMVisible, openPersonalM, closePersonalM] = useModal();
-  const [profMVisible, openProfM, closeProfM] = useModal();
 
   const onLogout = async () => {
     await logout();
@@ -69,9 +67,6 @@ export default function MyProfile() {
           onPress={onLogout}
         />
       </ScrollView>
-      <SlideModal visible={personalMVisible} onClose={closePersonalM}>
-        <EditProfileView profile={profile} />
-      </SlideModal>
     </SafeAreaView>
   );
 }

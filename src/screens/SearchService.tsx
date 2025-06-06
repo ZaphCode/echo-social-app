@@ -46,6 +46,9 @@ export default function SearchService({ route }: Props) {
         </Text>
         <Text
           size={theme.fontSizes.xl}
+          style={{ flexShrink: 1 }}
+          numberOfLines={1}
+          fontFamily="bold"
           color={theme.colors.primaryBlue}
         >{`"${search}"`}</Text>
       </View>

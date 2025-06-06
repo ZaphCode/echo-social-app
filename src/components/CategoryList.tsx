@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     backgroundColor: theme.colors.darkerGray,
-    marginVertical: 8,
+
     marginRight: 16,
     borderRadius: 8,
   },

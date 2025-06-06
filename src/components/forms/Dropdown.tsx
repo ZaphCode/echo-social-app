@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.darkGray,
     borderRadius: 12,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: 2,
+    paddingVertical: 4.5,
   },
   icon: {
     marginRight: 10,

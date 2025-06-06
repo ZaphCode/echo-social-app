@@ -5,8 +5,11 @@ import { theme } from "@/theme/theme";
 import { User } from "@/models/User";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import { ClientProfile } from "@/models/ClientProfile";
-import Text from "@/components/ui/Text";
+import { SlideModal } from "@/components/ui/SlideModal";
 import InfoRow from "@/components/InfoRow";
+import Text from "@/components/ui/Text";
+import EditProfileView from "@/components/EditProfileView";
+import useModal from "@/hooks/useModal";
 
 interface Props {
   user: User;
@@ -19,6 +22,8 @@ export default function PersonalInfoSection({
   profile,
   editable,
 }: Props) {
+  const [modalVisible, openModal, closeModal] = useModal();
+
   return (
     <View style={styles.infoContainer}>
       <View style={styles.sectionHeader}>
@@ -29,10 +34,7 @@ export default function PersonalInfoSection({
           </Text>
         </View>
         {editable && (
-          <Pressable
-            style={styles.editButton}
-            onPress={() => console.log("Edit Personal Info")}
-          >
+          <Pressable style={styles.editButton} onPress={openModal}>
             <Feather name="edit-2" size={18} color={theme.colors.primaryBlue} />
             <Text
               color={theme.colors.primaryBlue}
@@ -50,6 +52,11 @@ export default function PersonalInfoSection({
         label="Dirección"
         value={`${profile.address}, ${profile.city}, ${profile.state}, CP ${profile.zip}`}
       />
+      {editable && (
+        <SlideModal visible={modalVisible} onClose={closeModal}>
+          <EditProfileView profile={profile} />
+        </SlideModal>
+      )}
     </View>
   );
 }

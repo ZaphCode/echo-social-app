@@ -9,6 +9,7 @@ import Text from "@/components/ui/Text";
 import CategoryList from "@/components/CategoryList";
 import ServiceList from "@/components/ServiceList";
 import SearchBar from "@/components/forms/SearchBar";
+import Divider from "@/components/ui/Divider";
 
 export default function Home() {
   const { user } = useAuthCtx();
@@ -33,6 +34,7 @@ export default function Home() {
           selectedCategoryId={selectedCategoryId}
           setSelectedCategoryId={setSelectedCategoryId}
         />
+        <Divider />
         <ServiceList authUser={user} category={selectedCategoryId} />
       </SafeAreaView>
     </ScrollView>

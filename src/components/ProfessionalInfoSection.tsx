@@ -3,9 +3,12 @@ import { Feather } from "@expo/vector-icons";
 
 import { theme } from "@/theme/theme";
 import { ProviderProfile } from "@/models/ProviderProfile";
+import { SlideModal } from "./ui/SlideModal";
 import Text from "@/components/ui/Text";
 import InfoRow from "./InfoRow";
 import Divider from "./ui/Divider";
+import useModal from "@/hooks/useModal";
+import EditProviderInfoView from "./EditProviderInfoView";
 
 interface Props {
   providerProfile: ProviderProfile;
@@ -27,7 +30,9 @@ export default function ProfessionalInfoSection({
   editable,
 }: Props) {
   const specialty = providerProfile.expand?.specialty?.name;
-  const rating = 0; // Aquí pon tu lógica real si tienes rating
+  const rating = 0;
+
+  const [modalVisible, openModal, closeModal] = useModal();
 
   return (
     <View style={styles.block}>
@@ -39,10 +44,7 @@ export default function ProfessionalInfoSection({
           </Text>
         </View>
         {editable && (
-          <Pressable
-            style={styles.editButton}
-            onPress={() => console.log("Edit Personal Info")}
-          >
+          <Pressable style={styles.editButton} onPress={openModal}>
             <Feather name="edit-2" size={16} color={theme.colors.primaryBlue} />
             <Text
               color={theme.colors.primaryBlue}
@@ -53,11 +55,9 @@ export default function ProfessionalInfoSection({
           </Pressable>
         )}
       </View>
-
       {specialty && (
         <InfoRow label="Especialidad" value={specialty} icon="briefcase" />
       )}
-
       <View style={{ marginTop: 12, marginBottom: 12 }}>
         <View style={styles.labelContainer}>
           <Feather name={"calendar"} size={20} color={theme.colors.lightGray} />
@@ -88,9 +88,7 @@ export default function ProfessionalInfoSection({
           })}
         </View>
       </View>
-
       <Divider size={3} />
-
       <View style={styles.numbersRow}>
         <StatBox
           label="Experiencia"
@@ -110,6 +108,11 @@ export default function ProfessionalInfoSection({
           iconColor="#ffc700"
         />
       </View>
+      {editable && (
+        <SlideModal visible={modalVisible} onClose={closeModal}>
+          <EditProviderInfoView providerProfile={providerProfile} />
+        </SlideModal>
+      )}
     </View>
   );
 }
