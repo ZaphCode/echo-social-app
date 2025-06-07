@@ -1,21 +1,63 @@
-import { View, Text, Modal, StyleSheet } from "react-native";
-import React from "react";
+import { Modal, StyleSheet, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+
 import { theme } from "@/theme/theme";
+import { useAlertCtx } from "@/context/Alert";
+import Text from "./Text";
 import Button from "./Button";
 
-type Props = {
-  visible: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-};
+export function AlertModal() {
+  const { hide, visible, icon, message, title, iconColor, onConfirm } =
+    useAlertCtx();
 
-export default function AlertModal({ visible, children, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.modal}>
-          {children}
-          <Button style={styles.button} onPress={onClose} title="Cerrar" />
+          <MaterialCommunityIcons
+            name={icon}
+            size={54}
+            color={iconColor || theme.colors.primaryBlue}
+            style={{ marginBottom: 10 }}
+          />
+          <Text
+            fontFamily="bold"
+            size={theme.fontSizes.lg}
+            color="white"
+            style={{ marginBottom: 4, textAlign: "center" }}
+          >
+            {title}
+          </Text>
+          <Text
+            color={theme.colors.lightGray}
+            size={theme.fontSizes.md}
+            style={{ textAlign: "center", marginBottom: 12 }}
+          >
+            {message}
+          </Text>
+          {onConfirm ? (
+            <View style={styles.buttonRow}>
+              <Button
+                style={{
+                  width: "50%",
+                  backgroundColor: theme.colors.darkGray,
+                }}
+                title={"Cancelar"}
+                labelColor={theme.colors.lightGray}
+                onPress={hide}
+              />
+              <Button
+                style={{ width: "50%" }}
+                title={"Confirmar"}
+                onPress={() => {
+                  onConfirm();
+                  hide();
+                }}
+              />
+            </View>
+          ) : (
+            <Button style={{ width: "80%" }} title="Aceptar" onPress={hide} />
+          )}
         </View>
       </View>
     </Modal>
@@ -31,15 +73,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modal: {
-    width: "90%",
+    width: "92%",
     backgroundColor: theme.colors.darkerGray,
     padding: theme.spacing.lg + 4,
     gap: theme.spacing.sm,
-    borderRadius: theme.spacing.sm,
+    borderRadius: theme.spacing.md,
     elevation: 5,
     alignItems: "center",
   },
   button: {
-    minWidth: "100%",
+    flex: 1,
+    minWidth: 120,
+    marginHorizontal: 6,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: 10,
+    marginTop: 12,
   },
 });

@@ -5,6 +5,8 @@ import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { AuthProvider } from "./src/context/Auth";
 import { useFonts } from "expo-font";
+import { AlertProvider } from "@/context/Alert";
+import { AlertModal } from "@/components/ui/AlertModal";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,8 +28,11 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <StatusBar style="light" />
-      <Navigation onReady={() => SetAppIsReady(true)} />
+      <AlertProvider>
+        <StatusBar style="light" />
+        <Navigation onReady={() => SetAppIsReady(true)} />
+        <AlertModal />
+      </AlertProvider>
     </AuthProvider>
   );
 }

@@ -10,6 +10,7 @@ import * as NS from "@/utils/negotiation";
 import Text from "./ui/Text";
 import useSubscription from "@/hooks/useSubscription";
 import useMutate from "@/hooks/useMutate";
+import { useAlertCtx } from "@/context/Alert";
 
 const PERSON_ICON_SIZE = 38;
 
@@ -20,6 +21,7 @@ type Props = {
 
 export default function NegotiationBlock({ request, openModalFn }: Props) {
   const { user: authUser } = useAuthCtx();
+  const { show } = useAlertCtx();
 
   const [currentRequestData, setCurrentRequestData] = useState(request);
 
@@ -156,7 +158,15 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
       </View>
       <View style={styles.buttonsContainer}>
         <Pressable
-          onPress={handleAccept}
+          onPress={() =>
+            show({
+              title: "Aceptar Propuesta",
+              message: "¿Estás seguro de aceptar esta propuesta?",
+              icon: "check-circle",
+              iconColor: theme.colors.successGreen,
+              onConfirm: handleAccept,
+            })
+          }
           style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
           disabled={statusBtnDisabled}
         >
@@ -171,7 +181,15 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
         </Pressable>
         <Pressable
           disabled={statusBtnDisabled}
-          onPress={handleReject}
+          onPress={() =>
+            show({
+              title: "Rechazar Propuesta",
+              message: "¿Estás seguro de rechazar esta propuesta?",
+              icon: "close-circle",
+              iconColor: theme.colors.redError,
+              onConfirm: handleReject,
+            })
+          }
           style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
         >
           <Text color={theme.colors.redError}>Rechazar</Text>

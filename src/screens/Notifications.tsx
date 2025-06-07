@@ -5,8 +5,12 @@ import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 import NotificationList from "@/components/NotificationList";
 import Divider from "@/components/ui/Divider";
+import { useAlertCtx } from "@/context/Alert";
+import Button from "@/components/ui/Button";
 
 export default function Notifications() {
+  const { show } = useAlertCtx();
+
   return (
     <SafeAreaView style={styles.container}>
       <Text fontFamily="bold" color="white" size={theme.fontSizes.xxl}>
