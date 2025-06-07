@@ -11,7 +11,7 @@ import Button from "./ui/Button";
 
 export default function RequestsList() {
   const [serviceRequests, { status }] = useList("service_request", {
-    expand: "service.provider, client",
+    expand: "service, service.provider, client",
     sort: "-updated",
   });
 
@@ -26,7 +26,7 @@ export default function RequestsList() {
 
   return (
     <FlatList
-      data={[] as any[]}
+      data={serviceRequests}
       renderItem={({ item }) => <RequestCard request={item} />}
       keyExtractor={(item) => item.id}
       showsVerticalScrollIndicator={false}

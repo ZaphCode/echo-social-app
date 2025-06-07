@@ -5,7 +5,7 @@ import Text from "@/components/ui/Text";
 import { theme } from "@/theme/theme";
 
 interface Props {
-  icon: any;
+  icon: keyof typeof Feather.glyphMap;
   label: string;
   value: string | number;
 }

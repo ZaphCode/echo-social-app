@@ -13,6 +13,8 @@ import useProfile from "@/hooks/useProfile";
 import ProfessionalInfoSection from "@/components/ProfessionalInfoSection";
 import ProfileHeader from "@/components/ProfileHeader";
 import PersonalInfoSection from "./PersonalInfoSection";
+import Loader from "@/components/ui/Loader";
+import { ProfileError } from "@/components/ProfileError";
 
 export default function MyProfile() {
   const { user } = useAuthCtx();
@@ -27,16 +29,16 @@ export default function MyProfile() {
 
   if (profileState.status === "loading") {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={theme.colors.primaryBlue} />
+      <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
+        <Loader />
       </SafeAreaView>
     );
   }
 
-  if (!profile) {
+  if (!profile || profileState.status === "error") {
     return (
       <SafeAreaView style={styles.container}>
-        <Text color="white">No se encontró el perfil.</Text>
+        <ProfileError />
       </SafeAreaView>
     );
   }

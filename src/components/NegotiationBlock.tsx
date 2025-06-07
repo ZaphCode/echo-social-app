@@ -6,12 +6,10 @@ import { theme } from "@/theme/theme";
 import { formatDate } from "@/utils/format";
 import { useAuthCtx } from "@/context/Auth";
 import { ServiceRequest } from "@/models/ServiceRequest";
-import { bothAgreed, clientAgreed, providerAgreed } from "@/utils/negotiation";
+import * as NS from "@/utils/negotiation";
 import Text from "./ui/Text";
 import useSubscription from "@/hooks/useSubscription";
 import useMutate from "@/hooks/useMutate";
-import AlertModal from "./ui/AlertModal";
-import useModal from "@/hooks/useModal";
 
 const PERSON_ICON_SIZE = 38;
 
@@ -22,7 +20,6 @@ type Props = {
 
 export default function NegotiationBlock({ request, openModalFn }: Props) {
   const { user: authUser } = useAuthCtx();
-  const [visible, open, close] = useModal();
 
   const [currentRequestData, setCurrentRequestData] = useState(request);
 
@@ -37,7 +34,7 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
   });
 
   const handleAccept = async () => {
-    if (bothAgreed(currentRequestData)) return;
+    if (NS.bothAgreed(currentRequestData)) return;
 
     if (authUser.role === "client") {
       await update(request.id, { client_offer_status: "ACCEPTED" });
@@ -53,31 +50,56 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
     }
   };
 
+  const handleReject = async () => {
+    if (NS.bothAgreed(currentRequestData)) return;
+
+    if (authUser.role === "client") {
+      await update(request.id, { client_offer_status: "REJECTED" });
+    } else {
+      await update(request.id, { provider_offer_status: "REJECTED" });
+    }
+
+    if (mutationState.status === "error") {
+      return Alert.alert(
+        "Error",
+        "No se pudo rechazar la oferta. Intente nuevamente."
+      );
+    }
+  };
+
   const provider = request.expand?.service.provider;
   const client = request.client;
   const lastOfferUser = currentRequestData.last_offer_user;
 
-  const acceptBtnDisabled =
-    (authUser.id === client && clientAgreed(currentRequestData)) ||
-    (authUser.id === provider && providerAgreed(currentRequestData));
+  const statusBtnDisabled =
+    (authUser.id === client && NS.clientAgreed(currentRequestData)) ||
+    (authUser.id === provider && NS.providerAgreed(currentRequestData)) ||
+    (authUser.id === client && NS.clientRejected(currentRequestData)) ||
+    (authUser.id === provider && NS.providerRejected(currentRequestData)) ||
+    NS.bothAgreed(currentRequestData);
 
   const offerBtnDisabled =
-    authUser.id === lastOfferUser || bothAgreed(currentRequestData);
-
-  const rejectBtnDisabled = bothAgreed(currentRequestData);
+    authUser.id === lastOfferUser ||
+    !statusBtnDisabled ||
+    NS.bothRejected(currentRequestData);
 
   return (
     <View style={styles.container}>
       <View style={styles.agreementsDataContainer}>
         <View style={styles.userContainer}>
+          {authUser.id === client && (
+            <Text
+              color={theme.colors.primaryBlue}
+              size={theme.fontSizes.sm + 1}
+              style={{ position: "absolute", bottom: 40, left: 7 }}
+            >
+              (Tú)
+            </Text>
+          )}
           <MaterialIcons
             name="person"
             size={PERSON_ICON_SIZE}
-            color={
-              clientAgreed(currentRequestData)
-                ? theme.colors.successGreen
-                : theme.colors.primaryBlue
-            }
+            color={getClientColor(currentRequestData)}
           />
           {lastOfferUser === client && (
             <MaterialIcons
@@ -119,19 +141,24 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
           <MaterialIcons
             name="person-4"
             size={PERSON_ICON_SIZE}
-            color={
-              providerAgreed(currentRequestData)
-                ? theme.colors.successGreen
-                : theme.colors.primaryBlue
-            }
+            color={getProviderColor(currentRequestData)}
           />
+          {authUser.id === provider && (
+            <Text
+              color={theme.colors.primaryBlue}
+              size={theme.fontSizes.sm + 1}
+              style={{ position: "absolute", bottom: 40, left: 7 }}
+            >
+              (Tú)
+            </Text>
+          )}
         </View>
       </View>
       <View style={styles.buttonsContainer}>
         <Pressable
           onPress={handleAccept}
-          style={[styles.button, { opacity: acceptBtnDisabled ? 0.25 : 1 }]}
-          disabled={acceptBtnDisabled}
+          style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
+          disabled={statusBtnDisabled}
         >
           <Text color={theme.colors.successGreen}>Aceptar</Text>
         </Pressable>
@@ -143,16 +170,13 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
           <Text color={theme.colors.primaryBlue}>Ofertar</Text>
         </Pressable>
         <Pressable
-          disabled={rejectBtnDisabled}
-          onPress={open}
-          style={[styles.button, { opacity: rejectBtnDisabled ? 0.25 : 1 }]}
+          disabled={statusBtnDisabled}
+          onPress={handleReject}
+          style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
         >
           <Text color={theme.colors.redError}>Rechazar</Text>
         </Pressable>
       </View>
-      <AlertModal visible={visible} onClose={close}>
-        <Text>Hi</Text>
-      </AlertModal>
     </View>
   );
 }
@@ -186,3 +210,21 @@ const styles = StyleSheet.create({
 
   userContainer: { alignItems: "center", flexDirection: "row", marginTop: 20 },
 });
+
+function getClientColor(request: ServiceRequest) {
+  if (NS.clientAgreed(request)) {
+    return theme.colors.successGreen;
+  } else if (NS.clientRejected(request)) {
+    return theme.colors.redError;
+  }
+  return theme.colors.primaryBlue;
+}
+
+function getProviderColor(request: ServiceRequest) {
+  if (NS.providerAgreed(request)) {
+    return theme.colors.successGreen;
+  } else if (NS.providerRejected(request)) {
+    return theme.colors.redError;
+  }
+  return theme.colors.primaryBlue;
+}

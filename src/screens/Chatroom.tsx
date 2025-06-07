@@ -23,7 +23,7 @@ export default function Chatroom({ route }: Props) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={{ gap: 20 }}>
-        <ChatHeader service={service} />
+        <ChatHeader request={request} />
         <NegotiationBlock
           request={request}
           openModalFn={() => setModalVisible(true)}

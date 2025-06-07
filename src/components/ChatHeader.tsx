@@ -1,19 +1,28 @@
 import { Platform, Pressable, StyleSheet, View } from "react-native";
-import React from "react";
-import Text from "./ui/Text";
+import { Image } from "expo-image";
+
 import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
 import { useNavigation } from "@react-navigation/native";
 import { Fontisto } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { getFileUrl } from "@/utils/format";
+import { SlideModal } from "./ui/SlideModal";
+import Text from "./ui/Text";
+import useModal from "@/hooks/useModal";
+import { ServiceRequest } from "@/models/ServiceRequest";
+import RequestDetails from "./RequestDetails";
 
 type Props = {
-  service: Service;
+  request: ServiceRequest;
 };
 
-export default function ChatHeader({ service }: Props) {
+export default function ChatHeader({ request }: Props) {
   const navigation = useNavigation();
+  const [modalVisible, openModal, closeModal] = useModal();
+
+  const service = request.expand!.service;
+  const client = request.expand!.client;
+  const provider = service.expand!.provider;
 
   return (
     <View style={styles.container}>
@@ -42,7 +51,12 @@ export default function ChatHeader({ service }: Props) {
         </Text>
         <Text>{`$${service.base_price}`}</Text>
       </View>
-      <View></View>
+      <Pressable onPress={openModal} style={styles.infoIconContainer}>
+        <Fontisto name="move-h" size={16} color="white" />
+      </Pressable>
+      <SlideModal visible={modalVisible} onClose={closeModal}>
+        <RequestDetails client={client} provider={provider} request={request} />
+      </SlideModal>
     </View>
   );
 }
@@ -61,6 +75,12 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   serviceNameText: {
-    maxWidth: 250,
+    maxWidth: 240,
+  },
+  infoIconContainer: {
+    backgroundColor: theme.colors.darkGray,
+    padding: 8,
+    borderRadius: 20,
+    marginLeft: "auto",
   },
 });
