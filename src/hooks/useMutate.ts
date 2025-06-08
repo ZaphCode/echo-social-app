@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { pb } from "../lib/pocketbase";
-import { ClientResponseError, RecordOptions } from "pocketbase";
+import { RecordOptions } from "pocketbase";
 import { PBCollectionsMap } from "@/utils/collections";
+import { logPBError } from "@/utils/testing";
 
 type MutationStatus = "idle" | "loading" | "success" | "error";
 
@@ -29,10 +30,9 @@ export default function useMutate<K extends keyof PBCollectionsMap>(
       setMutationState({ status: "success", error: null });
       return res;
     } catch (error) {
-      const message =
-        error instanceof ClientResponseError ? error.message : "Unknown error";
       console.log("PB Create Error:", error);
-      setMutationState({ status: "error", error: message });
+      logPBError(error);
+      setMutationState({ status: "error", error: "Error al crear" });
       return null;
     }
   };
@@ -50,10 +50,9 @@ export default function useMutate<K extends keyof PBCollectionsMap>(
       setMutationState({ status: "success", error: null });
       return res;
     } catch (error) {
-      const message =
-        error instanceof ClientResponseError ? error.message : "Unknown error";
       console.log("PB Update Error:", error);
-      setMutationState({ status: "error", error: message });
+      logPBError(error);
+      setMutationState({ status: "error", error: "Error al actualizar" });
       return null;
     }
   };
@@ -66,10 +65,9 @@ export default function useMutate<K extends keyof PBCollectionsMap>(
       setMutationState({ status: "success", error: null });
       return res;
     } catch (error) {
-      const message =
-        error instanceof ClientResponseError ? error.message : "Unknown error";
-      console.log("PB Remove Error:", error);
-      setMutationState({ status: "error", error: message });
+      console.log("PB Delete Error:", error);
+      logPBError(error);
+      setMutationState({ status: "error", error: "Error al eliminar" });
       return null;
     }
   };

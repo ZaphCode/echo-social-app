@@ -13,25 +13,26 @@ type Props = {
   request: ServiceRequest;
 };
 
+const STATUS_MAP = {
+  NEGOTIATION: { label: "Negociación", color: theme.colors.secondaryBlue },
+  ACCEPTED: { label: "Aceptado", color: theme.colors.successGreen },
+  CANCELED: { label: "Cancelado", color: theme.colors.redError },
+  FINISHED: { label: "Finalizado", color: theme.colors.completePurple },
+};
+
 export default function RequestCard({ request }: Props) {
   const navigation = useNavigation();
   const { user } = useAuthCtx();
 
-  const status = request.agreement_state;
-
-  const statusColors: Record<typeof status, string> = {
-    PENDING: theme.colors.lightGray,
-    ACCEPTED: theme.colors.primaryBlue,
-    CANCELED: "#FF4C4C",
-    FINISHED: "#2ECC71",
-  };
-
   const service = request.expand!.service;
   const provider = service!.expand!.provider;
   const client = request.expand!.client;
+
   const imageUrl = service!.photos?.[0]
     ? getFileUrl("service", service.id, service.photos[0])
     : "https://via.placeholder.com/100x100";
+
+  const statusData = STATUS_MAP[request.agreement_state];
 
   const handlePress = () => {
     navigation.navigate("Main", {
@@ -45,9 +46,11 @@ export default function RequestCard({ request }: Props) {
       <Image source={{ uri: imageUrl }} style={styles.image} />
       <View style={styles.info}>
         <View style={styles.rowSpace}>
-          <Text style={styles.title}>{service?.name}</Text>
-          <Text style={[styles.status, { color: statusColors[status] }]}>
-            {status}
+          <Text numberOfLines={2} style={styles.title}>
+            {service.name}
+          </Text>
+          <Text style={[styles.status, { color: statusData.color }]}>
+            {statusData.label}
           </Text>
         </View>
 
@@ -62,13 +65,6 @@ export default function RequestCard({ request }: Props) {
           <Text style={styles.label}>Propuesta:</Text>
           <Text style={styles.price}>{`$${request.agreed_price}`}</Text>
         </View>
-
-        {clientAgreed(request) && providerAgreed(request) && (
-          <View style={styles.agreedBox}>
-            <Feather name="check-circle" size={16} color="#2ECC71" />
-            <Text style={styles.agreedText}>Ambas partes confirmaron</Text>
-          </View>
-        )}
       </View>
     </Pressable>
   );
@@ -76,7 +72,7 @@ export default function RequestCard({ request }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.darkGray,
+    backgroundColor: theme.colors.darkerGray,
     borderRadius: 16,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
@@ -94,13 +90,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   title: {
-    color: "#fff",
+    color: "white",
     fontSize: theme.fontSizes.md,
     fontFamily: theme.fontFamily.bold,
     flex: 1,
   },
   status: {
     fontFamily: theme.fontFamily.bold,
+    fontSize: theme.fontSizes.sm,
     textTransform: "capitalize",
   },
   row: {
@@ -113,6 +110,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 6,
+    gap: 11,
   },
   label: {
     color: "#aaa",
@@ -133,12 +131,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     marginTop: theme.spacing.sm,
-    backgroundColor: "#2ECC7110",
+    backgroundColor: "#00B86B22",
     padding: 8,
     borderRadius: 8,
   },
   agreedText: {
-    color: "#2ECC71",
+    color: theme.colors.successGreen,
     fontFamily: theme.fontFamily.bold,
     fontSize: theme.fontSizes.sm,
   },

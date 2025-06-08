@@ -28,45 +28,30 @@ export default function NegotiationBlock({ openModalFn }: Props) {
   });
 
   useSubscription("service_request", request.id, async ({ action, record }) => {
-    // just for debugging purposes
-    const { client_offer_status, provider_offer_status, agreement_state } =
-      record;
-    console.log({
-      client_offer_status,
-      provider_offer_status,
-      agreement_state,
-    });
-    // ---
-
     if (action === "update") {
       setRequest(record);
-
-      if (request.client_offer_status === request.provider_offer_status) {
-        if (NS.bothAgreed(request) && !NS.isAccepted(request)) {
-          await update(request.id, {
-            agreement_state: "ACCEPTED",
-          });
-          console.log("Updated to ACCEPTED automatically");
-        } else if (NS.bothRejected(request) && !NS.isCanceled(request)) {
-          await update(request.id, {
-            agreement_state: "CANCELED",
-          });
-          console.log("Updated to CANCELED automatically");
-        } else if (NS.bothMarkedCompleted(request) && !NS.isFinished(request)) {
-          await update(request.id, {
-            agreement_state: "FINISHED",
-          });
-          console.log("Updated to FINISHED automatically");
-        }
-      }
     }
   });
 
   const handleAccept = async () => {
     if (authUser.role === "client") {
-      await update(request.id, { client_offer_status: "ACCEPTED" });
+      if (NS.providerAgreed(request)) {
+        await update(request.id, {
+          client_offer_status: "ACCEPTED",
+          agreement_state: "ACCEPTED",
+        });
+      } else {
+        await update(request.id, { client_offer_status: "ACCEPTED" });
+      }
     } else {
-      await update(request.id, { provider_offer_status: "ACCEPTED" });
+      if (NS.clientAgreed(request)) {
+        await update(request.id, {
+          provider_offer_status: "ACCEPTED",
+          agreement_state: "ACCEPTED",
+        });
+      } else {
+        await update(request.id, { provider_offer_status: "ACCEPTED" });
+      }
     }
 
     if (mutationState.status === "error") {
@@ -79,9 +64,23 @@ export default function NegotiationBlock({ openModalFn }: Props) {
 
   const handleReject = async () => {
     if (authUser.role === "client") {
-      await update(request.id, { client_offer_status: "REJECTED" });
+      if (NS.providerRejected(request)) {
+        await update(request.id, {
+          client_offer_status: "REJECTED",
+          agreement_state: "CANCELED",
+        });
+      } else {
+        await update(request.id, { client_offer_status: "REJECTED" });
+      }
     } else {
-      await update(request.id, { provider_offer_status: "REJECTED" });
+      if (NS.clientRejected(request)) {
+        await update(request.id, {
+          provider_offer_status: "REJECTED",
+          agreement_state: "CANCELED",
+        });
+      } else {
+        await update(request.id, { provider_offer_status: "REJECTED" });
+      }
     }
 
     if (mutationState.status === "error") {
@@ -94,9 +93,23 @@ export default function NegotiationBlock({ openModalFn }: Props) {
 
   const handleCompleted = async () => {
     if (authUser.role === "client") {
-      await update(request.id, { client_offer_status: "COMPLETED" });
+      if (NS.providerMarkedCompleted(request)) {
+        await update(request.id, {
+          client_offer_status: "COMPLETED",
+          agreement_state: "FINISHED",
+        });
+      } else {
+        await update(request.id, { client_offer_status: "COMPLETED" });
+      }
     } else {
-      await update(request.id, { provider_offer_status: "COMPLETED" });
+      if (NS.clientMarkedCompleted(request)) {
+        await update(request.id, {
+          provider_offer_status: "COMPLETED",
+          agreement_state: "FINISHED",
+        });
+      } else {
+        await update(request.id, { provider_offer_status: "COMPLETED" });
+      }
     }
 
     if (mutationState.status === "error") {
