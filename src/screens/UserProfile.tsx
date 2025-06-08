@@ -1,14 +1,11 @@
-import { StyleSheet, ScrollView } from "react-native";
+import { StyleSheet, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { StaticScreenProps } from "@react-navigation/native";
 
 import { theme } from "@/theme/theme";
-import { useAuthCtx } from "@/context/Auth";
+import { User } from "@/models/User";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import { ProfileError } from "@/components/ProfileError";
-import Button from "@/components/ui/Button";
-import useLogout from "@/hooks/auth/useLogout";
-import ProfileConfigSection from "@/components/ProfileConfigSection";
 import useProfile from "@/hooks/useProfile";
 import ProfessionalInfoSection from "@/components/ProfessionalInfoSection";
 import ProfileHeader from "@/components/ProfileHeader";
@@ -16,61 +13,45 @@ import PersonalInfoSection from "./PersonalInfoSection";
 import Loader from "@/components/ui/Loader";
 import UserStats from "@/components/UserStats";
 
-export default function MyProfile() {
-  const { user } = useAuthCtx();
-  const logout = useLogout();
-  const navigation = useNavigation();
-  const [profile, profileState] = useProfile(user, { expand: "specialty" });
+type Props = StaticScreenProps<{ user: User }>;
 
-  const onLogout = async () => {
-    await logout();
-    navigation.navigate("Auth", { screen: "SignIn" });
-  };
+export default function UserProfile({ route }: Props) {
+  const { user } = route.params;
+  const [profile, profileState] = useProfile(user, { expand: "specialty" });
 
   if (profileState.status === "loading") {
     return (
-      <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
+      <View style={[styles.container, { justifyContent: "center" }]}>
         <Loader />
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!profile || profileState.status === "error") {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <ProfileError />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
         style={{ width: "100%" }}
         contentContainerStyle={{ alignItems: "center", paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        <ProfileHeader user={user} editable />
-
+        <ProfileHeader user={user} />
         <UserStats userId={user.id} />
-        <PersonalInfoSection user={user} profile={profile} editable />
-
+        <PersonalInfoSection user={user} profile={profile} />
         {user.role === "provider" && (
           <ProfessionalInfoSection
             providerProfile={profile as ProviderProfile}
-            editable
           />
         )}
-        <ProfileConfigSection />
-
-        <Button
-          title="Cerrar Sesión"
-          style={styles.logoutButton}
-          labelColor={theme.colors.redError}
-          onPress={onLogout}
-        />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -78,6 +59,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    paddingBottom: 20,
   },
   header: {
     alignItems: "center",
@@ -115,10 +97,5 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
-  },
-  logoutButton: {
-    marginTop: 20,
-    width: "90%",
-    backgroundColor: theme.colors.darkGray,
   },
 });

@@ -7,7 +7,6 @@ import { ProviderProfile } from "@/models/ProviderProfile";
 import { SlideModal } from "./ui/SlideModal";
 import Text from "@/components/ui/Text";
 import InfoRow from "./InfoRow";
-import Divider from "./ui/Divider";
 import useModal from "@/hooks/useModal";
 import EditProviderInfoView from "./EditProviderInfoView";
 
@@ -33,9 +32,12 @@ export default function ProfessionalInfoSection({
   const [modalVisible, openModal, closeModal] = useModal();
   const [optimisticProfile, setOptimisticProfile] = useState(providerProfile);
 
-  const { available_days, jobs_done, experience_years } = optimisticProfile;
+  const { available_days, experience_years } = optimisticProfile;
   const specialty = optimisticProfile.expand?.specialty?.name;
-  const rating = 0; // TODO: Replace with actual rating logic
+
+  const experience_years_value = `${experience_years} ${
+    experience_years === 1 ? "año" : "años"
+  }`;
 
   return (
     <View style={styles.block}>
@@ -61,6 +63,11 @@ export default function ProfessionalInfoSection({
       {specialty && (
         <InfoRow label="Especialidad" value={specialty} icon="briefcase" />
       )}
+      <InfoRow
+        label="Experiencia"
+        value={experience_years_value}
+        icon="calendar"
+      />
       <View style={{ marginTop: 12, marginBottom: 12 }}>
         <View style={styles.labelContainer}>
           <Feather name={"calendar"} size={20} color={theme.colors.lightGray} />
@@ -91,26 +98,6 @@ export default function ProfessionalInfoSection({
           })}
         </View>
       </View>
-      <Divider size={3} />
-      <View style={styles.numbersRow}>
-        <StatBox
-          label="Experiencia"
-          value={`${experience_years} años`}
-          icon="award"
-        />
-        <StatBox
-          label="Servicios"
-          value={jobs_done}
-          icon="check-circle"
-          iconColor={theme.colors.successGreen}
-        />
-        <StatBox
-          label="Calif."
-          value={typeof rating === "number" ? rating.toFixed(1) : "-"}
-          icon="star"
-          iconColor="#ffc700"
-        />
-      </View>
       {editable && (
         <SlideModal visible={modalVisible} onClose={closeModal}>
           <EditProviderInfoView
@@ -122,39 +109,6 @@ export default function ProfessionalInfoSection({
           />
         </SlideModal>
       )}
-    </View>
-  );
-}
-
-function StatBox({
-  label,
-  value,
-  icon,
-  iconColor,
-}: {
-  label: string;
-  value: string | number;
-  icon: keyof typeof Feather.glyphMap;
-  iconColor?: string;
-}) {
-  return (
-    <View style={styles.statBox}>
-      <Feather
-        name={icon}
-        size={18}
-        color={iconColor || theme.colors.primaryBlue}
-      />
-      <Text
-        fontFamily="bold"
-        color="white"
-        size={theme.fontSizes.lg}
-        style={{ marginLeft: 4 }}
-      >
-        {`${value}`}
-      </Text>
-      <Text color={theme.colors.lightGray} size={theme.fontSizes.sm}>
-        {label}
-      </Text>
     </View>
   );
 }
@@ -174,18 +128,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 8,
     gap: 10,
-  },
-  numbersRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 18,
-    marginTop: 6,
-    marginBottom: 4,
-  },
-  statBox: {
-    alignItems: "center",
-    gap: 2,
-    flex: 1,
   },
   daysRow: {
     flexDirection: "row",

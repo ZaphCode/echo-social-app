@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, View } from "react-native";
+import { StyleSheet, ScrollView, View, Pressable } from "react-native";
 import { StaticScreenProps, useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
@@ -38,9 +38,21 @@ export default function ServiceOverview({ route }: Props) {
     }
   }, [serviceRequests, status]);
 
+  const goToUserProfile = () => {
+    if (user.id === service.provider) {
+      return navigation.navigate("Main", {
+        screen: "Tabs",
+        params: { screen: "Profile" },
+      });
+    }
+    navigation.navigate("Main", {
+      screen: "UserProfile",
+      params: { user: service.expand!.provider },
+    });
+  };
+
   const requestOrGotoMessage = async () => {
     if (!activeRequest) return openRequestModal();
-
     return navigation.navigate("Main", {
       screen: "Chatroom",
       params: { request: activeRequest },
@@ -55,12 +67,15 @@ export default function ServiceOverview({ route }: Props) {
           {service.name}
         </Text>
         <View style={styles.infoContainer}>
-          <View style={styles.profileContainer}>
+          <Pressable onPress={goToUserProfile} style={styles.profileContainer}>
             <Feather name="user" size={25} color={theme.colors.lightGray} />
-            <Text size={theme.fontSizes.md + 1}>
+            <Text
+              size={theme.fontSizes.md + 1}
+              style={{ textDecorationLine: "underline" }}
+            >
               {service.expand!.provider.name}
             </Text>
-          </View>
+          </Pressable>
           <Text
             color={theme.colors.primaryBlue}
             size={theme.fontSizes.md + 2}

@@ -3,6 +3,7 @@ import { Tabs } from "./Tabs";
 import Chatroom from "@/screens/Chatroom";
 import { theme } from "@/theme/theme";
 import ServiceEditor from "@/screens/ServiceEditor";
+import UserProfile from "@/screens/UserProfile";
 
 export const MainStack = createNativeStackNavigator({
   screenOptions: {
@@ -28,6 +29,16 @@ export const MainStack = createNativeStackNavigator({
         },
         headerStyle: {
           backgroundColor: theme.colors.darkerGray,
+        },
+      },
+    },
+    UserProfile: {
+      screen: UserProfile,
+      options: {
+        headerShown: true,
+        title: "",
+        headerStyle: {
+          backgroundColor: theme.colors.background,
         },
       },
     },
