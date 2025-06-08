@@ -11,6 +11,7 @@ import Loader from "./ui/Loader";
 export default function NotificationList() {
   const [notifications, { status, error }] = useList("notification", {
     expand: "user",
+    sort: "-created",
   });
 
   if (status === "loading")

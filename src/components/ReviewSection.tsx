@@ -3,20 +3,17 @@ import Text from "./ui/Text";
 import { theme } from "@/theme/theme";
 import useList from "@/hooks/useList";
 import { useMemo } from "react";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 import ReviewCard from "./ReviewCard";
 import { User } from "@/models/User";
-import Button from "./ui/Button";
+import { Service } from "@/models/Service";
+import Loader from "./ui/Loader";
 
-type Props = { serviceId: string; authUser: User; ableToReview: boolean };
+type Props = { service: Service; authUser: User };
 
-export default function ReviewSection({
-  serviceId,
-  authUser,
-  ableToReview,
-}: Props) {
+export default function ReviewSection({ service, authUser }: Props) {
   const [reviews, { status }] = useList("review", {
-    filter: `service = "${serviceId}"`,
+    filter: `service = "${service.id}" && reviewer != "${service.provider}"`,
     expand: "reviewer, reviewed",
   });
 
@@ -26,15 +23,16 @@ export default function ReviewSection({
     return totalRating / reviews.length;
   }, [reviews]);
 
-  const isReviewable = useMemo(() => {
-    return (
-      ableToReview &&
-      reviews.some((review) => review.expand!.reviewer.id === authUser.id)
-    );
-  }, [ableToReview, reviews]);
-
   if (status === "loading") {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.container}>
+        <Loader horizontal />
+      </View>
+    );
+  }
+
+  if (status === "error") {
+    return <ErrorComponent />;
   }
 
   return (
@@ -53,21 +51,6 @@ export default function ReviewSection({
           </Text>
         </View>
       </View>
-      {isReviewable && (
-        <View
-          style={{
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          <Button
-            title="Escribir una valoración"
-            onPress={() => {}}
-            style={{ width: "80%", backgroundColor: theme.colors.darkerGray }}
-          />
-        </View>
-      )}
       <View style={{ gap: theme.spacing.sm }}>
         {reviews.length > 0 ? (
           reviews.map((review) => (
@@ -79,6 +62,21 @@ export default function ReviewSection({
           </Text>
         )}
       </View>
+    </View>
+  );
+}
+
+function ErrorComponent() {
+  return (
+    <View style={styles.errorContainer}>
+      <MaterialCommunityIcons
+        name="alert-circle-outline"
+        size={22}
+        color={theme.colors.redError}
+      />
+      <Text color={theme.colors.redError} size={theme.fontSizes.md}>
+        Error al cargar las valoraciones.
+      </Text>
     </View>
   );
 }
@@ -98,5 +96,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    justifyContent: "center",
   },
 });

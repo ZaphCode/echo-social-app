@@ -1,4 +1,4 @@
-import { View, StyleSheet, Pressable, Alert } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
 import { theme } from "@/theme/theme";
@@ -10,115 +10,32 @@ import { useAlertCtx } from "@/context/Alert";
 import * as NS from "@/utils/negotiation";
 import Text from "./ui/Text";
 import useSubscription from "@/hooks/useSubscription";
-import useMutate from "@/hooks/useMutate";
+import useRequestStatus from "@/hooks/useRequestStatus";
+import useCheckReviews from "@/hooks/useCheckReviews";
 
 const PERSON_ICON_SIZE = 38;
 
 type Props = {
-  openModalFn?: () => void;
+  openOfferFn: () => void;
+  openReviewFn: () => void;
+  hasReviewed: boolean;
 };
 
-export default function NegotiationBlock({ openModalFn }: Props) {
+export default function NegotiationBlock({
+  openOfferFn,
+  openReviewFn,
+  hasReviewed,
+}: Props) {
   const { user: authUser } = useAuthCtx();
   const { show } = useAlertCtx();
   const { request, client, provider, setRequest } = useNegotiationCtx();
-
-  const { update, mutationState } = useMutate("service_request", {
-    expand: "service.provider",
-  });
+  const statusModifier = useRequestStatus(authUser);
 
   useSubscription("service_request", request.id, async ({ action, record }) => {
     if (action === "update") {
       setRequest(record);
     }
   });
-
-  const handleAccept = async () => {
-    if (authUser.role === "client") {
-      if (NS.providerAgreed(request)) {
-        await update(request.id, {
-          client_offer_status: "ACCEPTED",
-          agreement_state: "ACCEPTED",
-        });
-      } else {
-        await update(request.id, { client_offer_status: "ACCEPTED" });
-      }
-    } else {
-      if (NS.clientAgreed(request)) {
-        await update(request.id, {
-          provider_offer_status: "ACCEPTED",
-          agreement_state: "ACCEPTED",
-        });
-      } else {
-        await update(request.id, { provider_offer_status: "ACCEPTED" });
-      }
-    }
-
-    if (mutationState.status === "error") {
-      return Alert.alert(
-        "Error",
-        "No se pudo crear la solicitud. Intente nuevamente."
-      );
-    }
-  };
-
-  const handleReject = async () => {
-    if (authUser.role === "client") {
-      if (NS.providerRejected(request)) {
-        await update(request.id, {
-          client_offer_status: "REJECTED",
-          agreement_state: "CANCELED",
-        });
-      } else {
-        await update(request.id, { client_offer_status: "REJECTED" });
-      }
-    } else {
-      if (NS.clientRejected(request)) {
-        await update(request.id, {
-          provider_offer_status: "REJECTED",
-          agreement_state: "CANCELED",
-        });
-      } else {
-        await update(request.id, { provider_offer_status: "REJECTED" });
-      }
-    }
-
-    if (mutationState.status === "error") {
-      return Alert.alert(
-        "Error",
-        "No se pudo rechazar la oferta. Intente nuevamente."
-      );
-    }
-  };
-
-  const handleCompleted = async () => {
-    if (authUser.role === "client") {
-      if (NS.providerMarkedCompleted(request)) {
-        await update(request.id, {
-          client_offer_status: "COMPLETED",
-          agreement_state: "FINISHED",
-        });
-      } else {
-        await update(request.id, { client_offer_status: "COMPLETED" });
-      }
-    } else {
-      if (NS.clientMarkedCompleted(request)) {
-        await update(request.id, {
-          provider_offer_status: "COMPLETED",
-          agreement_state: "FINISHED",
-        });
-      } else {
-        await update(request.id, { provider_offer_status: "COMPLETED" });
-      }
-    }
-
-    if (mutationState.status === "error") {
-      return Alert.alert(
-        "Error",
-        "No se pudo marcar la solicitud como completada. Intente nuevamente."
-      );
-    }
-  };
 
   const lastOfferUserId = request.last_offer_user;
 
@@ -135,13 +52,16 @@ export default function NegotiationBlock({ openModalFn }: Props) {
     (authUser.id === client.id && NS.clientMarkedCompleted(request)) ||
     (authUser.id === provider.id && NS.providerMarkedCompleted(request));
 
-  const offerBtnDisabled = authUser.id === lastOfferUserId || !NS.isNegotiation;
+  const offerBtnDisabled =
+    authUser.id === lastOfferUserId || !NS.isNegotiation(request);
 
   const showingCompletedBtn =
     NS.bothAgreed(request) ||
     NS.isAccepted(request) ||
     (authUser.id === client.id && NS.clientMarkedCompleted(request)) ||
     (authUser.id === provider.id && NS.providerMarkedCompleted(request));
+
+  const reviewBtnDisabled = !NS.isFinished(request) || hasReviewed;
 
   return (
     <View style={styles.container}>
@@ -216,27 +136,36 @@ export default function NegotiationBlock({ openModalFn }: Props) {
       </View>
       <View style={styles.buttonsContainer}>
         {showingCompletedBtn ? (
-          <Pressable
-            onPress={() =>
-              show({
-                title: "Marcar como Completado",
-                message:
-                  "¿Estás seguro de marcar esta solicitud como completada?",
-                icon: "check-circle",
-                iconColor: theme.colors.completePurple,
-                onConfirm: handleCompleted,
-              })
-            }
-            style={[
-              styles.button,
-              { opacity: completedBtnDisabled ? 0.25 : 1 },
-            ]}
-            disabled={completedBtnDisabled}
-          >
-            <Text color={theme.colors.completePurple}>
-              Marcar como completado
-            </Text>
-          </Pressable>
+          <>
+            <Pressable
+              onPress={() =>
+                show({
+                  title: "Marcar como Completado",
+                  message:
+                    "¿Estás seguro de marcar esta solicitud como completada?",
+                  icon: "check-circle",
+                  iconColor: theme.colors.completePurple,
+                  onConfirm: statusModifier.setUserToCompleted,
+                })
+              }
+              style={[
+                styles.button,
+                { opacity: completedBtnDisabled ? 0.25 : 1 },
+              ]}
+              disabled={completedBtnDisabled}
+            >
+              <Text color={theme.colors.completePurple}>
+                Marcar como completado
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={openReviewFn}
+              style={[styles.button, { opacity: reviewBtnDisabled ? 0.25 : 1 }]}
+              disabled={reviewBtnDisabled}
+            >
+              <Text color={"white"}>Valorar</Text>
+            </Pressable>
+          </>
         ) : (
           <>
             <Pressable
@@ -246,7 +175,7 @@ export default function NegotiationBlock({ openModalFn }: Props) {
                   message: "¿Estás seguro de aceptar esta propuesta?",
                   icon: "check-circle",
                   iconColor: theme.colors.successGreen,
-                  onConfirm: handleAccept,
+                  onConfirm: statusModifier.setUserToAgreed,
                 })
               }
               style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
@@ -255,7 +184,7 @@ export default function NegotiationBlock({ openModalFn }: Props) {
               <Text color={theme.colors.successGreen}>Aceptar</Text>
             </Pressable>
             <Pressable
-              onPress={openModalFn}
+              onPress={openOfferFn}
               disabled={offerBtnDisabled}
               style={[styles.button, { opacity: offerBtnDisabled ? 0.25 : 1 }]}
             >
@@ -269,7 +198,7 @@ export default function NegotiationBlock({ openModalFn }: Props) {
                   message: "¿Estás seguro de rechazar esta propuesta?",
                   icon: "close-circle",
                   iconColor: theme.colors.redError,
-                  onConfirm: handleReject,
+                  onConfirm: statusModifier.setUserToRejected,
                 })
               }
               style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}

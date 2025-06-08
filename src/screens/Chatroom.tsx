@@ -13,15 +13,22 @@ import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
 import RequestForm from "@/components/forms/RequestForm";
 import NegotiationStatusBar from "@/components/NegotiationStatusBar";
+import useModal from "@/hooks/useModal";
+import ReviewForm from "@/components/ReviewForm";
+import useCheckReviews from "@/hooks/useCheckReviews";
+import { useAuthCtx } from "@/context/Auth";
 
 type Props = StaticScreenProps<{ request: ServiceRequest }>;
 
 export default function Chatroom({ route }: Props) {
+  const { user: authUser } = useAuthCtx();
   const { request } = route.params;
   const { service, client } = request.expand!;
   const { provider } = service.expand!;
 
-  const [modalVisible, setModalVisible] = useState(false);
+  const [offerModalVisible, openOfferModal, closeOfferModal] = useModal();
+  const [reviewModalVisible, openReviewModal, closeReviewModal] = useModal();
+  const { hasReviewed, markAsReviewed } = useCheckReviews(authUser, request);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -34,25 +41,32 @@ export default function Chatroom({ route }: Props) {
         <View>
           <ChatHeader />
           <NegotiationStatusBar />
-          <NegotiationBlock openModalFn={() => setModalVisible(true)} />
+          <NegotiationBlock
+            openOfferFn={openOfferModal}
+            openReviewFn={openReviewModal}
+            hasReviewed={hasReviewed}
+          />
         </View>
         <View style={styles.messageList}>
           <MessageList requestId={request.id} />
         </View>
         <ChatInput />
-        <SlideModal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-        >
+        <SlideModal visible={offerModalVisible} onClose={closeOfferModal}>
           <View style={{ padding: theme.spacing.md }}>
             <RequestForm
               service={service}
               requestId={request.id}
-              onSuccess={() => {
-                setModalVisible(false);
-              }}
+              onSuccess={closeOfferModal}
             />
           </View>
+        </SlideModal>
+        <SlideModal visible={reviewModalVisible} onClose={closeReviewModal}>
+          <ReviewForm
+            onSuccess={() => {
+              closeReviewModal();
+              markAsReviewed();
+            }}
+          />
         </SlideModal>
       </NegotiationProvider>
     </SafeAreaView>

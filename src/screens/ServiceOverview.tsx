@@ -15,39 +15,31 @@ import Divider from "@/components/ui/Divider";
 import useList from "@/hooks/useList";
 import RequestForm from "@/components/forms/RequestForm";
 import ReviewSection from "@/components/ReviewSection";
+import useModal from "@/hooks/useModal";
 
 type Props = StaticScreenProps<{ service: Service }>;
 
 export default function ServiceOverview({ route }: Props) {
   const { service } = route.params;
   const { user } = useAuthCtx();
-  const [ableToReview, setAbleToReview] = useState(false);
 
   const [activeRequest, setActiveRequest] = useState<ServiceRequest | null>();
-  const [modalVisible, setModalVisible] = useState(false);
-
+  const [requestVisible, openRequestModal, closeRequestModal] = useModal();
   const navigation = useNavigation();
 
-  const [serviceRequests, _] = useList("service_request", {
-    filter: `service = "${service.id}" && client = "${user.id}"`,
+  const [serviceRequests, { status }] = useList("service_request", {
+    filter: `service = "${service.id}" && client = "${user.id} && agreement_state != "FINISHED"`,
     expand: "service.provider, client",
   });
 
   useEffect(() => {
-    if (serviceRequests?.length > 0) {
-      for (const request of serviceRequests) {
-        if (request.agreement_state === "FINISHED") {
-          setAbleToReview(true);
-          return;
-        } else {
-          setActiveRequest(request);
-        }
-      }
+    if (status === "success" && serviceRequests.length > 0) {
+      setActiveRequest(serviceRequests[0]);
     }
-  }, [serviceRequests]);
+  }, [serviceRequests, status]);
 
   const requestOrGotoMessage = async () => {
-    if (!activeRequest) return setModalVisible(true);
+    if (!activeRequest) return openRequestModal();
 
     return navigation.navigate("Main", {
       screen: "Chatroom",
@@ -89,14 +81,15 @@ export default function ServiceOverview({ route }: Props) {
           disabled={user.id === service.provider}
         />
         <Divider />
-        <ReviewSection ableToReview serviceId={service.id} authUser={user} />
+        <ReviewSection service={service} authUser={user} />
       </View>
-      <SlideModal visible={modalVisible} onClose={() => setModalVisible(false)}>
+      <SlideModal visible={requestVisible} onClose={closeRequestModal}>
         <RequestForm
           service={service}
+          defaultPrice={service.base_price.toString()}
           onSuccess={(newRequest) => {
             setActiveRequest(newRequest);
-            setModalVisible(false);
+            closeRequestModal();
           }}
         />
       </SlideModal>

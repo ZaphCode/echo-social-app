@@ -1,17 +1,17 @@
 import { View } from "react-native";
-import React from "react";
+import { AntDesign } from "@expo/vector-icons";
+
 import { Review } from "@/models/Review";
 import { theme } from "@/theme/theme";
-import Text from "./ui/Text";
-import { AntDesign } from "@expo/vector-icons";
 import { User } from "@/models/User";
+import Text from "./ui/Text";
 
 type Props = {
   review: Review;
   authUser: User;
 };
 
-export default function ReviewCard({ review, authUser }: Props) {
+export default function ReviewCard({ review }: Props) {
   return (
     <View key={review.id} style={{ gap: 3 }}>
       <Text color="white" size={theme.fontSizes.lg} fontFamily="bold">
@@ -27,16 +27,6 @@ export default function ReviewCard({ review, authUser }: Props) {
         </Text>
       )}
       <StarRow rating={review.rating} />
-      {review.expand?.reviewer.id === authUser.id && (
-        <View style={{ position: "absolute", right: 0, top: 20 }}>
-          <AntDesign
-            name="delete"
-            size={24}
-            color={theme.colors.redError}
-            style={{ marginLeft: 8 }}
-          />
-        </View>
-      )}
     </View>
   );
 }

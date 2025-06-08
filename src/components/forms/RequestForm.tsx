@@ -20,9 +20,17 @@ type Props = {
   service: Service;
   onSuccess: (request?: ServiceRequest) => void;
   requestId?: string;
+  defaultPrice?: string;
+  defaultDate?: string;
 };
 
-export default function RequestForm({ service, requestId, onSuccess }: Props) {
+export default function RequestForm({
+  service,
+  requestId,
+  onSuccess,
+  defaultDate,
+  defaultPrice,
+}: Props) {
   const { user } = useAuthCtx();
   const keyboardVisible = useKeyboardVisible();
   const [offsetHeight, setOffsetHeight] = useState(0);
@@ -30,8 +38,8 @@ export default function RequestForm({ service, requestId, onSuccess }: Props) {
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
-      price: "",
-      date: "",
+      price: defaultPrice || "",
+      date: defaultDate || "",
       notes: "",
     },
   });
