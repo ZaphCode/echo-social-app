@@ -10,6 +10,7 @@ export const theme = {
     lightGray: "#7B7C7C",
     redError: "#FF6959",
     successGreen: "#00B86BFF",
+    completePurple: "#A45EE5FF",
   },
   fontFamily: {
     regular: "Geist-Regular",

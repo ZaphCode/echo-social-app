@@ -6,13 +6,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  Text,
   Dimensions,
 } from "react-native";
 import { theme } from "@/theme/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuthCtx } from "@/context/Auth";
 import useMutate from "@/hooks/useMutate";
+import { useNegotiationCtx } from "@/context/Negotiation";
+import { isCanceled, isFinished } from "@/utils/negotiation";
 
 const DEVICE_HEIGHT = Dimensions.get("window").height;
 
@@ -20,9 +21,10 @@ type Props = {
   requestId: string;
 };
 
-export default function ChatInput({ requestId }: Props) {
+export default function ChatInput() {
   const { user } = useAuthCtx();
   const [message, setMessage] = useState("");
+  const { request } = useNegotiationCtx();
 
   const { create, mutationState } = useMutate("message");
 
@@ -32,11 +34,16 @@ export default function ChatInput({ requestId }: Props) {
     await create({
       content: message,
       sender: user.id,
-      request: requestId,
+      request: request.id,
     });
 
     setMessage("");
   };
+
+  const isDisabled =
+    mutationState.status === "loading" ||
+    isFinished(request) ||
+    isCanceled(request);
 
   return (
     <KeyboardAvoidingView
@@ -53,11 +60,16 @@ export default function ChatInput({ requestId }: Props) {
           onSubmitEditing={handleSend}
           returnKeyType="send"
         />
-        <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
+        <TouchableOpacity
+          onPress={handleSend}
+          disabled={isDisabled}
+          style={styles.sendButton}
+        >
           <MaterialCommunityIcons
             name="send"
             size={24}
             color={theme.colors.primaryBlue}
+            style={{ opacity: isDisabled ? 0.3 : 1 }}
           />
         </TouchableOpacity>
       </View>

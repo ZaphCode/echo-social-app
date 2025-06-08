@@ -6,7 +6,7 @@ import { PBCollectionsMap } from "@/utils/collections";
 export default function useSubscription<K extends keyof PBCollectionsMap>(
   collection: K,
   track: string,
-  callback: (data: RecordSubscription<PBCollectionsMap[K]>) => void
+  callback: (data: RecordSubscription<PBCollectionsMap[K]>) => Promise<void>
 ) {
   useEffect(() => {
     console.log("Subscribed to", collection);

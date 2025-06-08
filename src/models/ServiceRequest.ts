@@ -11,9 +11,9 @@ export type ServiceRequest = {
   agreed_date: string;
   notes: string;
 
-  agreement_state: "PENDING" | "ACCEPTED" | "CANCELED" | "FINISHED";
-  client_offer_status: "PENDING" | "ACCEPTED" | "REJECTED";
-  provider_offer_status: "PENDING" | "ACCEPTED" | "REJECTED";
+  agreement_state: "NEGOTIATION" | "ACCEPTED" | "CANCELED" | "FINISHED";
+  client_offer_status: "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED";
+  provider_offer_status: "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED";
 
   finished?: string;
   canceled?: string;

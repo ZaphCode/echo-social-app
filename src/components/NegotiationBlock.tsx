@@ -1,43 +1,68 @@
 import { View, StyleSheet, Pressable, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useState } from "react";
 
 import { theme } from "@/theme/theme";
 import { formatDate } from "@/utils/format";
 import { useAuthCtx } from "@/context/Auth";
 import { ServiceRequest } from "@/models/ServiceRequest";
+import { useNegotiationCtx } from "@/context/Negotiation";
+import { useAlertCtx } from "@/context/Alert";
 import * as NS from "@/utils/negotiation";
 import Text from "./ui/Text";
 import useSubscription from "@/hooks/useSubscription";
 import useMutate from "@/hooks/useMutate";
-import { useAlertCtx } from "@/context/Alert";
 
 const PERSON_ICON_SIZE = 38;
 
 type Props = {
-  request: ServiceRequest;
   openModalFn?: () => void;
 };
 
-export default function NegotiationBlock({ request, openModalFn }: Props) {
+export default function NegotiationBlock({ openModalFn }: Props) {
   const { user: authUser } = useAuthCtx();
   const { show } = useAlertCtx();
-
-  const [currentRequestData, setCurrentRequestData] = useState(request);
+  const { request, client, provider, setRequest } = useNegotiationCtx();
 
   const { update, mutationState } = useMutate("service_request", {
-    expand: "service",
+    expand: "service.provider",
   });
 
-  useSubscription("service_request", request.id, ({ action, record }) => {
+  useSubscription("service_request", request.id, async ({ action, record }) => {
+    // just for debugging purposes
+    const { client_offer_status, provider_offer_status, agreement_state } =
+      record;
+    console.log({
+      client_offer_status,
+      provider_offer_status,
+      agreement_state,
+    });
+    // ---
+
     if (action === "update") {
-      setCurrentRequestData(record);
+      setRequest(record);
+
+      if (request.client_offer_status === request.provider_offer_status) {
+        if (NS.bothAgreed(request) && !NS.isAccepted(request)) {
+          await update(request.id, {
+            agreement_state: "ACCEPTED",
+          });
+          console.log("Updated to ACCEPTED automatically");
+        } else if (NS.bothRejected(request) && !NS.isCanceled(request)) {
+          await update(request.id, {
+            agreement_state: "CANCELED",
+          });
+          console.log("Updated to CANCELED automatically");
+        } else if (NS.bothMarkedCompleted(request) && !NS.isFinished(request)) {
+          await update(request.id, {
+            agreement_state: "FINISHED",
+          });
+          console.log("Updated to FINISHED automatically");
+        }
+      }
     }
   });
 
   const handleAccept = async () => {
-    if (NS.bothAgreed(currentRequestData)) return;
-
     if (authUser.role === "client") {
       await update(request.id, { client_offer_status: "ACCEPTED" });
     } else {
@@ -53,8 +78,6 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
   };
 
   const handleReject = async () => {
-    if (NS.bothAgreed(currentRequestData)) return;
-
     if (authUser.role === "client") {
       await update(request.id, { client_offer_status: "REJECTED" });
     } else {
@@ -69,27 +92,49 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
     }
   };
 
-  const provider = request.expand?.service.provider;
-  const client = request.client;
-  const lastOfferUser = currentRequestData.last_offer_user;
+  const handleCompleted = async () => {
+    if (authUser.role === "client") {
+      await update(request.id, { client_offer_status: "COMPLETED" });
+    } else {
+      await update(request.id, { provider_offer_status: "COMPLETED" });
+    }
+
+    if (mutationState.status === "error") {
+      return Alert.alert(
+        "Error",
+        "No se pudo marcar la solicitud como completada. Intente nuevamente."
+      );
+    }
+  };
+
+  const lastOfferUserId = request.last_offer_user;
 
   const statusBtnDisabled =
-    (authUser.id === client && NS.clientAgreed(currentRequestData)) ||
-    (authUser.id === provider && NS.providerAgreed(currentRequestData)) ||
-    (authUser.id === client && NS.clientRejected(currentRequestData)) ||
-    (authUser.id === provider && NS.providerRejected(currentRequestData)) ||
-    NS.bothAgreed(currentRequestData);
+    (authUser.id === client.id && NS.clientAgreed(request)) ||
+    (authUser.id === provider.id && NS.providerAgreed(request)) ||
+    (authUser.id === client.id && NS.clientRejected(request)) ||
+    (authUser.id === provider.id && NS.providerRejected(request)) ||
+    (authUser.id === client.id && NS.clientMarkedCompleted(request)) ||
+    (authUser.id === provider.id && NS.providerMarkedCompleted(request)) ||
+    NS.bothAgreed(request);
 
-  const offerBtnDisabled =
-    authUser.id === lastOfferUser ||
-    !statusBtnDisabled ||
-    NS.bothRejected(currentRequestData);
+  const completedBtnDisabled =
+    (authUser.id === client.id && NS.clientMarkedCompleted(request)) ||
+    (authUser.id === provider.id && NS.providerMarkedCompleted(request));
+
+  const offerBtnDisabled = authUser.id === lastOfferUserId || !NS.isNegotiation;
+
+  const showingCompletedBtn =
+    NS.bothAgreed(request) ||
+    NS.isAccepted(request) ||
+    (authUser.id === client.id && NS.clientMarkedCompleted(request)) ||
+    (authUser.id === provider.id && NS.providerMarkedCompleted(request));
 
   return (
     <View style={styles.container}>
       <View style={styles.agreementsDataContainer}>
         <View style={styles.userContainer}>
-          {authUser.id === client && (
+          {authUser.id === client.id && (
             <Text
               color={theme.colors.primaryBlue}
               size={theme.fontSizes.sm + 1}
@@ -101,9 +146,9 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
           <MaterialIcons
             name="person"
             size={PERSON_ICON_SIZE}
-            color={getClientColor(currentRequestData)}
+            color={getClientColor(request)}
           />
-          {lastOfferUser === client && (
+          {lastOfferUserId === client.id && (
             <MaterialIcons
               name="arrow-right"
               size={32}
@@ -121,18 +166,18 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
               <Text>Precio: </Text>
               <Text
                 color={theme.colors.primaryBlue}
-              >{`$${currentRequestData.agreed_price}`}</Text>
+              >{`$${request.agreed_price}`}</Text>
             </View>
             <View style={{ flexDirection: "row" }}>
               <Text>Fecha: </Text>
               <Text color={theme.colors.primaryBlue}>
-                {formatDate(currentRequestData.agreed_date)}
+                {formatDate(request.agreed_date)}
               </Text>
             </View>
           </View>
         </View>
         <View style={styles.userContainer}>
-          {lastOfferUser === provider && (
+          {lastOfferUserId === provider.id && (
             <MaterialIcons
               name="arrow-left"
               size={32}
@@ -143,9 +188,9 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
           <MaterialIcons
             name="person-4"
             size={PERSON_ICON_SIZE}
-            color={getProviderColor(currentRequestData)}
+            color={getProviderColor(request)}
           />
-          {authUser.id === provider && (
+          {authUser.id === provider.id && (
             <Text
               color={theme.colors.primaryBlue}
               size={theme.fontSizes.sm + 1}
@@ -157,43 +202,69 @@ export default function NegotiationBlock({ request, openModalFn }: Props) {
         </View>
       </View>
       <View style={styles.buttonsContainer}>
-        <Pressable
-          onPress={() =>
-            show({
-              title: "Aceptar Propuesta",
-              message: "¿Estás seguro de aceptar esta propuesta?",
-              icon: "check-circle",
-              iconColor: theme.colors.successGreen,
-              onConfirm: handleAccept,
-            })
-          }
-          style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
-          disabled={statusBtnDisabled}
-        >
-          <Text color={theme.colors.successGreen}>Aceptar</Text>
-        </Pressable>
-        <Pressable
-          onPress={openModalFn}
-          disabled={offerBtnDisabled}
-          style={[styles.button, { opacity: offerBtnDisabled ? 0.25 : 1 }]}
-        >
-          <Text color={theme.colors.primaryBlue}>Ofertar</Text>
-        </Pressable>
-        <Pressable
-          disabled={statusBtnDisabled}
-          onPress={() =>
-            show({
-              title: "Rechazar Propuesta",
-              message: "¿Estás seguro de rechazar esta propuesta?",
-              icon: "close-circle",
-              iconColor: theme.colors.redError,
-              onConfirm: handleReject,
-            })
-          }
-          style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
-        >
-          <Text color={theme.colors.redError}>Rechazar</Text>
-        </Pressable>
+        {showingCompletedBtn ? (
+          <Pressable
+            onPress={() =>
+              show({
+                title: "Marcar como Completado",
+                message:
+                  "¿Estás seguro de marcar esta solicitud como completada?",
+                icon: "check-circle",
+                iconColor: theme.colors.completePurple,
+                onConfirm: handleCompleted,
+              })
+            }
+            style={[
+              styles.button,
+              { opacity: completedBtnDisabled ? 0.25 : 1 },
+            ]}
+            disabled={completedBtnDisabled}
+          >
+            <Text color={theme.colors.completePurple}>
+              Marcar como completado
+            </Text>
+          </Pressable>
+        ) : (
+          <>
+            <Pressable
+              onPress={() =>
+                show({
+                  title: "Aceptar Propuesta",
+                  message: "¿Estás seguro de aceptar esta propuesta?",
+                  icon: "check-circle",
+                  iconColor: theme.colors.successGreen,
+                  onConfirm: handleAccept,
+                })
+              }
+              style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
+              disabled={statusBtnDisabled}
+            >
+              <Text color={theme.colors.successGreen}>Aceptar</Text>
+            </Pressable>
+            <Pressable
+              onPress={openModalFn}
+              disabled={offerBtnDisabled}
+              style={[styles.button, { opacity: offerBtnDisabled ? 0.25 : 1 }]}
+            >
+              <Text color={theme.colors.primaryBlue}>Ofertar</Text>
+            </Pressable>
+            <Pressable
+              disabled={statusBtnDisabled}
+              onPress={() =>
+                show({
+                  title: "Rechazar Propuesta",
+                  message: "¿Estás seguro de rechazar esta propuesta?",
+                  icon: "close-circle",
+                  iconColor: theme.colors.redError,
+                  onConfirm: handleReject,
+                })
+              }
+              style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
+            >
+              <Text color={theme.colors.redError}>Rechazar</Text>
+            </Pressable>
+          </>
+        )}
       </View>
     </View>
   );
@@ -234,6 +305,8 @@ function getClientColor(request: ServiceRequest) {
     return theme.colors.successGreen;
   } else if (NS.clientRejected(request)) {
     return theme.colors.redError;
+  } else if (NS.clientMarkedCompleted(request)) {
+    return theme.colors.completePurple;
   }
   return theme.colors.primaryBlue;
 }
@@ -243,6 +316,8 @@ function getProviderColor(request: ServiceRequest) {
     return theme.colors.successGreen;
   } else if (NS.providerRejected(request)) {
     return theme.colors.redError;
+  } else if (NS.providerMarkedCompleted(request)) {
+    return theme.colors.completePurple;
   }
   return theme.colors.primaryBlue;
 }

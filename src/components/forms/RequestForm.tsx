@@ -67,7 +67,7 @@ export default function RequestForm({ service, requestId, onSuccess }: Props) {
         agreed_price: parseFloat(data.price),
         agreed_date: data.date,
         notes: data.notes,
-        agreement_state: "PENDING",
+        agreement_state: "NEGOTIATION",
         client_offer_status: "PENDING",
         provider_offer_status: "PENDING",
       });

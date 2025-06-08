@@ -2,27 +2,19 @@ import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 
 import { theme } from "@/theme/theme";
-import { Service } from "@/models/Service";
 import { useNavigation } from "@react-navigation/native";
 import { Fontisto } from "@expo/vector-icons";
 import { getFileUrl } from "@/utils/format";
 import { SlideModal } from "./ui/SlideModal";
 import Text from "./ui/Text";
 import useModal from "@/hooks/useModal";
-import { ServiceRequest } from "@/models/ServiceRequest";
 import RequestDetails from "./RequestDetails";
+import { useNegotiationCtx } from "@/context/Negotiation";
 
-type Props = {
-  request: ServiceRequest;
-};
-
-export default function ChatHeader({ request }: Props) {
+export default function ChatHeader() {
+  const { request, client, provider, service } = useNegotiationCtx();
   const navigation = useNavigation();
   const [modalVisible, openModal, closeModal] = useModal();
-
-  const service = request.expand!.service;
-  const client = request.expand!.client;
-  const provider = service.expand!.provider;
 
   return (
     <View style={styles.container}>
@@ -68,6 +60,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingTop: Platform.OS === "android" ? 16 : 0,
     paddingHorizontal: theme.spacing.md,
+    paddingBottom: theme.spacing.md,
   },
   image: {
     width: 45,
