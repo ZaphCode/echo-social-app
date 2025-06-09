@@ -1,11 +1,55 @@
-import { View, Pressable, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
+import {
+  View,
+  Pressable,
+  StyleSheet,
+  Switch,
+  Alert,
+  Platform,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import Text from "@/components/ui/Text";
 import { theme } from "@/theme/theme";
 import { useNavigation } from "@react-navigation/native";
+import { NOTIFICATIONS_KEY } from "@/utils/constants";
 
 export default function ProfileConfigSection() {
   const navigation = useNavigation();
+  const [notificationsOn, setNotificationOn] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const value = await AsyncStorage.getItem(NOTIFICATIONS_KEY);
+        if (value !== null) {
+          setNotificationOn(value === "true");
+        }
+      } catch (e) {
+        Alert.alert(
+          "Error al cargar configuración",
+          "Hubo un problema al cargar tu configuración de notificaciones. Por favor, intenta más tarde."
+        );
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleToggle = async () => {
+    try {
+      const newValue = !notificationsOn;
+      setNotificationOn(newValue);
+      await AsyncStorage.setItem(NOTIFICATIONS_KEY, newValue.toString());
+    } catch (e) {
+      Alert.alert(
+        "Error al guardar configuración",
+        "Hubo un problema al guardar tu configuración de notificaciones. Por favor, intenta más tarde."
+      );
+    }
+  };
 
   const goToPrivacy = () => {
     navigation.navigate("Main", { screen: "Privacy" });
@@ -21,44 +65,36 @@ export default function ProfileConfigSection() {
           </Text>
         </View>
       </View>
-      <Pressable
-        style={styles.settingRow}
-        onPress={() => console.log("Notifications")}
-      >
+      <View style={styles.settingRow}>
         <View style={styles.labelContainer}>
           <Feather name="bell" size={20} color={theme.colors.lightGray} />
           <Text color="white" style={styles.settingLabel}>
             Notificaciones
           </Text>
         </View>
-        <Feather
-          name="chevron-right"
-          size={20}
-          color={theme.colors.lightGray}
+        <Switch
+          trackColor={{
+            false: theme.colors.lightGray,
+            true: theme.colors.primaryBlue,
+          }}
+          thumbColor={"white"}
+          style={{
+            transform:
+              Platform.OS === "ios"
+                ? [{ scaleX: 0.75 }, { scaleY: 0.75 }]
+                : [{ scaleX: 1.2 }, { scaleY: 1.2 }],
+          }}
+          ios_backgroundColor={theme.colors.lightGray}
+          value={notificationsOn}
+          onValueChange={handleToggle}
+          disabled={loading}
         />
-      </Pressable>
+      </View>
       <Pressable style={styles.settingRow} onPress={goToPrivacy}>
         <View style={styles.labelContainer}>
           <Feather name="lock" size={20} color={theme.colors.lightGray} />
           <Text color="white" style={styles.settingLabel}>
             Privacidad
-          </Text>
-        </View>
-        <Feather
-          name="chevron-right"
-          size={20}
-          color={theme.colors.lightGray}
-        />
-      </Pressable>
-      <Pressable style={styles.settingRow} onPress={() => console.log("Help")}>
-        <View style={styles.labelContainer}>
-          <Feather
-            name="help-circle"
-            size={20}
-            color={theme.colors.lightGray}
-          />
-          <Text color="white" style={styles.settingLabel}>
-            Ayuda
           </Text>
         </View>
         <Feather
