@@ -4,6 +4,7 @@ import Chatroom from "@/screens/Chatroom";
 import { theme } from "@/theme/theme";
 import ServiceEditor from "@/screens/ServiceEditor";
 import UserProfile from "@/screens/UserProfile";
+import Privacy from "@/screens/Privacy";
 
 export const MainStack = createNativeStackNavigator({
   screenOptions: {
@@ -34,6 +35,16 @@ export const MainStack = createNativeStackNavigator({
     },
     UserProfile: {
       screen: UserProfile,
+      options: {
+        headerShown: true,
+        title: "",
+        headerStyle: {
+          backgroundColor: theme.colors.background,
+        },
+      },
+    },
+    Privacy: {
+      screen: Privacy,
       options: {
         headerShown: true,
         title: "",

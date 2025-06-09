@@ -2,8 +2,15 @@ import { View, Pressable, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Text from "@/components/ui/Text";
 import { theme } from "@/theme/theme";
+import { useNavigation } from "@react-navigation/native";
 
 export default function ProfileConfigSection() {
+  const navigation = useNavigation();
+
+  const goToPrivacy = () => {
+    navigation.navigate("Main", { screen: "Privacy" });
+  };
+
   return (
     <View style={styles.infoContainer}>
       <View style={styles.sectionHeader}>
@@ -30,10 +37,7 @@ export default function ProfileConfigSection() {
           color={theme.colors.lightGray}
         />
       </Pressable>
-      <Pressable
-        style={styles.settingRow}
-        onPress={() => console.log("Privacy")}
-      >
+      <Pressable style={styles.settingRow} onPress={goToPrivacy}>
         <View style={styles.labelContainer}>
           <Feather name="lock" size={20} color={theme.colors.lightGray} />
           <Text color="white" style={styles.settingLabel}>

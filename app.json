@@ -36,7 +36,8 @@
             "./assets/fonts/Geist-Regular.ttf"
           ]
         }
-      ]
+      ],
+      "expo-asset"
     ]
   }
 }
