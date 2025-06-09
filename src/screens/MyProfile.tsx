@@ -15,6 +15,7 @@ import ProfileHeader from "@/components/ProfileHeader";
 import PersonalInfoSection from "./PersonalInfoSection";
 import Loader from "@/components/ui/Loader";
 import UserStats from "@/components/UserStats";
+import { useEffect } from "react";
 
 export default function MyProfile() {
   const { user } = useAuthCtx();
@@ -33,6 +34,10 @@ export default function MyProfile() {
       params: {},
     });
   };
+
+  useEffect(() => {
+    if (profileState.status === "error") onLogout();
+  }, [profileState.status]);
 
   if (profileState.status === "loading") {
     return (

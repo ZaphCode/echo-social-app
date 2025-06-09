@@ -11,7 +11,7 @@ if (__DEV__) {
   if (Platform.OS === "ios") POCKETBASE_URL = "http://localhost:8090";
   else POCKETBASE_URL = "http://10.0.2.2:8090";
 } else {
-  POCKETBASE_URL = "https://tudominio.com";
+  POCKETBASE_URL = "https://echo-zaph.pockethost.io/";
 }
 
 const store = new AsyncAuthStore({
