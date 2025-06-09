@@ -24,7 +24,7 @@ export default function NotificationCard({ notification }: Props) {
       <View style={{ flex: 1 }}>
         <RNText>
           {parseBold(notification.message, {
-            color: notification.read ? theme.colors.lightGray : "#fff",
+            color: "#fff",
             fontSize: theme.fontSizes.md,
           })}
         </RNText>
@@ -32,13 +32,15 @@ export default function NotificationCard({ notification }: Props) {
           {formatDateLong(notification.created)}
         </Text>
       </View>
-      {!notification.read && (
+      {!notification.read ? (
         <MaterialIcons
           name="fiber-manual-record"
           size={14}
           color="#4bb543"
           style={{ marginLeft: 6 }}
         />
+      ) : (
+        <View style={{ width: 10, height: 10 }} />
       )}
     </View>
   );
@@ -55,27 +57,27 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   cardRead: {
-    opacity: 0.7,
+    opacity: 0.9,
   },
 });
 
-function getIconAndColor(type: Notification["type"], read: boolean) {
+function getIconAndColor(type: Notification["type"], read?: boolean) {
   switch (type) {
     case "PROVIDER:NEW_REQUEST":
       return {
         icon: "account-plus",
-        color: read ? "#999" : theme.colors.primaryBlue,
+        color: theme.colors.primaryBlue,
       };
     case "CLIENT:NEW_OFFER":
-      return { icon: "handshake", color: read ? "#999" : "#e6b800" };
+      return { icon: "handshake", color: "#e6b800" };
     case "PROVIDER:NEW_OFFER":
       return {
         icon: "account-cash",
-        color: read ? "#999" : theme.colors.successGreen,
+        color: theme.colors.successGreen,
       };
     case "SYSTEM:INFO":
     default:
-      return { icon: "information", color: read ? "#999" : "#888" };
+      return { icon: "information", color: "#888" };
   }
 }
 

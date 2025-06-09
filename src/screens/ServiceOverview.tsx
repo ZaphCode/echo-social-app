@@ -28,7 +28,7 @@ export default function ServiceOverview({ route }: Props) {
   const navigation = useNavigation();
 
   const [serviceRequests, { status }] = useList("service_request", {
-    filter: `service = "${service.id}" && client = "${user.id} && agreement_state != "FINISHED"`,
+    filter: `service = "${service.id}" && client = "${user.id}" && agreement_state != "FINISHED"`,
     expand: "service.provider, client",
   });
 

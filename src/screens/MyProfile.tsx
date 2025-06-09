@@ -27,6 +27,13 @@ export default function MyProfile() {
     navigation.navigate("Auth", { screen: "SignIn" });
   };
 
+  const goToServiceCreation = () => {
+    navigation.navigate("Main", {
+      screen: "ServiceEditor",
+      params: {},
+    });
+  };
+
   if (profileState.status === "loading") {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
@@ -53,6 +60,16 @@ export default function MyProfile() {
         <ProfileHeader user={user} editable />
 
         <UserStats userId={user.id} />
+
+        {user.role === "provider" && (
+          <Button
+            title="Publicar nuevo servicio"
+            style={styles.newServiceButton}
+            labelColor={theme.colors.primaryBlue}
+            onPress={goToServiceCreation}
+          />
+        )}
+
         <PersonalInfoSection user={user} profile={profile} editable />
 
         {user.role === "provider" && (
@@ -115,6 +132,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
+  },
+  newServiceButton: {
+    width: "90%",
+    marginTop: 10,
+    backgroundColor: theme.colors.darkerGray,
   },
   logoutButton: {
     marginTop: 20,

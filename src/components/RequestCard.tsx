@@ -32,7 +32,10 @@ export default function RequestCard({ request }: Props) {
     ? getFileUrl("service", service.id, service.photos[0])
     : "https://via.placeholder.com/100x100";
 
-  const statusData = STATUS_MAP[request.agreement_state];
+  const statusData = STATUS_MAP[request.agreement_state] || {
+    label: "Pendiente",
+    color: theme.colors.lightGray,
+  };
 
   const handlePress = () => {
     navigation.navigate("Main", {

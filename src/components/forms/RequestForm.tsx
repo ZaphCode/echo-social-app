@@ -95,10 +95,12 @@ export default function RequestForm({
 
       await notificationMutation.create({
         user: service.provider,
-        message: `Nueva solicitud de servicio de *${user.name}*.`,
+        message: `Nueva solicitud de servicio de *${user.name}* para *${service.name}*`,
         type: "PROVIDER:NEW_REQUEST",
         read: false,
       });
+
+      console.log("New request created:", newRequest);
 
       onSuccess(newRequest);
     }

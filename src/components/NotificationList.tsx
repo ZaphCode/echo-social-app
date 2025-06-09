@@ -2,17 +2,33 @@ import { View, FlatList, StyleSheet } from "react-native";
 import { theme } from "@/theme/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
+import { useEffect } from "react";
 import useList from "@/hooks/useList";
 import NotificationCard from "./NotificationCard";
 import Divider from "./ui/Divider";
 import Text from "./ui/Text";
 import Loader from "./ui/Loader";
+import useMutate from "@/hooks/useMutate";
 
 export default function NotificationList() {
-  const [notifications, { status, error }] = useList("notification", {
+  const [notifications, { status }] = useList("notification", {
     expand: "user",
     sort: "-created",
   });
+
+  const { update } = useMutate("notification");
+
+  useEffect(() => {
+    if (status === "success" && notifications.length > 0) {
+      notifications.forEach((notification) => {
+        if (!notification.read) {
+          update(notification.id, { read: true }).then((result) => {
+            console.log(`Notification ${notification.id} marked as read`);
+          });
+        }
+      });
+    }
+  }, [notifications, status]);
 
   if (status === "loading")
     return (
