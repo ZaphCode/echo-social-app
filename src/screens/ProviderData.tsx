@@ -1,4 +1,4 @@
-import { View, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { StaticScreenProps } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm } from "react-hook-form";
@@ -6,6 +6,7 @@ import { Feather } from "@expo/vector-icons";
 
 import { User } from "@/models/User";
 import { theme } from "@/theme/theme";
+import { useAlertCtx } from "@/context/Alert";
 import Divider from "@/components/ui/Divider";
 import useRegister from "@/hooks/auth/useRegister";
 import Text from "@/components/ui/Text";
@@ -30,8 +31,8 @@ type Props = StaticScreenProps<{
 
 export default function ProviderData({ route }: Props) {
   const { userData } = route.params;
-
   const { registerProvider, loading } = useRegister();
+  const { show } = useAlertCtx();
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -48,12 +49,14 @@ export default function ProviderData({ route }: Props) {
       ...data,
     });
 
-    // TODO: handle error properly
     if (error) {
-      Alert.alert(
-        "Error",
-        "No se pudo registrar el proveedor. Inténtalo de nuevo."
-      );
+      show({
+        title: "Error de Registro",
+        message:
+          "Ocurrió un error al registrar tu perfil profesional. Por favor, inténtalo de nuevo más tarde.",
+        icon: "alert-circle",
+        iconColor: theme.colors.redError,
+      });
     }
   });
 
@@ -77,6 +80,7 @@ export default function ProviderData({ route }: Props) {
           </View>
           <ProviderInfoForm
             control={control}
+            loading={loading}
             onContinue={onContinue}
             submitBtnLabel="Registrar"
           />

@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, Alert } from "react-native";
+import { StyleSheet, ScrollView } from "react-native";
 import { StaticScreenProps, useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { User } from "@/models/User";
 import { theme } from "@/theme/theme";
+import { useAlertCtx } from "@/context/Alert";
 import AvatarPicker from "@/components/forms/AvatarPicker";
 import useRegister from "@/hooks/auth/useRegister";
 import useRedirect from "@/hooks/auth/useRedirect";
@@ -28,10 +29,11 @@ export default function ProfileCreation({ route }: Props) {
   const { userData } = route.params;
   const [avatar, setAvatar] = useState<string>();
   const navigation = useNavigation();
+  const { show } = useAlertCtx();
 
   const { control, handleSubmit, setValue } = useForm({
     defaultValues: {
-      phone: "+52 123 456 7890",
+      phone: "",
       address: "",
       state: "",
       city: "",
@@ -72,10 +74,13 @@ export default function ProfileCreation({ route }: Props) {
       const error = await registerClient(allData);
 
       if (error) {
-        Alert.alert(
-          "Error al registrar cliente",
-          "Hubo un problema al crear tu perfil. Por favor, intenta nuevamente más tarde."
-        );
+        show({
+          title: "Error al crear cuenta",
+          message:
+            "Ocurrió un error al crear tu cuenta. Por favor, inténtalo de nuevo más tarde.",
+          icon: "account-remove",
+          iconColor: theme.colors.redError,
+        });
       }
     }
   });

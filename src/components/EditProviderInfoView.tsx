@@ -1,8 +1,9 @@
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 
 import { theme } from "@/theme/theme";
 import { ProviderProfile } from "@/models/ProviderProfile";
+import { useAlertCtx } from "@/context/Alert";
 import Text from "./ui/Text";
 import ProviderInfoForm from "./forms/ProviderInfoForm";
 import useMutate from "@/hooks/useMutate";
@@ -16,6 +17,7 @@ export default function EditProviderInfoView({
   providerProfile,
   onSuccess,
 }: Props) {
+  const { show } = useAlertCtx();
   const { control, handleSubmit } = useForm({
     defaultValues: {
       description: providerProfile.description,
@@ -35,20 +37,14 @@ export default function EditProviderInfoView({
       experience_years: parseInt(data.experience_years),
     });
 
-    // TODO: Proper error handling
-    if (mutationState.status === "error") {
-      console.error("Error updating profile:", mutationState.error);
-      return Alert.alert(
-        "Error",
-        "No se pudieron guardar los cambios. Intente nuevamente."
-      );
-    }
-
-    if (!result) {
-      return Alert.alert(
-        "Error",
-        "No se pudieron guardar los cambios. Intente nuevamente."
-      );
+    if (!result || mutationState.status === "error") {
+      return show({
+        title: "Error al Guardar",
+        message:
+          "Ocurrió un error al guardar los cambios en tu perfil. Inténtalo de nuevo.",
+        icon: "alert-circle",
+        iconColor: theme.colors.redError,
+      });
     }
 
     onSuccess?.(result);

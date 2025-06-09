@@ -1,4 +1,4 @@
-import { View, StyleSheet, Alert, Pressable } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { useForm } from "react-hook-form";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,6 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import { theme } from "@/theme/theme";
 import { validEmailRules } from "@/utils/validations";
 import { getDevPassword, getDevEmail } from "@/utils/constants";
+import { useAlertCtx } from "@/context/Alert";
 import Text from "@/components/ui/Text";
 import Field from "@/components/forms/Field";
 import Button from "@/components/ui/Button";
@@ -15,6 +16,7 @@ import useLogin from "@/hooks/auth/useLogin";
 
 export default function SignIn() {
   useRedirect();
+  const { show } = useAlertCtx();
 
   const { login, loading } = useLogin();
   const navigation = useNavigation();
@@ -27,14 +29,18 @@ export default function SignIn() {
   });
 
   const onSubmit = handleSubmit(async ({ email, password }) => {
-    console.log("Submitting login with:", { email, password });
-
     const error = await login(email, password);
 
-    if (error) {
-      // TODO: Handle error more gracefully in the future
-      Alert.alert("Error", error);
-    }
+    if (error)
+      show({
+        title: "Error al iniciar sesión",
+        message:
+          error === "invalid-credentials"
+            ? "Credenciales incorrectas. Por favor, verifica tu correo y contraseña."
+            : "Ocurrió un error al iniciar sesión. Por favor, inténtalo de nuevo más tarde.",
+        icon: "account-remove",
+        iconColor: theme.colors.redError,
+      });
   });
 
   return (

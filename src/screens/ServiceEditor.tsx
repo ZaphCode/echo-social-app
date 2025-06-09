@@ -1,10 +1,13 @@
-import { Alert, KeyboardAvoidingView, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { StaticScreenProps } from "@react-navigation/native";
 import { useEffect } from "react";
 
 import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
+import { useAuthCtx } from "@/context/Auth";
+import { useAlertCtx } from "@/context/Alert";
+import { validPriceRules, validServicesPhotoRules } from "@/utils/validations";
 import Text from "@/components/ui/Text";
 import Field from "@/components/forms/Field";
 import useList from "@/hooks/useList";
@@ -12,8 +15,6 @@ import Dropdown from "@/components/forms/Dropdown";
 import Button from "@/components/ui/Button";
 import PhotoPicker from "@/components/forms/PhotoPicker";
 import useMutate from "@/hooks/useMutate";
-import { validPriceRules } from "@/utils/validations";
-import { useAuthCtx } from "@/context/Auth";
 
 type Props = StaticScreenProps<{ serviceToEdit?: Service }>;
 
@@ -21,10 +22,11 @@ export default function ServiceEditor({ route }: Props) {
   let service = route.params.serviceToEdit;
 
   const { user } = useAuthCtx();
+  const { show } = useAlertCtx();
   const [categories, { status }] = useList("service_category", {});
   const { create, update, mutationState } = useMutate("service");
 
-  const { control, handleSubmit, formState } = useForm({
+  const { control, handleSubmit } = useForm({
     defaultValues: {
       serviceName: service?.name || "",
       description: service?.description || "",
@@ -34,15 +36,16 @@ export default function ServiceEditor({ route }: Props) {
     },
   });
 
-  // TODO: Improve this logic
   useEffect(() => {
     if (mutationState.status === "success") {
-      Alert.alert(
-        "Éxito",
-        service ? "Servicio actualizado" : "Servicio creado"
-      );
-    } else if (mutationState.status === "error") {
-      Alert.alert("Error", mutationState.error || "Ocurrió un error");
+      show({
+        title: service ? "Servicio Actualizado" : "Servicio Creado",
+        message: `El servicio ha sido ${
+          service ? "actualizado" : "creado"
+        } exitosamente.`,
+        icon: "check-circle",
+        iconColor: theme.colors.successGreen,
+      });
     }
   }, [mutationState]);
 
@@ -66,11 +69,23 @@ export default function ServiceEditor({ route }: Props) {
       }
     }
 
+    let result;
+
     if (service) {
-      await update(service.id, formData);
+      result = await update(service.id, formData);
     } else {
       formData.append("provider", user.id);
-      await create(formData);
+      result = await create(formData);
+    }
+
+    if (!result || mutationState.status === "error") {
+      show({
+        title: "Error al Guardar",
+        message:
+          "Ocurrió un error al guardar el servicio. Verifique los datos e intente de nuevo.",
+        icon: "database-alert",
+        iconColor: theme.colors.redError,
+      });
     }
   });
 
@@ -121,15 +136,7 @@ export default function ServiceEditor({ route }: Props) {
           service={service}
           control={control}
           name="photos"
-          rules={{
-            // TODO: MOVE TO VALIDATIONS FILE
-            validate: (value) => {
-              if (!value || value.length === 0)
-                return "Agrega al menos una foto";
-              if (value.length > 5) return "Máximo 5 fotos permitidas";
-              return true;
-            },
-          }}
+          rules={validServicesPhotoRules}
         />
       </View>
       <Button

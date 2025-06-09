@@ -20,9 +20,10 @@ export default function useLogin() {
     } catch (error) {
       if (error instanceof Error) {
         logPBError(error);
-        return error.message;
+        if (error.message.includes("Failed to authenticate"))
+          return "invalid-credentials";
       }
-      return "Credenciales incorrectas";
+      return "server-error";
     } finally {
       setLoading(false);
     }

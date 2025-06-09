@@ -1,5 +1,5 @@
 import { View, StyleSheet, Pressable } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Foundation } from "@expo/vector-icons";
 import { useState } from "react";
 
 import { theme } from "@/theme/theme";
@@ -43,7 +43,11 @@ export default function ProfessionalInfoSection({
     <View style={styles.block}>
       <View style={styles.sectionHeader}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Feather name="archive" size={20} color={theme.colors.primaryBlue} />
+          <Foundation
+            name="torso-business"
+            size={28}
+            color={theme.colors.primaryBlue}
+          />
           <Text fontFamily="bold" color="white" size={theme.fontSizes.lg - 2.5}>
             Información Profesional
           </Text>
@@ -70,7 +74,11 @@ export default function ProfessionalInfoSection({
       />
       <View style={{ marginTop: 12, marginBottom: 12 }}>
         <View style={styles.labelContainer}>
-          <Feather name={"calendar"} size={20} color={theme.colors.lightGray} />
+          <Feather
+            name={"check-square"}
+            size={20}
+            color={theme.colors.lightGray}
+          />
           <Text style={styles.label}>Días disponibles</Text>
         </View>
         <View style={styles.daysRow}>

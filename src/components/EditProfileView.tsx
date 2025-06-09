@@ -1,10 +1,11 @@
 import { useForm } from "react-hook-form";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { ClientProfile } from "@/models/ClientProfile";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import { theme } from "@/theme/theme";
 import { User } from "@/models/User";
+import { useAlertCtx } from "@/context/Alert";
 import Text from "./ui/Text";
 import ProfileForm from "./forms/ProfileForm";
 import useMutate from "@/hooks/useMutate";
@@ -20,6 +21,7 @@ export default function EditProfileView({
   userRole,
   onSuccess,
 }: Props) {
+  const { show } = useAlertCtx();
   const { control, handleSubmit } = useForm({
     defaultValues: {
       phone: profile.phone,
@@ -40,20 +42,14 @@ export default function EditProfileView({
   const onSubmit = handleSubmit(async (data) => {
     const result = await update(profile.id, { ...data });
 
-    // TODO: Proper error handling
-    if (mutationState.status === "error") {
-      console.error("Error updating profile:", mutationState.error);
-      return Alert.alert(
-        "Error",
-        "No se pudieron guardar los cambios. Intente nuevamente."
-      );
-    }
-
-    if (!result) {
-      return Alert.alert(
-        "Error",
-        "No se pudieron guardar los cambios. Intente nuevamente."
-      );
+    if (!result || mutationState.status === "error") {
+      return show({
+        title: "Error al Guardar",
+        message:
+          "Ocurrió un error al guardar los cambios en tu perfil. Inténtalo de nuevo.",
+        icon: "alert-circle",
+        iconColor: theme.colors.redError,
+      });
     }
 
     onSuccess?.(result);

@@ -1,23 +1,25 @@
-import { View, StyleSheet, Alert, Pressable, ScrollView } from "react-native";
+import { View, StyleSheet, Pressable, ScrollView } from "react-native";
 import { Image } from "expo-image";
 import { useForm } from "react-hook-form";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 
 import { theme } from "@/theme/theme";
+import { useAlertCtx } from "@/context/Alert";
+import { User } from "@/models/User";
+import { pb } from "@/lib/pocketbase";
 import * as rules from "@/utils/validations";
 import Text from "@/components/ui/Text";
 import Field from "@/components/forms/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import RoleSelector from "@/components/forms/RoleSelector";
-import { User } from "@/models/User";
-import { pb } from "@/lib/pocketbase";
 
 export default function SignUp() {
   useRedirect();
 
   const navigation = useNavigation();
+  const { show } = useAlertCtx();
 
   const { control, handleSubmit, ...signInForm } = useForm({
     defaultValues: {
@@ -32,8 +34,6 @@ export default function SignUp() {
   // TODO: Move this to a separate utility file
   async function emailExists(email: string): Promise<boolean> {
     try {
-      console.log("Checking if email exists:", email);
-
       const users = await pb.collection("users").getList(1, 1, {
         filter: `email = "${email}"`,
       });
@@ -45,10 +45,12 @@ export default function SignUp() {
 
   const onSubmit = handleSubmit(async (data) => {
     if (await emailExists(data.email)) {
-      Alert.alert("Error", "El correo electrónico ya está en uso", [
-        { text: "OK" },
-      ]);
-      return;
+      return show({
+        title: "Correo Inválido",
+        message: "El correo electrónico que ingresaste ya está en uso.",
+        icon: "email-remove",
+        iconColor: theme.colors.redError,
+      });
     }
 
     navigation.navigate("Auth", {

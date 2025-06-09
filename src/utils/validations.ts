@@ -113,3 +113,11 @@ export const validYearsRules: RegisterOptions = {
     return true;
   },
 };
+
+export const validServicesPhotoRules: RegisterOptions = {
+  validate: (value) => {
+    if (!value || value.length === 0) return "Agrega al menos una foto";
+    if (value.length > 5) return "Máximo 5 fotos permitidas";
+    return true;
+  },
+};

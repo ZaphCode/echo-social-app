@@ -1,5 +1,5 @@
 import { View, StyleSheet, Pressable } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Foundation } from "@expo/vector-icons";
 
 import { theme } from "@/theme/theme";
 import { User } from "@/models/User";
@@ -32,7 +32,7 @@ export default function PersonalInfoSection({
     <View style={styles.infoContainer}>
       <View style={styles.sectionHeader}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Feather name="user" size={16} color={theme.colors.primaryBlue} />
+          <Foundation name="torso" size={28} color={theme.colors.primaryBlue} />
           <Text fontFamily="bold" color="white" size={theme.fontSizes.lg - 2.5}>
             Información Personal
           </Text>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 
 import { theme } from "@/theme/theme";
@@ -13,6 +13,7 @@ import Text from "../ui/Text";
 import Button from "../ui/Button";
 import DateField from "./DateField";
 import useMutate from "@/hooks/useMutate";
+import { useAlertCtx } from "@/context/Alert";
 
 const DEVICE_HEIGHT = Dimensions.get("window").height;
 
@@ -32,6 +33,7 @@ export default function RequestForm({
   defaultPrice,
 }: Props) {
   const { user } = useAuthCtx();
+  const { show } = useAlertCtx();
   const keyboardVisible = useKeyboardVisible();
   const [offsetHeight, setOffsetHeight] = useState(0);
   const offeringMode = !!requestId;
@@ -61,10 +63,12 @@ export default function RequestForm({
       });
 
       if (requestMutation.mutationState.status === "error")
-        return Alert.alert(
-          "Error",
-          "No se pudo crear la solicitud. Intente nuevamente."
-        );
+        return show({
+          title: "Error al Ofertar",
+          message: "No se pudo enviar tu oferta. Intente nuevamente.",
+          icon: "alert-circle",
+          iconColor: theme.colors.redError,
+        });
 
       onSuccess();
     } else {
@@ -80,11 +84,14 @@ export default function RequestForm({
         provider_offer_status: "PENDING",
       });
 
-      if (requestMutation.mutationState.status === "error" || !newRequest)
-        return Alert.alert(
-          "Error",
-          "No se pudo crear la solicitud. Intente nuevamente."
-        );
+      if (requestMutation.mutationState.status === "error" || !newRequest) {
+        return show({
+          title: "Error al Solicitar Servicio",
+          message: "No se pudo enviar tu solicitud. Intente nuevamente.",
+          icon: "alert-circle",
+          iconColor: theme.colors.redError,
+        });
+      }
 
       await notificationMutation.create({
         user: service.provider,
@@ -92,12 +99,6 @@ export default function RequestForm({
         type: "PROVIDER:NEW_REQUEST",
         read: false,
       });
-
-      if (notificationMutation.mutationState.status === "error")
-        return Alert.alert(
-          "Error",
-          "No se pudo enviar la notificación al proveedor. Intente nuevamente."
-        );
 
       onSuccess(newRequest);
     }
