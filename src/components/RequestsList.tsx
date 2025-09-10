@@ -8,11 +8,14 @@ import RequestCard from "./RequestCard";
 import Loader from "./ui/Loader";
 import { useNavigation } from "@react-navigation/native";
 import Button from "./ui/Button";
+import { useAuthCtx } from "@/context/Auth";
 
 export default function RequestsList() {
+  const { user } = useAuthCtx();
   const [serviceRequests, { status }] = useList("service_request", {
     expand: "service, service.provider, client",
     sort: "-updated",
+    filter: `provider.id = "${user.id}" || client.id = "${user.id}"`,
   });
 
   if (status === "loading")

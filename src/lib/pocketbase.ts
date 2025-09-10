@@ -8,7 +8,8 @@ import { Platform } from "react-native";
 let POCKETBASE_URL;
 
 if (__DEV__) {
-  if (Platform.OS === "ios") POCKETBASE_URL = "http://localhost:8090";
+  if (Platform.OS === "ios")
+    POCKETBASE_URL = "https://echo-zaph.pockethost.io/";
   else POCKETBASE_URL = "http://10.0.2.2:8090";
 } else {
   POCKETBASE_URL = "https://echo-zaph.pockethost.io/";

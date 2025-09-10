@@ -15,7 +15,7 @@ export default function CategoryList({
   selectedCategoryId,
   setSelectedCategoryId,
 }: Props) {
-  const [categories, { status, error }] = useList("service_category", {
+  const [categories, { status }] = useList("service_category", {
     notRefreshOnFocus: true,
   });
 
