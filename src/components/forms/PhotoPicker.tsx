@@ -14,6 +14,7 @@ import * as ImagePicker from "expo-image-picker";
 import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
 import { getFileUrl } from "@/utils/format";
+import useColorScheme from "@/hooks/useColorScheme";
 
 const MAX_IMAGES = 5;
 
@@ -25,11 +26,61 @@ interface Props {
 }
 
 function PhotoPicker({ control, name, rules, service }: Props) {
+  const { colors } = useColorScheme();
   const getPreviewUrl = (img: string) => {
     if (img.startsWith("file://") || img.startsWith("http")) return img;
     if (service?.id) return getFileUrl("service", service.id, img);
     return img;
   };
+
+  const styles = StyleSheet.create({
+    photosSection: {
+      marginBottom: theme.spacing.lg,
+    },
+    label: {
+      color: colors.lightGray,
+      fontSize: theme.fontSizes.md,
+      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.sm,
+    },
+    imageWrapper: {
+      position: "relative",
+      marginRight: 14,
+    },
+    image: {
+      width: 70,
+      height: 70,
+      borderRadius: 10,
+      borderColor: colors.lightGray,
+      borderWidth: 1,
+    },
+    removeBtn: {
+      position: "absolute",
+      top: -8,
+      right: -8,
+      backgroundColor: "#FF6959",
+      borderRadius: 10,
+      padding: 2,
+      zIndex: 1,
+    },
+    addBtn: {
+      width: 70,
+      height: 70,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.lightGray,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 6,
+      backgroundColor: "transparent",
+    },
+    photoHint: {
+      color: colors.lightGray,
+      fontSize: theme.fontSizes.sm,
+      marginTop: 4,
+      marginLeft: theme.spacing.sm,
+    },
+  });
 
   return (
     <Controller
@@ -89,11 +140,7 @@ function PhotoPicker({ control, name, rules, service }: Props) {
               ))}
               {images.length < MAX_IMAGES && (
                 <Pressable style={styles.addBtn} onPress={pickImage}>
-                  <Feather
-                    name="plus"
-                    size={28}
-                    color={theme.colors.lightGray}
-                  />
+                  <Feather name="plus" size={28} color={colors.lightGray} />
                 </Pressable>
               )}
             </ScrollView>
@@ -120,54 +167,5 @@ function PhotoPicker({ control, name, rules, service }: Props) {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  photosSection: {
-    marginBottom: theme.spacing.lg,
-  },
-  label: {
-    color: theme.colors.lightGray,
-    fontSize: theme.fontSizes.md,
-    marginBottom: theme.spacing.sm,
-    marginLeft: theme.spacing.sm,
-  },
-  imageWrapper: {
-    position: "relative",
-    marginRight: 14,
-  },
-  image: {
-    width: 70,
-    height: 70,
-    borderRadius: 10,
-    borderColor: theme.colors.lightGray,
-    borderWidth: 1,
-  },
-  removeBtn: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: "#FF6959",
-    borderRadius: 10,
-    padding: 2,
-    zIndex: 1,
-  },
-  addBtn: {
-    width: 70,
-    height: 70,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: theme.colors.lightGray,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 6,
-    backgroundColor: "transparent",
-  },
-  photoHint: {
-    color: theme.colors.lightGray,
-    fontSize: theme.fontSizes.sm,
-    marginTop: 4,
-    marginLeft: theme.spacing.sm,
-  },
-});
 
 export default PhotoPicker;

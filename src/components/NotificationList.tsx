@@ -9,6 +9,7 @@ import Divider from "./ui/Divider";
 import Text from "./ui/Text";
 import Loader from "./ui/Loader";
 import useMutate from "@/hooks/useMutate";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function NotificationList() {
   const [notifications, { status }] = useList("notification", {
@@ -52,24 +53,26 @@ export default function NotificationList() {
 }
 
 function EmptyListComponent() {
+  const { colors } = useColorScheme();
+
   return (
     <View style={styles.centeredContainer}>
       <MaterialCommunityIcons
         name="bell-remove"
         size={44}
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         style={{ marginBottom: 12 }}
       />
       <Text
         fontFamily="bold"
-        color={"white"}
+        color={colors.text}
         size={theme.fontSizes.lg + 1}
         style={{ marginBottom: 2 }}
       >
         No tienes notificaciones
       </Text>
       <Text
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
         style={{ textAlign: "center" }}
       >
@@ -80,25 +83,27 @@ function EmptyListComponent() {
 }
 
 function ErrorNotificationComponent() {
+  const { colors } = useColorScheme();
+
   return (
     <View style={styles.centeredContainer}>
       <MaterialCommunityIcons
         name="alert-circle-outline"
         size={48}
-        color={theme.colors.redError}
+        color={colors.redError}
         style={{ marginBottom: 10 }}
       />
       <Text
         fontFamily="bold"
         size={theme.fontSizes.lg + 1}
-        color={theme.colors.redError || "#FF6959"}
+        color={colors.redError}
         style={{ marginBottom: 3 }}
       >
         No se pudieron cargar las notificaciones
       </Text>
       <Text
         style={{ textAlign: "center" }}
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
       >
         Revisa tu conexión e intenta de nuevo.

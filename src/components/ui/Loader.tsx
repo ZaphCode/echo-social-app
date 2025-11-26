@@ -1,6 +1,7 @@
 import { View, Text, ActivityIndicator } from "react-native";
 import React from "react";
 import { theme } from "@/theme/theme";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   size?: number;
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export default function Loader({ size = 40, horizontal = false }: Props) {
+  const { colors } = useColorScheme();
   return (
     <View
       style={{
@@ -17,8 +19,8 @@ export default function Loader({ size = 40, horizontal = false }: Props) {
         flexDirection: horizontal ? "row" : "column",
       }}
     >
-      <ActivityIndicator size={size} color={theme.colors.lightGray} />
-      <Text style={{ color: theme.colors.lightGray }}>Cargando...</Text>
+      <ActivityIndicator size={size} color={colors.lightGray} />
+      <Text style={{ color: colors.lightGray }}>Cargando...</Text>
     </View>
   );
 }

@@ -7,6 +7,7 @@ import { useAlertCtx } from "@/context/Alert";
 import Text from "./ui/Text";
 import ProviderInfoForm from "./forms/ProviderInfoForm";
 import useMutate from "@/hooks/useMutate";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   providerProfile: ProviderProfile;
@@ -17,6 +18,7 @@ export default function EditProviderInfoView({
   providerProfile,
   onSuccess,
 }: Props) {
+  const { colors } = useColorScheme();
   const { show } = useAlertCtx();
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -43,7 +45,7 @@ export default function EditProviderInfoView({
         message:
           "Ocurrió un error al guardar los cambios en tu perfil. Inténtalo de nuevo.",
         icon: "alert-circle",
-        iconColor: theme.colors.redError,
+        iconColor: colors.redError,
       });
     }
 

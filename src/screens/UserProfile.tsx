@@ -1,5 +1,4 @@
 import { StyleSheet, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { StaticScreenProps } from "@react-navigation/native";
 
 import { theme } from "@/theme/theme";
@@ -12,11 +11,13 @@ import ProfileHeader from "@/components/ProfileHeader";
 import PersonalInfoSection from "./PersonalInfoSection";
 import Loader from "@/components/ui/Loader";
 import UserStats from "@/components/UserStats";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = StaticScreenProps<{ user: User }>;
 
 export default function UserProfile({ route }: Props) {
   const { user } = route.params;
+  const { colors } = useColorScheme();
   const [profile, profileState] = useProfile(user, { expand: "specialty" });
 
   if (profileState.status === "loading") {
@@ -36,7 +37,7 @@ export default function UserProfile({ route }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         style={{ width: "100%" }}
         contentContainerStyle={{ alignItems: "center", paddingBottom: 20 }}
@@ -58,7 +59,6 @@ export default function UserProfile({ route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
     paddingBottom: 20,
   },
   header: {

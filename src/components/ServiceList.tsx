@@ -8,6 +8,7 @@ import useList from "@/hooks/useList";
 import ServiceCard from "./ServiceCard";
 import Text from "./ui/Text";
 import Loader from "./ui/Loader";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   authUser: User;
@@ -56,6 +57,7 @@ export default function ServiceList({ authUser, category }: Props) {
 }
 
 export function EmptyServicesComponent() {
+  const { colors } = useColorScheme();
   return (
     <View style={styles.emptyContainer}>
       <MaterialCommunityIcons
@@ -67,13 +69,13 @@ export function EmptyServicesComponent() {
       <Text
         fontFamily="bold"
         size={theme.fontSizes.lg + 2}
-        color="white"
+        color={colors.text}
         style={{ marginBottom: 4 }}
       >
         No se encontraron servicios
       </Text>
       <Text
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
         style={{ textAlign: "center" }}
       >
@@ -84,6 +86,7 @@ export function EmptyServicesComponent() {
 }
 
 export function ErrorServicesComponent() {
+  const { colors } = useColorScheme();
   return (
     <View style={styles.emptyContainer}>
       <MaterialCommunityIcons
@@ -95,13 +98,13 @@ export function ErrorServicesComponent() {
       <Text
         fontFamily="bold"
         size={theme.fontSizes.lg + 2}
-        color={"white"}
+        color={colors.text}
         style={{ marginBottom: 4 }}
       >
         Error al cargar servicios
       </Text>
       <Text
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
         style={{ textAlign: "center" }}
       >

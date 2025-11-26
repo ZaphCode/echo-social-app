@@ -1,10 +1,9 @@
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
-import { theme } from "@/theme/theme";
 import Text from "./ui/Text";
 import useList from "@/hooks/useList";
 import Loader from "./ui/Loader";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   selectedCategoryId: string;
@@ -15,6 +14,7 @@ export default function CategoryList({
   selectedCategoryId,
   setSelectedCategoryId,
 }: Props) {
+  const { colors } = useColorScheme();
   const [categories, { status }] = useList("service_category", {
     notRefreshOnFocus: true,
   });
@@ -35,14 +35,15 @@ export default function CategoryList({
         <Pressable
           style={[
             styles.listItem,
-            id === selectedCategoryId && styles.selectedListItem,
+            { backgroundColor: colors.darkerGray },
+            id === selectedCategoryId && {
+              backgroundColor: colors.secondaryBlue,
+            },
           ]}
           onPress={() => setSelectedCategoryId(id)}
         >
           <Text
-            color={
-              id === selectedCategoryId ? theme.colors.primaryBlue : "white"
-            }
+            color={id === selectedCategoryId ? colors.primaryBlue : colors.text}
           >
             {name}
           </Text>
@@ -53,16 +54,15 @@ export default function CategoryList({
 }
 
 function CategoryListError() {
+  const { colors } = useColorScheme();
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
       <MaterialCommunityIcons
         name="alert-circle-outline"
         size={22}
-        color={theme.colors.redError}
+        color={colors.redError}
       />
-      <Text color={theme.colors.redError}>
-        Error cargando las categorías...
-      </Text>
+      <Text color={colors.redError}>Error cargando las categorías...</Text>
     </View>
   );
 }
@@ -71,11 +71,7 @@ const styles = StyleSheet.create({
   listItem: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: theme.colors.darkerGray,
     marginRight: 16,
     borderRadius: 8,
-  },
-  selectedListItem: {
-    backgroundColor: theme.colors.secondaryBlue,
   },
 });

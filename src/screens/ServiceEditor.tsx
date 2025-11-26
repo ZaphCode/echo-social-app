@@ -15,6 +15,7 @@ import Dropdown from "@/components/forms/Dropdown";
 import Button from "@/components/ui/Button";
 import PhotoPicker from "@/components/forms/PhotoPicker";
 import useMutate from "@/hooks/useMutate";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = StaticScreenProps<{ serviceToEdit?: Service }>;
 
@@ -89,8 +90,12 @@ export default function ServiceEditor({ route }: Props) {
     }
   });
 
+  const { colors } = useColorScheme();
+
   return (
-    <KeyboardAvoidingView style={styles.container}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <View style={{ gap: theme.spacing.md }}>
         <Field
           name="serviceName"
@@ -150,7 +155,6 @@ export default function ServiceEditor({ route }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.background,
     padding: theme.spacing.sm + 4,
     paddingVertical: theme.spacing.md,
     flex: 1,

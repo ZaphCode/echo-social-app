@@ -1,31 +1,25 @@
 import { View } from "react-native";
 
-import { theme } from "@/theme/theme";
 import { useNegotiationCtx } from "@/context/Negotiation";
 import * as NS from "@/utils/negotiation";
 import Text from "./ui/Text";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function NegotiationStatusBar() {
   const { request } = useNegotiationCtx();
+  const { colors } = useColorScheme();
 
   if (NS.isAccepted(request) || NS.bothAgreed(request)) {
-    return (
-      <StatusBar title="Trato Aceptado" color={theme.colors.successGreen} />
-    );
+    return <StatusBar title="Trato Aceptado" color={colors.successGreen} />;
   }
 
   if (NS.isCanceled(request) || NS.bothRejected(request)) {
-    return (
-      <StatusBar title="Solicitud Cancelada" color={theme.colors.redError} />
-    );
+    return <StatusBar title="Solicitud Cancelada" color={colors.redError} />;
   }
 
   if (NS.isFinished(request) || NS.bothMarkedCompleted(request)) {
     return (
-      <StatusBar
-        title="Servicio Completado!"
-        color={theme.colors.completePurple}
-      />
+      <StatusBar title="Servicio Completado!" color={colors.completePurple} />
     );
   }
 

@@ -5,15 +5,17 @@ import { theme } from "@/theme/theme";
 import { useAlertCtx } from "@/context/Alert";
 import Text from "./Text";
 import Button from "./Button";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export function AlertModal() {
   const { hide, visible, icon, message, title, iconColor, onConfirm } =
     useAlertCtx();
+  const { colors } = useColorScheme();
 
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
-        <View style={styles.modal}>
+        <View style={{ ...styles.modal, backgroundColor: colors.darkerGray }}>
           <MaterialCommunityIcons
             name={icon}
             size={54}
@@ -29,7 +31,7 @@ export function AlertModal() {
             {title}
           </Text>
           <Text
-            color={theme.colors.lightGray}
+            color={colors.lightGray}
             size={theme.fontSizes.md}
             style={{ textAlign: "center", marginBottom: 12 }}
           >
@@ -40,10 +42,10 @@ export function AlertModal() {
               <Button
                 style={{
                   width: "50%",
-                  backgroundColor: theme.colors.darkGray,
+                  backgroundColor: colors.darkGray,
                 }}
                 title={"Cancelar"}
-                labelColor={theme.colors.lightGray}
+                labelColor={colors.lightGray}
                 onPress={hide}
               />
               <Button
@@ -74,7 +76,6 @@ const styles = StyleSheet.create({
   },
   modal: {
     width: "92%",
-    backgroundColor: theme.colors.darkerGray,
     padding: theme.spacing.lg + 4,
     gap: theme.spacing.sm,
     borderRadius: theme.spacing.md,

@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { theme } from "@/theme/theme";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   visible: boolean;
@@ -16,6 +17,7 @@ type Props = {
 
 export function SlideModal({ visible, onClose, children }: Props) {
   const slideAnim = useRef(new Animated.Value(300)).current;
+  const { colors } = useColorScheme();
 
   useEffect(() => {
     if (visible) {
@@ -47,7 +49,10 @@ export function SlideModal({ visible, onClose, children }: Props) {
       <Animated.View
         style={[
           styles.modalContent,
-          { transform: [{ translateY: slideAnim }] },
+          {
+            backgroundColor: colors.darkerGray,
+            transform: [{ translateY: slideAnim }],
+          },
         ]}
       >
         {children}
@@ -65,7 +70,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     width: "100%",
-    backgroundColor: theme.colors.darkerGray,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     padding: 20,

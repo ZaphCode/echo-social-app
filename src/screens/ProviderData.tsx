@@ -11,6 +11,7 @@ import Divider from "@/components/ui/Divider";
 import useRegister from "@/hooks/auth/useRegister";
 import Text from "@/components/ui/Text";
 import ProviderInfoForm from "@/components/forms/ProviderInfoForm";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = StaticScreenProps<{
   userData: {
@@ -31,6 +32,7 @@ type Props = StaticScreenProps<{
 
 export default function ProviderData({ route }: Props) {
   const { userData } = route.params;
+  const { colors } = useColorScheme();
   const { registerProvider, loading } = useRegister();
   const { show } = useAlertCtx();
 
@@ -61,7 +63,9 @@ export default function ProviderData({ route }: Props) {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <View>
         <View style={styles.fieldsContainer}>
           <View style={styles.headerContainer}>
@@ -73,7 +77,10 @@ export default function ProviderData({ route }: Props) {
             <Text color="white" fontFamily="bold" size={theme.fontSizes.xl + 6}>
               ¡Ya casi terminas!
             </Text>
-            <Text style={styles.headerMsg} size={theme.fontSizes.md}>
+            <Text
+              style={[styles.headerMsg, { color: colors.lightGray }]}
+              size={theme.fontSizes.md}
+            >
               Completa tu perfil profesional y empieza a ofrecer tus servicios.
             </Text>
             <Divider />
@@ -92,7 +99,6 @@ export default function ProviderData({ route }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.background,
     flex: 1,
     paddingTop: theme.spacing.tabPT,
     paddingHorizontal: theme.spacing.md,
@@ -106,7 +112,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   headerMsg: {
-    color: theme.colors.lightGray,
+    // color: theme.colors.lightGray,
     textAlign: "center",
     paddingHorizontal: theme.spacing.sm,
   },

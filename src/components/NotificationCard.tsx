@@ -5,6 +5,7 @@ import Text from "./ui/Text";
 import { Notification } from "@/models/Notification";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { formatDateLong } from "@/utils/format";
+import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
   notification: Notification;
@@ -12,9 +13,15 @@ interface Props {
 
 export default function NotificationCard({ notification }: Props) {
   const { icon, color } = getIconAndColor(notification.type, notification.read);
+  const { colors } = useColorScheme();
 
   return (
-    <View style={[styles.card, notification.read && styles.cardRead]}>
+    <View
+      style={[
+        { ...styles.card, backgroundColor: colors.darkerGray },
+        notification.read && styles.cardRead,
+      ]}
+    >
       <MaterialCommunityIcons
         name={icon as any}
         size={28}
@@ -28,7 +35,7 @@ export default function NotificationCard({ notification }: Props) {
             fontSize: theme.fontSizes.md,
           })}
         </RNText>
-        <Text color={theme.colors.lightGray} size={theme.fontSizes.sm}>
+        <Text color={colors.lightGray} size={theme.fontSizes.sm}>
           {formatDateLong(notification.created)}
         </Text>
       </View>
@@ -50,7 +57,6 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: theme.colors.darkerGray,
     borderRadius: theme.spacing.md,
     padding: theme.spacing.md,
     gap: theme.spacing.sm,
@@ -62,18 +68,19 @@ const styles = StyleSheet.create({
 });
 
 function getIconAndColor(type: Notification["type"], read?: boolean) {
+  const { colors } = useColorScheme();
   switch (type) {
     case "PROVIDER:NEW_REQUEST":
       return {
         icon: "account-plus",
-        color: theme.colors.primaryBlue,
+        color: colors.primaryBlue,
       };
     case "CLIENT:NEW_OFFER":
       return { icon: "handshake", color: "#e6b800" };
     case "PROVIDER:NEW_OFFER":
       return {
         icon: "account-cash",
-        color: theme.colors.successGreen,
+        color: colors.successGreen,
       };
     case "SYSTEM:INFO":
     default:

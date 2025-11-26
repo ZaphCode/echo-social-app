@@ -7,6 +7,7 @@ import { theme } from "@/theme/theme";
 import { getFileUrl } from "@/utils/format";
 import { useNavigation } from "@react-navigation/native";
 import { User } from "@/models/User";
+import useColorScheme from "@/hooks/useColorScheme";
 
 const DEVICE_WIDTH = Dimensions.get("window").width;
 
@@ -33,8 +34,13 @@ export default function ServiceCard({ service, authUser }: Props) {
     });
   };
 
+  const { colors } = useColorScheme();
+
   return (
-    <Pressable onPress={handlePress} style={[styles.card]}>
+    <Pressable
+      onPress={handlePress}
+      style={[styles.card, { backgroundColor: colors.darkerGray }]}
+    >
       <Image
         source={{
           uri:
@@ -75,7 +81,7 @@ export default function ServiceCard({ service, authUser }: Props) {
               </>
             ) : (
               <>
-                <Feather name="user" size={14} color={theme.colors.lightGray} />
+                <Feather name="user" size={14} color={colors.lightGray} />
                 <Text style={styles.username}>
                   {service.expand!.provider.name}
                 </Text>
@@ -92,7 +98,6 @@ export default function ServiceCard({ service, authUser }: Props) {
 const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
-    backgroundColor: theme.colors.darkerGray,
     overflow: "hidden",
     width: DEVICE_WIDTH * 0.89,
   },

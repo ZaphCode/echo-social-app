@@ -16,6 +16,7 @@ import useList from "@/hooks/useList";
 import RequestForm from "@/components/forms/RequestForm";
 import ReviewSection from "@/components/ReviewSection";
 import useModal from "@/hooks/useModal";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = StaticScreenProps<{ service: Service }>;
 
@@ -59,8 +60,12 @@ export default function ServiceOverview({ route }: Props) {
     });
   };
 
+  const { colors } = useColorScheme();
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <ServicePhotoCarousel photos={service.photos} serviceId={service.id} />
       <View style={{ gap: theme.spacing.md }}>
         <Text color="white" fontFamily="bold" size={theme.fontSizes.xxl}>
@@ -68,7 +73,7 @@ export default function ServiceOverview({ route }: Props) {
         </Text>
         <View style={styles.infoContainer}>
           <Pressable onPress={goToUserProfile} style={styles.profileContainer}>
-            <Feather name="user" size={25} color={theme.colors.lightGray} />
+            <Feather name="user" size={25} color={colors.lightGray} />
             <Text
               size={theme.fontSizes.md + 1}
               style={{ textDecorationLine: "underline" }}
@@ -114,7 +119,6 @@ export default function ServiceOverview({ route }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.background,
     padding: theme.spacing.sm + 4,
   },
   infoContainer: {

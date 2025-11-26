@@ -10,6 +10,7 @@ import MessageField from "./MessageField";
 import { theme } from "@/theme/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Loader from "./ui/Loader";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   requestId: string;
@@ -31,7 +32,7 @@ export default function MessageList({ requestId }: Props) {
     if (status === "success") setMessages(initialMessages);
   }, [status]);
 
-  useSubscription("message", "*", ({ action, record }) => {
+  useSubscription("message", "*", async ({ action, record }) => {
     if (action === "create" && record.request === requestId) {
       setMessages((prevMessages) => [...prevMessages, record]);
     }
@@ -68,25 +69,26 @@ export default function MessageList({ requestId }: Props) {
 }
 
 function EmptyMessages() {
+  const { colors } = useColorScheme();
   return (
     <View style={styles.emptyContainer}>
       <MaterialCommunityIcons
         name="message-text-outline"
         size={52}
-        color={theme.colors.primaryBlue}
+        color={colors.primaryBlue}
         style={{ marginBottom: 18 }}
       />
       <Text
         fontFamily="bold"
         size={theme.fontSizes.lg + 2}
-        color={"white"}
+        color={colors.text}
         style={{ marginBottom: 6 }}
       >
         ¡Sin mensajes!
       </Text>
       <Text
         style={{ textAlign: "center" }}
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
       >
         No hay mensajes en esta conversación. ¡Envía el primero!
@@ -96,12 +98,13 @@ function EmptyMessages() {
 }
 
 function ErrorMessages() {
+  const { colors } = useColorScheme();
   return (
     <View style={styles.errorContainer}>
       <MaterialCommunityIcons
         name="alert-circle-outline"
         size={52}
-        color={theme.colors.redError}
+        color={colors.redError}
         style={{ marginBottom: 16 }}
       />
       <Text
@@ -114,7 +117,7 @@ function ErrorMessages() {
       </Text>
       <Text
         style={{ textAlign: "center" }}
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
       >
         No pudimos cargar los mensajes. Por favor, revisa tu conexión o intenta

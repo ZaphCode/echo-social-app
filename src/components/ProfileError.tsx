@@ -2,14 +2,17 @@ import { View, StyleSheet } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Text from "@/components/ui/Text";
 import { theme } from "@/theme/theme";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export function ProfileError({ message = "No se encontró el perfil." }) {
+  const { colors } = useColorScheme();
+
   return (
     <View style={errorStyles.container}>
       <MaterialCommunityIcons
         name="account-alert-outline"
         size={56}
-        color={theme.colors.redError}
+        color={colors.redError}
         style={{ marginBottom: 14 }}
       />
       <Text
@@ -22,7 +25,7 @@ export function ProfileError({ message = "No se encontró el perfil." }) {
       </Text>
       <Text
         style={{ textAlign: "center" }}
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
       >
         {message}

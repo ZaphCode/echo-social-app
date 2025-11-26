@@ -7,8 +7,11 @@ import { AuthProvider } from "./src/context/Auth";
 import { useFonts } from "expo-font";
 import { AlertProvider } from "@/context/Alert";
 import { AlertModal } from "@/components/ui/AlertModal";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 SplashScreen.preventAutoHideAsync();
+
+const queryClient = new QueryClient();
 
 export default function App() {
   const [appIsReady, SetAppIsReady] = useState(false);
@@ -27,12 +30,14 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <AlertProvider>
-        <StatusBar style="light" />
-        <Navigation onReady={() => SetAppIsReady(true)} />
-        <AlertModal />
-      </AlertProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AlertProvider>
+          <StatusBar style="light" />
+          <Navigation onReady={() => SetAppIsReady(true)} />
+          <AlertModal />
+        </AlertProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

@@ -11,7 +11,7 @@ import * as NS from "@/utils/negotiation";
 import Text from "./ui/Text";
 import useSubscription from "@/hooks/useSubscription";
 import useRequestStatus from "@/hooks/useRequestStatus";
-import useCheckReviews from "@/hooks/useCheckReviews";
+import useColorScheme from "@/hooks/useColorScheme";
 
 const PERSON_ICON_SIZE = 38;
 
@@ -30,6 +30,7 @@ export default function NegotiationBlock({
   const { show } = useAlertCtx();
   const { request, client, provider, setRequest } = useNegotiationCtx();
   const statusModifier = useRequestStatus(authUser);
+  const { colors } = useColorScheme();
 
   useSubscription("service_request", request.id, async ({ action, record }) => {
     if (action === "update") {
@@ -64,12 +65,14 @@ export default function NegotiationBlock({
   const reviewBtnDisabled = !NS.isFinished(request) || hasReviewed;
 
   return (
-    <View style={styles.container}>
+    <View
+      style={{ padding: theme.spacing.md, backgroundColor: colors.darkerGray }}
+    >
       <View style={styles.agreementsDataContainer}>
         <View style={styles.userContainer}>
           {authUser.id === client.id && (
             <Text
-              color={theme.colors.primaryBlue}
+              color={colors.primaryBlue}
               size={theme.fontSizes.sm + 1}
               style={{ position: "absolute", bottom: 40, left: 7 }}
             >
@@ -98,12 +101,12 @@ export default function NegotiationBlock({
             <View style={{ flexDirection: "row" }}>
               <Text>Precio: </Text>
               <Text
-                color={theme.colors.primaryBlue}
+                color={colors.primaryBlue}
               >{`$${request.agreed_price}`}</Text>
             </View>
             <View style={{ flexDirection: "row" }}>
               <Text>Fecha: </Text>
-              <Text color={theme.colors.primaryBlue}>
+              <Text color={colors.primaryBlue}>
                 {formatDate(request.agreed_date)}
               </Text>
             </View>
@@ -125,7 +128,7 @@ export default function NegotiationBlock({
           />
           {authUser.id === provider.id && (
             <Text
-              color={theme.colors.primaryBlue}
+              color={colors.primaryBlue}
               size={theme.fontSizes.sm + 1}
               style={{ position: "absolute", bottom: 40, left: 7 }}
             >
@@ -144,7 +147,7 @@ export default function NegotiationBlock({
                   message:
                     "¿Estás seguro de marcar esta solicitud como completada?",
                   icon: "check-circle",
-                  iconColor: theme.colors.completePurple,
+                  iconColor: colors.completePurple,
                   onConfirm: statusModifier.setUserToCompleted,
                 })
               }
@@ -154,9 +157,7 @@ export default function NegotiationBlock({
               ]}
               disabled={completedBtnDisabled}
             >
-              <Text color={theme.colors.completePurple}>
-                Marcar como completado
-              </Text>
+              <Text color={colors.completePurple}>Marcar como completado</Text>
             </Pressable>
             <Pressable
               onPress={openReviewFn}
@@ -174,21 +175,21 @@ export default function NegotiationBlock({
                   title: "Aceptar Propuesta",
                   message: "¿Estás seguro de aceptar esta propuesta?",
                   icon: "check-circle",
-                  iconColor: theme.colors.successGreen,
+                  iconColor: colors.successGreen,
                   onConfirm: statusModifier.setUserToAgreed,
                 })
               }
               style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
               disabled={statusBtnDisabled}
             >
-              <Text color={theme.colors.successGreen}>Aceptar</Text>
+              <Text color={colors.successGreen}>Aceptar</Text>
             </Pressable>
             <Pressable
               onPress={openOfferFn}
               disabled={offerBtnDisabled}
               style={[styles.button, { opacity: offerBtnDisabled ? 0.25 : 1 }]}
             >
-              <Text color={theme.colors.primaryBlue}>Ofertar</Text>
+              <Text color={colors.primaryBlue}>Ofertar</Text>
             </Pressable>
             <Pressable
               disabled={statusBtnDisabled}
@@ -197,13 +198,19 @@ export default function NegotiationBlock({
                   title: "Rechazar Propuesta",
                   message: "¿Estás seguro de rechazar esta propuesta?",
                   icon: "close-circle",
-                  iconColor: theme.colors.redError,
+                  iconColor: colors.redError,
                   onConfirm: statusModifier.setUserToRejected,
                 })
               }
-              style={[styles.button, { opacity: statusBtnDisabled ? 0.25 : 1 }]}
+              style={[
+                styles.button,
+                {
+                  backgroundColor: colors.darkGray,
+                  opacity: statusBtnDisabled ? 0.25 : 1,
+                },
+              ]}
             >
-              <Text color={theme.colors.redError}>Rechazar</Text>
+              <Text color={colors.redError}>Rechazar</Text>
             </Pressable>
           </>
         )}
@@ -213,10 +220,6 @@ export default function NegotiationBlock({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.darkerGray,
-    padding: theme.spacing.md,
-  },
   agreementsDataContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -231,7 +234,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   button: {
-    backgroundColor: theme.colors.darkGray,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.xs - 2,
     minWidth: 100,
@@ -243,23 +245,25 @@ const styles = StyleSheet.create({
 });
 
 function getClientColor(request: ServiceRequest) {
+  const { colors } = useColorScheme();
   if (NS.clientAgreed(request)) {
-    return theme.colors.successGreen;
+    return colors.successGreen;
   } else if (NS.clientRejected(request)) {
-    return theme.colors.redError;
+    return colors.redError;
   } else if (NS.clientMarkedCompleted(request)) {
-    return theme.colors.completePurple;
+    return colors.completePurple;
   }
-  return theme.colors.primaryBlue;
+  return colors.primaryBlue;
 }
 
 function getProviderColor(request: ServiceRequest) {
+  const { colors } = useColorScheme();
   if (NS.providerAgreed(request)) {
-    return theme.colors.successGreen;
+    return colors.successGreen;
   } else if (NS.providerRejected(request)) {
-    return theme.colors.redError;
+    return colors.redError;
   } else if (NS.providerMarkedCompleted(request)) {
-    return theme.colors.completePurple;
+    return colors.completePurple;
   }
-  return theme.colors.primaryBlue;
+  return colors.primaryBlue;
 }

@@ -1,11 +1,10 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import React from "react";
 import Button from "../ui/Button";
 import Field from "./Field";
 import * as rules from "@/utils/validations";
 import { theme } from "@/theme/theme";
 import Divider from "../ui/Divider";
-import { useForm } from "react-hook-form";
 
 type Props = {
   submitBtnLabel: string;

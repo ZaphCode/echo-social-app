@@ -6,16 +6,18 @@ import { IndexStack } from "./Index";
 import MyProfile from "@/screens/MyProfile";
 import Notifications from "@/screens/Notifications";
 import Requests from "@/screens/Requests";
+import { theme } from "@/theme/theme";
 
 export const Tabs = createBottomTabNavigator({
   initialRouteName: "Home",
   screenOptions: {
     headerShown: false,
     tabBarStyle: {
-      backgroundColor: "#1F1F1F",
+      backgroundColor: theme.colors.secondaryBlue,
       borderTopWidth: 0,
       height: Platform.OS === "ios" ? 90 : 70,
     },
+    tabBarInactiveTintColor: "white",
     tabBarLabelStyle: {
       fontSize: 12,
     },

@@ -6,14 +6,16 @@ import Text from "@/components/ui/Text";
 import NotificationList from "@/components/NotificationList";
 import Divider from "@/components/ui/Divider";
 import { useAlertCtx } from "@/context/Alert";
-import Button from "@/components/ui/Button";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function Notifications() {
-  const { show } = useAlertCtx();
+  const { colors } = useColorScheme();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text fontFamily="bold" color="white" size={theme.fontSizes.xxl}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <Text fontFamily="bold" color={colors.text} size={theme.fontSizes.xxl}>
         Notificaciones
       </Text>
       <Divider />
@@ -24,7 +26,6 @@ export default function Notifications() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.background,
     padding: theme.spacing.md,
     height: "100%",
     paddingTop: theme.spacing.tabPT,

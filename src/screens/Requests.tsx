@@ -5,11 +5,15 @@ import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 import RequestsList from "@/components/RequestsList";
 import Divider from "@/components/ui/Divider";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function Requests() {
+  const { colors } = useColorScheme();
   return (
-    <SafeAreaView style={styles.container}>
-      <Text fontFamily="bold" color="white" size={theme.fontSizes.xxl}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <Text fontFamily="bold" color={colors.text} size={theme.fontSizes.xxl}>
         Solicitudes
       </Text>
       <Divider />
@@ -20,7 +24,6 @@ export default function Requests() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.background,
     padding: theme.spacing.md,
     paddingTop: theme.spacing.tabPT,
     height: "100%",

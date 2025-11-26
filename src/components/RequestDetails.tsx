@@ -1,12 +1,14 @@
 import { View, StyleSheet } from "react-native";
 import { Image } from "expo-image";
+
 import Text from "./ui/Text";
 import { theme } from "@/theme/theme";
 import { User } from "@/models/User";
 import { ServiceRequest } from "@/models/ServiceRequest";
-import { formatDateLong, getFileUrl } from "@/utils/format";
+import { getFileUrl } from "@/utils/format";
 import Divider from "./ui/Divider";
 import InfoRow from "./InfoRow";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   client: User;
@@ -64,13 +66,14 @@ function UserMiniCard({
   name: string;
   avatar?: string;
 }) {
+  const { colors } = useColorScheme();
   return (
     <View style={styles.userCard}>
       <Image
         source={{ uri: getFileUrl("users", id, avatar!) }}
         style={styles.avatar}
       />
-      <Text color={theme.colors.lightGray} size={12}>
+      <Text color={colors.lightGray} size={12}>
         {label}
       </Text>
       <Text color="white" numberOfLines={1} style={{ fontWeight: "bold" }}>
@@ -84,11 +87,6 @@ const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.md,
     gap: 18,
-  },
-  notesText: {
-    color: theme.colors.lightGray,
-    marginBottom: 14,
-    fontSize: theme.fontSizes.md,
   },
   datesRow: {
     flexDirection: "row",

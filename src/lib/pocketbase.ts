@@ -7,13 +7,17 @@ import { Platform } from "react-native";
 
 let POCKETBASE_URL;
 
-if (__DEV__) {
-  if (Platform.OS === "ios")
-    POCKETBASE_URL = "https://echo-zaph.pockethost.io/";
-  else POCKETBASE_URL = "http://10.0.2.2:8090";
-} else {
-  POCKETBASE_URL = "https://echo-zaph.pockethost.io/";
-}
+// if (__DEV__) {
+//   if (Platform.OS === "ios")
+//   if (Platform.OS === "ios")
+//     POCKETBASE_URL = "https://echo-zaph.pockethost.io/";
+//   else POCKETBASE_URL = "http://127.0.0.1:8090/";
+// } else {
+//   POCKETBASE_URL = "https://echo-zaph.pockethost.io/";
+// }
+
+POCKETBASE_URL =
+  Platform.OS === "ios" ? "http://127.0.0.1:8090/" : "http://10.0.2.2:8090";
 
 const store = new AsyncAuthStore({
   save: async (serialized) => AsyncStorage.setItem("pb_auth", serialized),

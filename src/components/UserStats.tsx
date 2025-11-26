@@ -4,14 +4,16 @@ import { theme } from "@/theme/theme";
 import { Feather } from "@expo/vector-icons";
 import Text from "./ui/Text";
 import useStats from "@/hooks/useStats";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = { userId: string };
 
 export default function UserStats({ userId }: Props) {
   const { rating, reviewsCount, requestsDone } = useStats(userId);
+  const { colors } = useColorScheme();
 
   return (
-    <View style={styles.block}>
+    <View style={{ ...styles.block, backgroundColor: colors.darkerGray }}>
       <View style={styles.numbersRow}>
         <StatBox label="Reseñas" value={reviewsCount} icon="award" />
         <StatBox
@@ -42,6 +44,7 @@ function StatBox({
   icon: keyof typeof Feather.glyphMap;
   iconColor?: string;
 }) {
+  const { colors } = useColorScheme();
   return (
     <View style={styles.statBox}>
       <Feather
@@ -51,13 +54,13 @@ function StatBox({
       />
       <Text
         fontFamily="bold"
-        color="white"
+        color={colors.text}
         size={theme.fontSizes.lg + 5}
         style={{ marginLeft: 4 }}
       >
         {`${value}`}
       </Text>
-      <Text color={theme.colors.lightGray} size={theme.fontSizes.md}>
+      <Text color={colors.lightGray} size={theme.fontSizes.md}>
         {label}
       </Text>
     </View>
@@ -66,7 +69,6 @@ function StatBox({
 
 const styles = StyleSheet.create({
   block: {
-    backgroundColor: theme.colors.darkerGray,
     borderRadius: 16,
     padding: 20,
     width: "90%",

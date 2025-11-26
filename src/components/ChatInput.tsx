@@ -14,15 +14,14 @@ import { useAuthCtx } from "@/context/Auth";
 import useMutate from "@/hooks/useMutate";
 import { useNegotiationCtx } from "@/context/Negotiation";
 import { isCanceled, isFinished } from "@/utils/negotiation";
+import useColorScheme from "@/hooks/useColorScheme";
 
 const DEVICE_HEIGHT = Dimensions.get("window").height;
 
-type Props = {
-  requestId: string;
-};
-
 export default function ChatInput() {
   const { user } = useAuthCtx();
+  const { colors } = useColorScheme();
+
   const [message, setMessage] = useState("");
   const { request } = useNegotiationCtx();
 
@@ -50,13 +49,17 @@ export default function ChatInput() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? DEVICE_HEIGHT * 0.02 : 0}
     >
-      <View style={styles.inputContainer}>
+      <View style={{ ...styles.inputContainer, borderColor: colors.darkGray }}>
         <TextInput
-          style={styles.input}
+          style={{
+            ...styles.input,
+            backgroundColor: colors.darkGray,
+            color: colors.text,
+          }}
           value={message}
           onChangeText={setMessage}
           placeholder="Escribe un mensaje..."
-          placeholderTextColor={theme.colors.lightGray}
+          placeholderTextColor={colors.lightGray}
           onSubmitEditing={handleSend}
           returnKeyType="send"
         />
@@ -68,7 +71,7 @@ export default function ChatInput() {
           <MaterialCommunityIcons
             name="send"
             size={24}
-            color={theme.colors.primaryBlue}
+            color={colors.primaryBlue}
             style={{ opacity: isDisabled ? 0.3 : 1 }}
           />
         </TouchableOpacity>
@@ -85,15 +88,12 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "android" ? theme.spacing.md + 1 : 3,
     paddingHorizontal: theme.spacing.md,
     borderTopWidth: 1,
-    borderColor: theme.colors.darkGray,
   },
   input: {
     flex: 1,
     height: 44,
     borderRadius: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md + 2,
-    backgroundColor: theme.colors.darkGray,
-    color: "white",
     fontFamily: theme.fontFamily.regular,
   },
   sendButton: {

@@ -14,9 +14,11 @@ import Text from "@/components/ui/Text";
 import { theme } from "@/theme/theme";
 import { useNavigation } from "@react-navigation/native";
 import { NOTIFICATIONS_KEY } from "@/utils/constants";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function ProfileConfigSection() {
   const navigation = useNavigation();
+  const { colors, activeMode, setDarkMode, setLightMode } = useColorScheme();
   const [notificationsOn, setNotificationOn] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -51,57 +53,81 @@ export default function ProfileConfigSection() {
     }
   };
 
+  const toggleTheme = () => {
+    if (activeMode === "dark") {
+      setLightMode();
+    } else {
+      setDarkMode();
+    }
+  };
+
   const goToPrivacy = () => {
     navigation.navigate("Main", { screen: "Privacy" });
   };
 
   return (
-    <View style={styles.infoContainer}>
+    <View
+      style={{ ...styles.infoContainer, backgroundColor: colors.darkerGray }}
+    >
       <View style={styles.sectionHeader}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Feather name="settings" size={20} color={theme.colors.primaryBlue} />
-          <Text fontFamily="bold" color="white" size={theme.fontSizes.lg}>
+          <Feather name="settings" size={20} color={colors.primaryBlue} />
+          <Text fontFamily="bold" color={colors.text} size={theme.fontSizes.lg}>
             Configuración
           </Text>
         </View>
       </View>
-      <View style={styles.settingRow}>
+      <View style={[styles.settingRow, { borderBottomColor: colors.darkGray }]}>
         <View style={styles.labelContainer}>
-          <Feather name="bell" size={20} color={theme.colors.lightGray} />
-          <Text color="white" style={styles.settingLabel}>
+          <Feather name="bell" size={20} color={colors.text} />
+          <Text color={colors.text} style={styles.settingLabel}>
             Notificaciones
           </Text>
         </View>
         <Switch
           trackColor={{
-            false: theme.colors.lightGray,
-            true: theme.colors.primaryBlue,
+            false: colors.lightGray,
+            true: colors.primaryBlue,
           }}
           thumbColor={"white"}
-          style={{
-            transform:
-              Platform.OS === "ios"
-                ? [{ scaleX: 0.75 }, { scaleY: 0.75 }]
-                : [{ scaleX: 1.2 }, { scaleY: 1.2 }],
-          }}
-          ios_backgroundColor={theme.colors.lightGray}
+          style={styles.switch}
+          ios_backgroundColor={colors.lightGray}
           value={notificationsOn}
           onValueChange={handleToggle}
           disabled={loading}
         />
       </View>
-      <Pressable style={styles.settingRow} onPress={goToPrivacy}>
+      <View style={[styles.settingRow, { borderBottomColor: colors.darkGray }]}>
         <View style={styles.labelContainer}>
-          <Feather name="lock" size={20} color={theme.colors.lightGray} />
-          <Text color="white" style={styles.settingLabel}>
+          <Feather name="moon" size={20} color={colors.text} />
+          <Text color={colors.text} style={styles.settingLabel}>
+            Modo Oscuro
+          </Text>
+        </View>
+        <Switch
+          trackColor={{
+            false: colors.lightGray,
+            true: colors.primaryBlue,
+          }}
+          thumbColor={"white"}
+          style={styles.switch}
+          ios_backgroundColor={colors.lightGray}
+          value={activeMode === "dark"}
+          onValueChange={toggleTheme}
+          disabled={loading}
+        />
+      </View>
+      <Pressable
+        style={[styles.settingRow, { borderBottomColor: colors.darkGray }]}
+        onPress={goToPrivacy}
+      >
+        <View style={styles.labelContainer}>
+          <Feather name="lock" size={20} color={colors.text} />
+          <Text color={colors.text} style={styles.settingLabel}>
             Privacidad
           </Text>
         </View>
-        <Feather
-          name="chevron-right"
-          size={20}
-          color={theme.colors.lightGray}
-        />
+        <Feather name="chevron-right" size={20} color={colors.lightGray} />
       </Pressable>
     </View>
   );
@@ -110,7 +136,6 @@ export default function ProfileConfigSection() {
 const styles = StyleSheet.create({
   infoContainer: {
     width: "90%",
-    backgroundColor: theme.colors.darkerGray,
     borderRadius: 15,
     padding: 26,
     marginTop: 20,
@@ -127,7 +152,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
   },
   labelContainer: {
     flexDirection: "row",
@@ -136,5 +160,11 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: theme.fontSizes.md,
+  },
+  switch: {
+    transform:
+      Platform.OS === "ios"
+        ? [{ scaleX: 0.75 }, { scaleY: 0.75 }]
+        : [{ scaleX: 1.2 }, { scaleY: 1.2 }],
   },
 });

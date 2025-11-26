@@ -8,10 +8,12 @@ import Text from "@/components/ui/Text";
 import Button from "@/components/ui/Button";
 import { theme } from "@/theme/theme";
 import { useAlertCtx } from "@/context/Alert";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function Privacy() {
   const { show } = useAlertCtx();
   const [loading, setLoading] = useState(false);
+  const { colors } = useColorScheme();
 
   const downloadPrivacyPDF = async () => {
     setLoading(true);
@@ -67,7 +69,7 @@ export default function Privacy() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Feather
         name="shield"
         size={54}
@@ -95,7 +97,7 @@ export default function Privacy() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.background,
+    // backgroundColor: theme.colors.background,
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 40,

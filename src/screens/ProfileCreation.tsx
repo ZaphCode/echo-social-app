@@ -12,6 +12,7 @@ import useRegister from "@/hooks/auth/useRegister";
 import useRedirect from "@/hooks/auth/useRedirect";
 import useLocation from "@/hooks/useLocation";
 import ProfileForm from "@/components/forms/ProfileForm";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = StaticScreenProps<{
   userData: {
@@ -27,6 +28,7 @@ type Props = StaticScreenProps<{
 export default function ProfileCreation({ route }: Props) {
   useRedirect();
   const { userData } = route.params;
+  const { colors } = useColorScheme();
   const [avatar, setAvatar] = useState<string>();
   const navigation = useNavigation();
   const { show } = useAlertCtx();
@@ -86,7 +88,9 @@ export default function ProfileCreation({ route }: Props) {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <ScrollView>
         <AvatarPicker onChange={setAvatar} />
         <ProfileForm
@@ -102,7 +106,7 @@ export default function ProfileCreation({ route }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.background,
+    // backgroundColor: theme.colors.background,
     flex: 1,
     paddingTop: theme.spacing.tabPT,
   },

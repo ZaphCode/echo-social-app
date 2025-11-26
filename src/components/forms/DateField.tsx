@@ -6,6 +6,7 @@ import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import { formatDate } from "@/utils/format";
 import { validDateRules } from "@/utils/validations";
+import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
   name: string;
@@ -15,6 +16,7 @@ interface Props {
 
 export default function DateField({ name, label, control }: Props) {
   const [showPicker, setShowPicker] = useState(false);
+  const { colors } = useColorScheme();
 
   return (
     <Controller
@@ -24,22 +26,30 @@ export default function DateField({ name, label, control }: Props) {
       rules={validDateRules}
       render={({ field: { onChange, value }, fieldState: { error } }) => (
         <View>
-          {label && <Text style={styles.label}>{label}</Text>}
+          {label && (
+            <Text style={[styles.label, { color: colors.lightGray }]}>
+              {label}
+            </Text>
+          )}
 
           <Pressable
             onPress={() => setShowPicker(true)}
-            style={styles.inputContainer}
+            style={{
+              ...styles.inputContainer,
+              borderColor: error ? colors.redError : colors.lightGray,
+              borderWidth: 1,
+            }}
           >
             <Feather
               name="calendar"
               size={20}
-              color={theme.colors.lightGray}
+              color={colors.lightGray}
               style={styles.icon}
             />
             <Text
               style={{
                 ...styles.inputText,
-                color: value ? "#fff" : theme.colors.lightGray,
+                color: value ? colors.text : colors.lightGray,
               }}
             >
               {value
@@ -74,7 +84,6 @@ export default function DateField({ name, label, control }: Props) {
 
 const styles = StyleSheet.create({
   label: {
-    color: theme.colors.lightGray,
     fontFamily: theme.fontFamily.regular,
     fontSize: theme.fontSizes.md,
     marginBottom: theme.spacing.sm,
@@ -83,7 +92,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.darkGray,
     borderRadius: 12,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: Platform.OS === "android" ? 17 : 14,

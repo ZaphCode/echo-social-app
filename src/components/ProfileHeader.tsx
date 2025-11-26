@@ -6,6 +6,7 @@ import AvatarPicker from "@/components/forms/AvatarPicker";
 import { getFileUrl } from "@/utils/format";
 import { User } from "@/models/User";
 import useMutate from "@/hooks/useMutate";
+import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
   user: User;
@@ -14,6 +15,7 @@ interface Props {
 
 export default function ProfileHeader({ user, editable }: Props) {
   const { update, mutationState } = useMutate("users");
+  const { colors } = useColorScheme();
 
   const onAvatarChange = async (imgSrc: string) => {
     if (!editable) return;
@@ -43,7 +45,7 @@ export default function ProfileHeader({ user, editable }: Props) {
         onChange={onAvatarChange}
         viewOnly={!editable}
       />
-      <Text fontFamily="bold" color="white" style={styles.userName}>
+      <Text fontFamily="bold" color={colors.text} style={styles.userName}>
         {user.name}
       </Text>
       <View style={styles.roleContainer}>
@@ -64,7 +66,6 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   userName: {
-    color: "white",
     fontSize: theme.fontSizes.xl,
     fontFamily: theme.fontFamily.bold,
     textAlign: "center",

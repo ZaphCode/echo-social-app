@@ -16,12 +16,19 @@ import PersonalInfoSection from "./PersonalInfoSection";
 import Loader from "@/components/ui/Loader";
 import UserStats from "@/components/UserStats";
 import { useEffect } from "react";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function MyProfile() {
   const { user } = useAuthCtx();
   const logout = useLogout();
   const navigation = useNavigation();
+  const { colors } = useColorScheme();
   const [profile, profileState] = useProfile(user, { expand: "specialty" });
+
+  const containerStyle = {
+    flex: 1,
+    backgroundColor: colors.background,
+  };
 
   const onLogout = async () => {
     await logout();
@@ -41,7 +48,7 @@ export default function MyProfile() {
 
   if (profileState.status === "loading") {
     return (
-      <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
+      <SafeAreaView style={[containerStyle, { justifyContent: "center" }]}>
         <Loader />
       </SafeAreaView>
     );
@@ -49,14 +56,14 @@ export default function MyProfile() {
 
   if (!profile || profileState.status === "error") {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={containerStyle}>
         <ProfileError />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={containerStyle}>
       <ScrollView
         style={{ width: "100%" }}
         contentContainerStyle={{ alignItems: "center", paddingBottom: 20 }}
@@ -69,7 +76,10 @@ export default function MyProfile() {
         {user.role === "provider" && (
           <Button
             title="Publicar nuevo servicio"
-            style={styles.newServiceButton}
+            style={[
+              styles.newServiceButton,
+              { backgroundColor: colors.darkerGray },
+            ]}
             labelColor={theme.colors.primaryBlue}
             onPress={goToServiceCreation}
           />
@@ -87,7 +97,7 @@ export default function MyProfile() {
 
         <Button
           title="Cerrar Sesión"
-          style={styles.logoutButton}
+          style={[styles.logoutButton, { backgroundColor: colors.darkGray }]}
           labelColor={theme.colors.redError}
           onPress={onLogout}
         />
@@ -97,10 +107,6 @@ export default function MyProfile() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   header: {
     alignItems: "center",
     paddingVertical: 18,
@@ -124,14 +130,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  infoContainer: {
-    width: "90%",
-    backgroundColor: theme.colors.darkGray,
-    borderRadius: 15,
-    padding: 26,
-    gap: 13,
-    marginTop: 20,
-  },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -141,11 +139,9 @@ const styles = StyleSheet.create({
   newServiceButton: {
     width: "90%",
     marginTop: 10,
-    backgroundColor: theme.colors.darkerGray,
   },
   logoutButton: {
     marginTop: 20,
     width: "90%",
-    backgroundColor: theme.colors.darkGray,
   },
 });

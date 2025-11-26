@@ -9,6 +9,7 @@ import Text from "@/components/ui/Text";
 import InfoRow from "./InfoRow";
 import useModal from "@/hooks/useModal";
 import EditProviderInfoView from "./EditProviderInfoView";
+import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
   providerProfile: ProviderProfile;
@@ -29,6 +30,7 @@ export default function ProfessionalInfoSection({
   providerProfile,
   editable,
 }: Props) {
+  const { colors } = useColorScheme();
   const [modalVisible, openModal, closeModal] = useModal();
   const [optimisticProfile, setOptimisticProfile] = useState(providerProfile);
 
@@ -40,25 +42,26 @@ export default function ProfessionalInfoSection({
   }`;
 
   return (
-    <View style={styles.block}>
+    <View style={{ ...styles.block, backgroundColor: colors.darkerGray }}>
       <View style={styles.sectionHeader}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Foundation
             name="torso-business"
             size={28}
-            color={theme.colors.primaryBlue}
+            color={colors.primaryBlue}
           />
-          <Text fontFamily="bold" color="white" size={theme.fontSizes.lg - 2.5}>
+          <Text
+            fontFamily="bold"
+            color={colors.text}
+            size={theme.fontSizes.lg - 2.5}
+          >
             Información Profesional
           </Text>
         </View>
         {editable && (
           <Pressable style={styles.editButton} onPress={openModal}>
-            <Feather name="edit-2" size={16} color={theme.colors.primaryBlue} />
-            <Text
-              color={theme.colors.primaryBlue}
-              style={styles.editButtonText}
-            >
+            <Feather name="edit-2" size={16} color={colors.primaryBlue} />
+            <Text color={colors.primaryBlue} style={styles.editButtonText}>
               Editar
             </Text>
           </Pressable>
@@ -74,11 +77,7 @@ export default function ProfessionalInfoSection({
       />
       <View style={{ marginTop: 12, marginBottom: 12 }}>
         <View style={styles.labelContainer}>
-          <Feather
-            name={"check-square"}
-            size={20}
-            color={theme.colors.lightGray}
-          />
+          <Feather name={"check-square"} size={20} color={colors.text} />
           <Text style={styles.label}>Días disponibles</Text>
         </View>
         <View style={styles.daysRow}>
@@ -90,14 +89,20 @@ export default function ProfessionalInfoSection({
                   <Feather
                     name="check"
                     size={16}
-                    color={theme.colors.secondaryBlue}
+                    color={colors.secondaryBlue}
                     style={{ marginBottom: 2 }}
                   />
                 ) : (
                   <View style={{ height: 16, marginBottom: 2 }} />
                 )}
                 <Text
-                  style={[styles.dayText, selected && styles.dayTextActive]}
+                  style={[
+                    { ...styles.dayText, color: colors.text },
+                    selected && {
+                      color: colors.secondaryBlue,
+                      fontFamily: theme.fontFamily.bold,
+                    },
+                  ]}
                 >
                   {d.label}
                 </Text>
@@ -129,7 +134,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   block: {
-    backgroundColor: theme.colors.darkerGray,
     borderRadius: 16,
     padding: 26,
     width: "90%",
@@ -150,14 +154,9 @@ const styles = StyleSheet.create({
     width: 37,
   },
   dayText: {
-    color: "white",
     fontSize: 14,
     fontFamily: theme.fontFamily.regular,
     textAlign: "center",
-  },
-  dayTextActive: {
-    color: theme.colors.primaryBlue,
-    fontFamily: theme.fontFamily.bold,
   },
   labelContainer: {
     flexDirection: "row",

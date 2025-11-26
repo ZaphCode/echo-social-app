@@ -14,9 +14,11 @@ import Field from "@/components/forms/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import RoleSelector from "@/components/forms/RoleSelector";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function SignUp() {
   useRedirect();
+  const { colors } = useColorScheme();
 
   const navigation = useNavigation();
   const { show } = useAlertCtx();
@@ -60,7 +62,9 @@ export default function SignUp() {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <ScrollView>
         <View style={{ gap: 5, alignItems: "center" }}>
           {Object.keys(signInForm.formState.errors).length === 0 && (
@@ -146,7 +150,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    backgroundColor: theme.colors.background,
     gap: theme.spacing.sm,
     paddingTop: theme.spacing.tabPT,
   },

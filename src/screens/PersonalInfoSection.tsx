@@ -11,6 +11,7 @@ import Text from "@/components/ui/Text";
 import EditProfileView from "@/components/EditProfileView";
 import useModal from "@/hooks/useModal";
 import { useState } from "react";
+import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
   user: User;
@@ -25,15 +26,21 @@ export default function PersonalInfoSection({
 }: Props) {
   const [modalVisible, openModal, closeModal] = useModal();
   const [optimisticProfile, setOptimisticProfile] = useState(profile);
-
+  const { colors } = useColorScheme();
   const { address, phone, city, state, zip } = optimisticProfile;
 
   return (
-    <View style={styles.infoContainer}>
+    <View
+      style={[styles.infoContainer, { backgroundColor: colors.darkerGray }]}
+    >
       <View style={styles.sectionHeader}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Foundation name="torso" size={28} color={theme.colors.primaryBlue} />
-          <Text fontFamily="bold" color="white" size={theme.fontSizes.lg - 2.5}>
+          <Text
+            fontFamily="bold"
+            color={colors.text}
+            size={theme.fontSizes.lg - 2.5}
+          >
             Información Personal
           </Text>
         </View>
@@ -75,7 +82,7 @@ export default function PersonalInfoSection({
 const styles = StyleSheet.create({
   infoContainer: {
     width: "90%",
-    backgroundColor: theme.colors.darkerGray,
+    // backgroundColor: theme.colors.darkerGray,
     borderRadius: 15,
     padding: 26,
     gap: 13,

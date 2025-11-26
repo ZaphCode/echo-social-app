@@ -1,5 +1,5 @@
-import { theme } from "@/theme/theme";
-import { View, Text } from "react-native";
+import useColorScheme from "@/hooks/useColorScheme";
+import { View } from "react-native";
 
 type Props = {
   my?: number;
@@ -7,11 +7,12 @@ type Props = {
 };
 
 export default function Divider({ my, size }: Props) {
+  const { colors } = useColorScheme();
   return (
     <View
       style={{
         height: size || 1,
-        backgroundColor: theme.colors.darkGray,
+        backgroundColor: colors.lightGray,
         width: "100%",
         marginVertical: my || 10,
       }}

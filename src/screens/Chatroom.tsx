@@ -1,5 +1,4 @@
 import { StyleSheet, View } from "react-native";
-import { useState } from "react";
 import { StaticScreenProps } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,10 +16,12 @@ import useModal from "@/hooks/useModal";
 import ReviewForm from "@/components/ReviewForm";
 import useCheckReviews from "@/hooks/useCheckReviews";
 import { useAuthCtx } from "@/context/Auth";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = StaticScreenProps<{ request: ServiceRequest }>;
 
 export default function Chatroom({ route }: Props) {
+  const { colors } = useColorScheme();
   const { user: authUser } = useAuthCtx();
   const { request } = route.params;
   const { service, client } = request.expand!;
@@ -31,7 +32,7 @@ export default function Chatroom({ route }: Props) {
   const { hasReviewed, markAsReviewed } = useCheckReviews(authUser, request);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <NegotiationProvider
         initialRequest={request}
         service={service}
@@ -74,11 +75,6 @@ export default function Chatroom({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-
   messageList: {
     flex: 1,
     paddingHorizontal: theme.spacing.md,

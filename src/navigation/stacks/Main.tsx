@@ -6,6 +6,8 @@ import ServiceEditor from "@/screens/ServiceEditor";
 import UserProfile from "@/screens/UserProfile";
 import Privacy from "@/screens/Privacy";
 
+// const { colors } = useColorScheme();
+
 export const MainStack = createNativeStackNavigator({
   screenOptions: {
     headerShown: false,
@@ -29,7 +31,7 @@ export const MainStack = createNativeStackNavigator({
           fontFamily: theme.fontFamily.bold,
         },
         headerStyle: {
-          backgroundColor: theme.colors.darkerGray,
+          // backgroundColor: colors.darkerGray,
         },
       },
     },
@@ -39,7 +41,7 @@ export const MainStack = createNativeStackNavigator({
         headerShown: true,
         title: "",
         headerStyle: {
-          backgroundColor: theme.colors.background,
+          // backgroundColor: colors.background,
         },
       },
     },
@@ -49,7 +51,7 @@ export const MainStack = createNativeStackNavigator({
         headerShown: true,
         title: "",
         headerStyle: {
-          backgroundColor: theme.colors.background,
+          // backgroundColor: colors.background,
         },
       },
     },

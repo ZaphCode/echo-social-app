@@ -3,6 +3,7 @@ import { View, Image, Pressable, StyleSheet, Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
+import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
   onChange: (uri: string) => void;
@@ -12,6 +13,7 @@ interface Props {
 
 export default function AvatarPicker({ image, viewOnly, onChange }: Props) {
   const [img, setImg] = useState(image);
+  const { colors } = useColorScheme();
 
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -43,17 +45,27 @@ export default function AvatarPicker({ image, viewOnly, onChange }: Props) {
             source={{ uri: img }}
             style={[
               styles.image,
-              { borderWidth: 2, borderColor: theme.colors.lightGray },
+              {
+                backgroundColor: colors.darkerGray,
+                borderWidth: 2,
+                borderColor: colors.lightGray,
+              },
             ]}
           />
         ) : (
-          <View style={[styles.image, styles.placeholder]}>
-            <Feather name="user" size={48} color={theme.colors.lightGray} />
+          <View
+            style={[
+              styles.image,
+              styles.placeholder,
+              { backgroundColor: colors.darkerGray },
+            ]}
+          >
+            <Feather name="user" size={48} color={colors.lightGray} />
           </View>
         )}
         {!viewOnly && (
           <View style={styles.iconContainer}>
-            <Feather name="camera" size={18} color={theme.colors.primaryBlue} />
+            <Feather name="camera" size={18} color={colors.primaryBlue} />
           </View>
         )}
       </Pressable>
@@ -70,7 +82,6 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: theme.colors.darkGray,
     justifyContent: "center",
     alignItems: "center",
   },

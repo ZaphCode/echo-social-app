@@ -8,6 +8,7 @@ import ReviewCard from "./ReviewCard";
 import { User } from "@/models/User";
 import { Service } from "@/models/Service";
 import Loader from "./ui/Loader";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = { service: Service; authUser: User };
 
@@ -16,6 +17,7 @@ export default function ReviewSection({ service, authUser }: Props) {
     filter: `service = "${service.id}" && reviewer != "${service.provider}"`,
     expand: "reviewer, reviewed",
   });
+  const { colors } = useColorScheme();
 
   const reviewAverage = useMemo(() => {
     if (reviews.length === 0) return 0;
@@ -46,7 +48,7 @@ export default function ReviewSection({ service, authUser }: Props) {
             {`${reviewAverage}`}
           </Text>
           <AntDesign name="star" size={24} color="white" />
-          <Text color={theme.colors.lightGray} size={theme.fontSizes.lg}>
+          <Text color={colors.lightGray} size={theme.fontSizes.lg}>
             {`(${reviews.length})`}
           </Text>
         </View>
@@ -57,7 +59,7 @@ export default function ReviewSection({ service, authUser }: Props) {
             <ReviewCard review={review} key={review.id} authUser={authUser} />
           ))
         ) : (
-          <Text color={theme.colors.lightGray} size={theme.fontSizes.md}>
+          <Text color={colors.lightGray} size={theme.fontSizes.md}>
             Aún no hay valoraciones para este servicio.
           </Text>
         )}

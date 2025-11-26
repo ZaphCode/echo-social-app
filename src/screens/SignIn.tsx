@@ -13,6 +13,7 @@ import Field from "@/components/forms/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import useLogin from "@/hooks/auth/useLogin";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function SignIn() {
   useRedirect();
@@ -42,9 +43,12 @@ export default function SignIn() {
         iconColor: theme.colors.redError,
       });
   });
+  const { colors } = useColorScheme();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <View>
         <Image
           source={require("@Assets/app-logo.png")}
@@ -105,7 +109,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    backgroundColor: theme.colors.background,
     gap: theme.spacing.sm,
     paddingTop: theme.spacing.tabPT,
   },

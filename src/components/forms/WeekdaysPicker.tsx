@@ -3,6 +3,7 @@ import { View, Pressable, StyleSheet } from "react-native";
 import Text from "@/components/ui/Text";
 import { Controller, Control, RegisterOptions } from "react-hook-form";
 import { theme } from "@/theme/theme";
+import useColorScheme from "@/hooks/useColorScheme";
 
 const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
@@ -24,6 +25,41 @@ interface Props {
 }
 
 export default function WeekDaysPicker({ name, control, label, rules }: Props) {
+  const { colors } = useColorScheme();
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      gap: 8,
+      marginVertical: 10,
+      flexWrap: "wrap",
+    },
+    label: {
+      color: colors.lightGray,
+      fontFamily: theme.fontFamily.regular,
+      fontSize: theme.fontSizes.md,
+      marginLeft: theme.spacing.sm,
+    },
+    chip: {
+      backgroundColor: colors.darkGray,
+      borderRadius: 18,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderColor: "transparent",
+    },
+    chipSelected: {
+      backgroundColor: theme.colors.secondaryBlue,
+    },
+    chipText: {
+      color: colors.lightGray,
+      fontFamily: theme.fontFamily.regular,
+      fontSize: 15,
+    },
+    chipTextSelected: {
+      color: colors.primaryBlue,
+      fontFamily: theme.fontFamily.bold,
+    },
+  });
   return (
     <Controller
       name={name}
@@ -72,38 +108,3 @@ export default function WeekDaysPicker({ name, control, label, rules }: Props) {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    gap: 8,
-    marginVertical: 10,
-    flexWrap: "wrap",
-  },
-  label: {
-    color: theme.colors.lightGray,
-    fontFamily: theme.fontFamily.regular,
-    fontSize: theme.fontSizes.md,
-    marginLeft: theme.spacing.sm,
-  },
-  chip: {
-    backgroundColor: theme.colors.darkGray,
-    borderRadius: 18,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: "transparent",
-  },
-  chipSelected: {
-    backgroundColor: theme.colors.secondaryBlue,
-  },
-  chipText: {
-    color: theme.colors.lightGray,
-    fontFamily: theme.fontFamily.regular,
-    fontSize: 15,
-  },
-  chipTextSelected: {
-    color: theme.colors.primaryBlue,
-    fontFamily: theme.fontFamily.bold,
-  },
-});

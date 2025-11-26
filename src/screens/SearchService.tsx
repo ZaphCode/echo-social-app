@@ -12,11 +12,13 @@ import SearchBar from "@/components/forms/SearchBar";
 import Divider from "@/components/ui/Divider";
 import Loader from "@/components/ui/Loader";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = StaticScreenProps<{ search: string }>;
 
 export default function SearchService({ route }: Props) {
   const { user } = useAuthCtx();
+  const { colors } = useColorScheme();
   const initialSearch = route.params.search;
   const [search, setSearch] = useState(initialSearch);
 
@@ -40,7 +42,7 @@ export default function SearchService({ route }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.titleContainer}>
         <Text fontFamily="bold" size={theme.fontSizes.xl} color="white">
           Resultados de
@@ -76,6 +78,7 @@ export default function SearchService({ route }: Props) {
 }
 
 export function ErrorSearchResults() {
+  const { colors } = useColorScheme();
   return (
     <View style={styles.errorContainer}>
       <MaterialCommunityIcons
@@ -93,7 +96,7 @@ export function ErrorSearchResults() {
         Error al buscar servicios
       </Text>
       <Text
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
         style={{ textAlign: "center" }}
       >
@@ -105,6 +108,7 @@ export function ErrorSearchResults() {
 }
 
 export function EmptySearchResults({ query }: { query: string }) {
+  const { colors } = useColorScheme();
   return (
     <View style={styles.emptyContainer}>
       <MaterialCommunityIcons
@@ -122,7 +126,7 @@ export function EmptySearchResults({ query }: { query: string }) {
         No se encontraron servicios
       </Text>
       <Text
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
         style={{ textAlign: "center" }}
       >
@@ -135,7 +139,6 @@ export function EmptySearchResults({ query }: { query: string }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
     padding: theme.spacing.md,
     gap: theme.spacing.md,
   },

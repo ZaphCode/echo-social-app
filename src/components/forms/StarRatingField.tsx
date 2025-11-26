@@ -4,6 +4,7 @@ import { useController, Control, RegisterOptions } from "react-hook-form";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Text from "../ui/Text";
 import { theme } from "@/theme/theme";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   name: string;
@@ -21,6 +22,7 @@ export default function StarRatingField({
     validate: (value) => value > 0 || "La calificación debe ser mayor a 0",
   },
 }: Props) {
+  const { colors } = useColorScheme();
   const {
     field: { value, onChange },
     fieldState: { error },
@@ -29,7 +31,7 @@ export default function StarRatingField({
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={styles.starsRow}>
+      <View style={{ ...styles.starsRow, backgroundColor: colors.darkGray }}>
         {[1, 2, 3, 4, 5].map((star) => (
           <Pressable
             key={star}
@@ -41,9 +43,7 @@ export default function StarRatingField({
               name={star <= value ? "star" : "star-outline"}
               size={36}
               color={
-                star <= value
-                  ? theme.colors.primaryBlue
-                  : theme.colors.lightGray
+                star <= value ? theme.colors.primaryBlue : colors.lightGray
               }
               style={{ marginHorizontal: 4 }}
             />
@@ -71,7 +71,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.darkGray,
     padding: 8,
     width: "100%",
     borderRadius: 12,

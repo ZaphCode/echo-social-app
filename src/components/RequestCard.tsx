@@ -7,7 +7,7 @@ import { Feather } from "@expo/vector-icons";
 import { getFileUrl } from "@/utils/format";
 import { useNavigation } from "@react-navigation/native";
 import { useAuthCtx } from "@/context/Auth";
-import { clientAgreed, providerAgreed } from "@/utils/negotiation";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   request: ServiceRequest;
@@ -21,6 +21,7 @@ const STATUS_MAP = {
 };
 
 export default function RequestCard({ request }: Props) {
+  const { colors } = useColorScheme();
   const navigation = useNavigation();
   const { user } = useAuthCtx();
 
@@ -34,7 +35,7 @@ export default function RequestCard({ request }: Props) {
 
   const statusData = STATUS_MAP[request.agreement_state] || {
     label: "Pendiente",
-    color: theme.colors.lightGray,
+    color: colors.lightGray,
   };
 
   const handlePress = () => {
@@ -45,7 +46,10 @@ export default function RequestCard({ request }: Props) {
   };
 
   return (
-    <Pressable onPress={handlePress} style={styles.card}>
+    <Pressable
+      onPress={handlePress}
+      style={{ ...styles.card, backgroundColor: colors.darkerGray }}
+    >
       <Image source={{ uri: imageUrl }} style={styles.image} />
       <View style={styles.info}>
         <View style={styles.rowSpace}>
@@ -58,8 +62,8 @@ export default function RequestCard({ request }: Props) {
         </View>
 
         <View style={styles.row}>
-          <Feather name="user" size={14} color={theme.colors.lightGray} />
-          <Text style={styles.sub}>
+          <Feather name="user" size={14} color={colors.lightGray} />
+          <Text style={[styles.sub, { color: colors.lightGray }]}>
             {user.id === client?.id ? provider.name : client.name}
           </Text>
         </View>
@@ -75,7 +79,6 @@ export default function RequestCard({ request }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.darkerGray,
     borderRadius: 16,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
@@ -121,7 +124,6 @@ const styles = StyleSheet.create({
     fontFamily: theme.fontFamily.bold,
   },
   sub: {
-    color: theme.colors.lightGray,
     fontSize: theme.fontSizes.sm,
     fontFamily: theme.fontFamily.regular,
   },

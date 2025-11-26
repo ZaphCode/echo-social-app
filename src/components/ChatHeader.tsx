@@ -1,7 +1,6 @@
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 
-import { theme } from "@/theme/theme";
 import { useNavigation } from "@react-navigation/native";
 import { Fontisto } from "@expo/vector-icons";
 import { getFileUrl } from "@/utils/format";
@@ -10,8 +9,11 @@ import Text from "./ui/Text";
 import useModal from "@/hooks/useModal";
 import RequestDetails from "./RequestDetails";
 import { useNegotiationCtx } from "@/context/Negotiation";
+import { theme } from "@/theme/theme";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function ChatHeader() {
+  const { colors } = useColorScheme();
   const { request, client, provider, service } = useNegotiationCtx();
   const navigation = useNavigation();
   const [modalVisible, openModal, closeModal] = useModal();
@@ -43,7 +45,13 @@ export default function ChatHeader() {
         </Text>
         <Text>{`$${service.base_price}`}</Text>
       </View>
-      <Pressable onPress={openModal} style={styles.infoIconContainer}>
+      <Pressable
+        onPress={openModal}
+        style={{
+          ...styles.infoIconContainer,
+          backgroundColor: colors.darkGray,
+        }}
+      >
         <Fontisto name="move-h" size={16} color="white" />
       </Pressable>
       <SlideModal visible={modalVisible} onClose={closeModal}>
@@ -71,7 +79,6 @@ const styles = StyleSheet.create({
     maxWidth: 240,
   },
   infoIconContainer: {
-    backgroundColor: theme.colors.darkGray,
     padding: 8,
     borderRadius: 20,
     marginLeft: "auto",

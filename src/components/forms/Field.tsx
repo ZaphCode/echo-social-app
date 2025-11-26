@@ -10,6 +10,7 @@ import {
 import { Controller, RegisterOptions } from "react-hook-form";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
+import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
   name: string;
@@ -37,6 +38,7 @@ const Field: FC<Props> = ({
   onSubmitEditing,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const { colors } = useColorScheme();
 
   return (
     <Controller
@@ -48,20 +50,29 @@ const Field: FC<Props> = ({
         fieldState: { error },
       }) => (
         <View>
-          {label && <Text style={styles.label}>{label}</Text>}
-          <View style={styles.inputContainer}>
+          {label && (
+            <Text style={{ color: colors.lightGray, ...styles.label }}>
+              {label}
+            </Text>
+          )}
+          <View
+            style={{
+              ...styles.inputContainer,
+              backgroundColor: colors.darkGray,
+            }}
+          >
             {icon && (
               <Feather
                 name={icon}
                 size={20}
-                color={theme.colors.lightGray}
+                color={colors.lightGray}
                 style={styles.icon}
               />
             )}
             <TextInput
               style={styles.input}
               placeholder={placeholder}
-              placeholderTextColor={theme.colors.lightGray}
+              placeholderTextColor={colors.lightGray}
               secureTextEntry={secureTextEntry && !showPassword}
               keyboardType={keyboardType}
               onBlur={onBlur}
@@ -77,7 +88,7 @@ const Field: FC<Props> = ({
                 <Feather
                   name={showPassword ? "eye-off" : "eye"}
                   size={20}
-                  color={theme.colors.lightGray}
+                  color={colors.lightGray}
                 />
               </Pressable>
             )}
@@ -91,7 +102,7 @@ const Field: FC<Props> = ({
 
 const styles = StyleSheet.create({
   label: {
-    color: theme.colors.lightGray,
+    // color: theme.colors.lightGray,
     fontFamily: theme.fontFamily.regular,
     fontSize: theme.fontSizes.md,
     marginBottom: theme.spacing.sm,
@@ -100,7 +111,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.darkGray,
+    // backgroundColor: theme.colors.darkGray,
     borderRadius: 12,
     paddingVertical: Platform.OS === "android" ? 6 : 4,
     paddingHorizontal: theme.spacing.md,

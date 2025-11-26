@@ -9,6 +9,7 @@ import Loader from "./ui/Loader";
 import { useNavigation } from "@react-navigation/native";
 import Button from "./ui/Button";
 import { useAuthCtx } from "@/context/Auth";
+import useColorScheme from "@/hooks/useColorScheme";
 
 export default function RequestsList() {
   const { user } = useAuthCtx();
@@ -41,7 +42,7 @@ export default function RequestsList() {
 
 function EmptyRequestsComponent() {
   const navigation = useNavigation();
-
+  const { colors } = useColorScheme();
   const handleGoToServices = () => {
     navigation.navigate("Main", { screen: "Tabs", params: { screen: "Home" } });
   };
@@ -56,14 +57,14 @@ function EmptyRequestsComponent() {
       />
       <Text
         fontFamily="bold"
-        color="white"
+        color={colors.text}
         size={theme.fontSizes.lg + 2}
         style={{ marginBottom: 4 }}
       >
         No hay solicitudes
       </Text>
       <Text
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
         style={{ textAlign: "center", opacity: 0.8, marginBottom: 24 }}
       >
@@ -72,7 +73,7 @@ function EmptyRequestsComponent() {
       </Text>
       <Button
         title="Buscar servicios"
-        style={{ minWidth: 220, backgroundColor: theme.colors.darkerGray }}
+        style={{ minWidth: 220, backgroundColor: colors.darkerGray }}
         onPress={handleGoToServices}
       />
     </View>
@@ -80,6 +81,7 @@ function EmptyRequestsComponent() {
 }
 
 function ErrorRequestComponent() {
+  const { colors } = useColorScheme();
   return (
     <View style={styles.centeredContainer}>
       <MaterialCommunityIcons
@@ -90,14 +92,14 @@ function ErrorRequestComponent() {
       />
       <Text
         fontFamily="bold"
-        color={"white"}
+        color={colors.text}
         size={theme.fontSizes.lg + 2}
         style={{ marginBottom: 4 }}
       >
         Error al cargar solicitudes
       </Text>
       <Text
-        color={theme.colors.lightGray}
+        color={colors.lightGray}
         size={theme.fontSizes.md}
         style={{ textAlign: "center", opacity: 0.8 }}
       >

@@ -4,6 +4,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { Controller, RegisterOptions } from "react-hook-form";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
+import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props<T = any> {
   name: string;
@@ -40,6 +41,53 @@ const Dropdown: FC<Props> = ({
     }))
   );
 
+  const { colors } = useColorScheme();
+
+  const styles = StyleSheet.create({
+    label: {
+      color: colors.lightGray,
+      fontFamily: theme.fontFamily.regular,
+      fontSize: theme.fontSizes.md,
+      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.sm,
+    },
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.darkGray,
+      borderRadius: 12,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: 4.5,
+    },
+    icon: {
+      marginRight: 10,
+    },
+    dropdown: {
+      backgroundColor: colors.darkGray,
+      borderWidth: 0,
+      borderRadius: 12,
+      minHeight: 44,
+    },
+    dropdownContainer: {
+      backgroundColor: colors.darkGray,
+      borderRadius: 12,
+      borderWidth: 0,
+    },
+    dropdownText: {
+      color: "#fff",
+      fontSize: theme.fontSizes.md,
+      fontFamily: theme.fontFamily.regular,
+    },
+    placeholder: {
+      color: colors.lightGray,
+    },
+    error: {
+      color: theme.colors.redError,
+      marginTop: theme.spacing.sm,
+      fontSize: theme.fontSizes.sm,
+    },
+  });
+
   return (
     <Controller
       control={control}
@@ -54,7 +102,7 @@ const Dropdown: FC<Props> = ({
               <Feather
                 name={icon}
                 size={20}
-                color={iconColor || theme.colors.lightGray}
+                color={iconColor || colors.lightGray}
                 style={styles.icon}
               />
             )}
@@ -84,50 +132,5 @@ const Dropdown: FC<Props> = ({
     />
   );
 };
-
-const styles = StyleSheet.create({
-  label: {
-    color: theme.colors.lightGray,
-    fontFamily: theme.fontFamily.regular,
-    fontSize: theme.fontSizes.md,
-    marginBottom: theme.spacing.sm,
-    marginLeft: theme.spacing.sm,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.darkGray,
-    borderRadius: 12,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 4.5,
-  },
-  icon: {
-    marginRight: 10,
-  },
-  dropdown: {
-    backgroundColor: theme.colors.darkGray,
-    borderWidth: 0,
-    borderRadius: 12,
-    minHeight: 44,
-  },
-  dropdownContainer: {
-    backgroundColor: theme.colors.darkGray,
-    borderRadius: 12,
-    borderWidth: 0,
-  },
-  dropdownText: {
-    color: "#fff",
-    fontSize: theme.fontSizes.md,
-    fontFamily: theme.fontFamily.regular,
-  },
-  placeholder: {
-    color: theme.colors.lightGray,
-  },
-  error: {
-    color: theme.colors.redError,
-    marginTop: theme.spacing.sm,
-    fontSize: theme.fontSizes.sm,
-  },
-});
 
 export default Dropdown;

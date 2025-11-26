@@ -9,6 +9,7 @@ import { useAlertCtx } from "@/context/Alert";
 import Text from "./ui/Text";
 import ProfileForm from "./forms/ProfileForm";
 import useMutate from "@/hooks/useMutate";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   userRole: User["role"];
@@ -22,6 +23,7 @@ export default function EditProfileView({
   onSuccess,
 }: Props) {
   const { show } = useAlertCtx();
+  const { colors } = useColorScheme();
   const { control, handleSubmit } = useForm({
     defaultValues: {
       phone: profile.phone,
@@ -48,7 +50,7 @@ export default function EditProfileView({
         message:
           "Ocurrió un error al guardar los cambios en tu perfil. Inténtalo de nuevo.",
         icon: "alert-circle",
-        iconColor: theme.colors.redError,
+        iconColor: colors.redError,
       });
     }
 
