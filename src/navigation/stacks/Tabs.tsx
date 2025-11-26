@@ -17,7 +17,7 @@ export const Tabs = createBottomTabNavigator({
       borderTopWidth: 0,
       height: Platform.OS === "ios" ? 90 : 70,
     },
-    tabBarInactiveTintColor: "white",
+    tabBarInactiveTintColor: "#D6D6D6FF",
     tabBarLabelStyle: {
       fontSize: 12,
     },

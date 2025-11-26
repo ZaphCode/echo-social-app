@@ -38,7 +38,7 @@ export default function ChatHeader() {
           style={styles.serviceNameText}
           fontFamily="bold"
           size={theme.fontSizes.md + 1}
-          color="white"
+          color={colors.text}
           numberOfLines={1}
         >
           {service.name}

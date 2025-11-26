@@ -88,13 +88,13 @@ export default function NegotiationBlock({
             <MaterialIcons
               name="arrow-right"
               size={32}
-              color="white"
+              color={colors.text}
               style={{ position: "absolute", left: 32 }}
             />
           )}
         </View>
         <View style={{ alignItems: "center" }}>
-          <Text fontFamily="bold" color="white">
+          <Text fontFamily="bold" color={colors.text}>
             Propuestas de Negociación
           </Text>
           <View style={{ justifyContent: "center" }}>
@@ -236,6 +236,7 @@ const styles = StyleSheet.create({
   button: {
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.xs - 2,
+    backgroundColor: "#5757575E",
     minWidth: 100,
     borderRadius: 8,
     alignItems: "center",

@@ -18,7 +18,6 @@ type Props = {
 
 export default function ServiceCard({ service, authUser }: Props) {
   const navigation = useNavigation();
-
   const isOwnerProvider = authUser.id === service.provider;
 
   const handlePress = () => {
@@ -65,7 +64,9 @@ export default function ServiceCard({ service, authUser }: Props) {
       )}
 
       <View style={styles.info}>
-        <Text style={styles.title}>{service.name}</Text>
+        <Text color={colors.text} style={styles.title}>
+          {service.name}
+        </Text>
         <View style={styles.footer}>
           <View style={styles.userRow}>
             {isOwnerProvider ? (
@@ -109,7 +110,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
   },
   title: {
-    color: "#fff",
     fontFamily: theme.fontFamily.bold,
     fontSize: theme.fontSizes.md,
     marginBottom: 8,

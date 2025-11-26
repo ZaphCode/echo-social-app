@@ -25,7 +25,7 @@ export function AlertModal() {
           <Text
             fontFamily="bold"
             size={theme.fontSizes.lg}
-            color="white"
+            color={colors.text}
             style={{ marginBottom: 4, textAlign: "center" }}
           >
             {title}

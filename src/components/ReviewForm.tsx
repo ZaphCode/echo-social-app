@@ -11,6 +11,7 @@ import useMutate from "@/hooks/useMutate";
 import Field from "./forms/Field";
 import Button from "./ui/Button";
 import StarRatingField from "./forms/StarRatingField";
+import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   onSuccess?: () => void;
@@ -18,6 +19,7 @@ type Props = {
 
 export default function ReviewForm({ onSuccess }: Props) {
   const { user: authUser } = useAuthCtx();
+  const { colors } = useColorScheme();
   const { client, provider, service } = useNegotiationCtx();
   const { show } = useAlertCtx();
 
@@ -56,7 +58,7 @@ export default function ReviewForm({ onSuccess }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text color="white" style={styles.title}>
+      <Text color={colors.text} style={styles.title}>
         Deja tu Valoración
       </Text>
       <RNText style={styles.descContainer}>

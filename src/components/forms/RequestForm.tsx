@@ -14,6 +14,7 @@ import Button from "../ui/Button";
 import DateField from "./DateField";
 import useMutate from "@/hooks/useMutate";
 import { useAlertCtx } from "@/context/Alert";
+import useColorScheme from "@/hooks/useColorScheme";
 
 const DEVICE_HEIGHT = Dimensions.get("window").height;
 
@@ -32,6 +33,7 @@ export default function RequestForm({
   defaultDate,
   defaultPrice,
 }: Props) {
+  const { colors } = useColorScheme();
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
   const keyboardVisible = useKeyboardVisible();
@@ -108,7 +110,7 @@ export default function RequestForm({
 
   return (
     <View style={styles.container}>
-      <Text color="white" fontFamily="bold" size={theme.fontSizes.xl}>
+      <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.xl}>
         {offeringMode ? "Realiza una oferta" : `Solicitud de Servicio`}
       </Text>
       <View style={{ width: "90%", gap: theme.spacing.md }}>

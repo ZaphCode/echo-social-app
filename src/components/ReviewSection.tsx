@@ -40,14 +40,18 @@ export default function ReviewSection({ service, authUser }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.infoContainer}>
-        <Text color="white" size={theme.fontSizes.xl + 2} fontFamily="bold">
+        <Text
+          color={colors.text}
+          size={theme.fontSizes.xl + 2}
+          fontFamily="bold"
+        >
           Valoraciones
         </Text>
         <View style={styles.averageContainer}>
-          <Text color="white" size={theme.fontSizes.lg}>
+          <Text color={colors.secondaryBlue} size={theme.fontSizes.lg}>
             {`${reviewAverage}`}
           </Text>
-          <AntDesign name="star" size={24} color="white" />
+          <AntDesign name="star" size={24} color={colors.primaryBlue} />
           <Text color={colors.lightGray} size={theme.fontSizes.lg}>
             {`(${reviews.length})`}
           </Text>

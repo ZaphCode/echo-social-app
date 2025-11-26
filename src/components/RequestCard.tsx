@@ -53,7 +53,7 @@ export default function RequestCard({ request }: Props) {
       <Image source={{ uri: imageUrl }} style={styles.image} />
       <View style={styles.info}>
         <View style={styles.rowSpace}>
-          <Text numberOfLines={2} style={styles.title}>
+          <Text numberOfLines={2} color={colors.text} style={styles.title}>
             {service.name}
           </Text>
           <Text style={[styles.status, { color: statusData.color }]}>
@@ -96,7 +96,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   title: {
-    color: "white",
     fontSize: theme.fontSizes.md,
     fontFamily: theme.fontFamily.bold,
     flex: 1,

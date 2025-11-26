@@ -16,7 +16,7 @@ interface Props {
 
 export default function DateField({ name, label, control }: Props) {
   const [showPicker, setShowPicker] = useState(false);
-  const { colors } = useColorScheme();
+  const { colors, activeMode } = useColorScheme();
 
   return (
     <Controller
@@ -27,9 +27,7 @@ export default function DateField({ name, label, control }: Props) {
       render={({ field: { onChange, value }, fieldState: { error } }) => (
         <View>
           {label && (
-            <Text style={[styles.label, { color: colors.lightGray }]}>
-              {label}
-            </Text>
+            <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
           )}
 
           <Pressable
@@ -65,8 +63,8 @@ export default function DateField({ name, label, control }: Props) {
               value={value ? new Date(value) : new Date()}
               mode="date"
               minimumDate={new Date()}
-              textColor="white"
-              themeVariant="dark"
+              textColor={colors.text}
+              themeVariant={activeMode}
               display={Platform.OS === "ios" ? "inline" : "default"}
               onChange={(_, selectedDate) => {
                 if (selectedDate) {

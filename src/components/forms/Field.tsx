@@ -51,9 +51,7 @@ const Field: FC<Props> = ({
       }) => (
         <View>
           {label && (
-            <Text style={{ color: colors.lightGray, ...styles.label }}>
-              {label}
-            </Text>
+            <Text style={{ color: colors.text, ...styles.label }}>{label}</Text>
           )}
           <View
             style={{
@@ -70,7 +68,7 @@ const Field: FC<Props> = ({
               />
             )}
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: colors.text }]}
               placeholder={placeholder}
               placeholderTextColor={colors.lightGray}
               secureTextEntry={secureTextEntry && !showPassword}
@@ -111,7 +109,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    // backgroundColor: theme.colors.darkGray,
     borderRadius: 12,
     paddingVertical: Platform.OS === "android" ? 6 : 4,
     paddingHorizontal: theme.spacing.md,

@@ -8,6 +8,7 @@ import { useFonts } from "expo-font";
 import { AlertProvider } from "@/context/Alert";
 import { AlertModal } from "@/components/ui/AlertModal";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import useColorScheme from "@/hooks/useColorScheme";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,6 +16,7 @@ const queryClient = new QueryClient();
 
 export default function App() {
   const [appIsReady, SetAppIsReady] = useState(false);
+  const { activeMode } = useColorScheme();
 
   const [loaded, error] = useFonts({
     "Geist-Bold": require("./assets/fonts/Geist-Bold.ttf"),
@@ -33,7 +35,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AlertProvider>
-          <StatusBar style="light" />
+          <StatusBar style={activeMode === "dark" ? "light" : "dark"} />
           <Navigation onReady={() => SetAppIsReady(true)} />
           <AlertModal />
         </AlertProvider>

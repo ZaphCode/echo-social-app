@@ -16,7 +16,7 @@ export default function RequestsList() {
   const [serviceRequests, { status }] = useList("service_request", {
     expand: "service, service.provider, client",
     sort: "-updated",
-    filter: `provider.id = "${user.id}" || client.id = "${user.id}"`,
+    filter: `service.provider.id = "${user.id}" || client.id = "${user.id}"`,
   });
 
   if (status === "loading")

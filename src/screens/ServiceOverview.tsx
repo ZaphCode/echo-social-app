@@ -68,7 +68,7 @@ export default function ServiceOverview({ route }: Props) {
     >
       <ServicePhotoCarousel photos={service.photos} serviceId={service.id} />
       <View style={{ gap: theme.spacing.md }}>
-        <Text color="white" fontFamily="bold" size={theme.fontSizes.xxl}>
+        <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.xxl}>
           {service.name}
         </Text>
         <View style={styles.infoContainer}>
@@ -88,10 +88,10 @@ export default function ServiceOverview({ route }: Props) {
           >{`$${service.base_price}`}</Text>
         </View>
         <View style={{ padding: theme.spacing.sm, gap: 5 }}>
-          <Text size={theme.fontSizes.lg} color="white" fontFamily="bold">
+          <Text size={theme.fontSizes.lg} color={colors.text} fontFamily="bold">
             Descripción
           </Text>
-          <Text size={theme.fontSizes.lg} color="white">
+          <Text size={theme.fontSizes.lg} color={colors.lightGray}>
             {service.description}
           </Text>
         </View>

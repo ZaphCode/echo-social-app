@@ -38,7 +38,7 @@ function PhotoPicker({ control, name, rules, service }: Props) {
       marginBottom: theme.spacing.lg,
     },
     label: {
-      color: colors.lightGray,
+      color: colors.text,
       fontSize: theme.fontSizes.md,
       marginBottom: theme.spacing.sm,
       marginLeft: theme.spacing.sm,

@@ -70,7 +70,7 @@ export default function useList<K extends keyof PBCollectionsMap>(
     notRefreshOnFocus?: boolean;
   }
 ) {
-  const queryFn = async (opts: RecordFullListOptions) => {
+  const fetchPB = async (opts: typeof options) => {
     try {
       const res = await pb
         .collection(collection)
@@ -85,7 +85,7 @@ export default function useList<K extends keyof PBCollectionsMap>(
 
   const { data, status, error, refetch } = useQuery({
     queryKey: [collection, options],
-    queryFn,
+    queryFn: () => fetchPB(options),
     staleTime: 1000 * 60 * 5, // 5 minutos de caché antes de volver a refrescar
     refetchOnWindowFocus: !options?.notRefreshOnFocus, // controla si recarga al enfocar
     refetchOnReconnect: true,
@@ -96,5 +96,5 @@ export default function useList<K extends keyof PBCollectionsMap>(
     return status === "pending" ? "loading" : status;
   }, [status]);
 
-  return [data ?? [], { status: queryStatus, error }, refetch] as const;
+  return [data ?? [], { status: queryStatus, error }, fetchPB] as const;
 }

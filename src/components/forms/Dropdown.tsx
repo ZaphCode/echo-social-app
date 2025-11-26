@@ -45,7 +45,7 @@ const Dropdown: FC<Props> = ({
 
   const styles = StyleSheet.create({
     label: {
-      color: colors.lightGray,
+      color: colors.text,
       fontFamily: theme.fontFamily.regular,
       fontSize: theme.fontSizes.md,
       marginBottom: theme.spacing.sm,
@@ -64,6 +64,7 @@ const Dropdown: FC<Props> = ({
     },
     dropdown: {
       backgroundColor: colors.darkGray,
+      color: colors.text,
       borderWidth: 0,
       borderRadius: 12,
       minHeight: 44,
@@ -74,7 +75,7 @@ const Dropdown: FC<Props> = ({
       borderWidth: 0,
     },
     dropdownText: {
-      color: "#fff",
+      color: colors.text,
       fontSize: theme.fontSizes.md,
       fontFamily: theme.fontFamily.regular,
     },
