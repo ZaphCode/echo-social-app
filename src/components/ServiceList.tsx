@@ -16,14 +16,14 @@ type Props = {
 };
 
 export default function ServiceList({ authUser, category }: Props) {
-  const [services, { status }, refetch] = useList("service", {
+  const [services, { status }, updateOptions] = useList("service", {
     expand: "provider",
     filter: getFilter(category),
   });
 
   useEffect(() => {
     if (status !== "loading")
-      refetch({
+      updateOptions({
         expand: "provider",
         filter: getFilter(category),
       });

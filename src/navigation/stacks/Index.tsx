@@ -1,9 +1,9 @@
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
 import Home from "@/screens/Home";
 import SearchService from "@/screens/SearchService";
 import ServiceOverview from "@/screens/ServiceOverview";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
-// const { colors } = useColorScheme();
+import { theme } from "@/theme/theme";
 
 export const IndexStack = createNativeStackNavigator({
   initialRouteName: "Inicio",
@@ -20,7 +20,7 @@ export const IndexStack = createNativeStackNavigator({
         headerShown: true,
         title: "",
         headerStyle: {
-          // backgroundColor: colors.darkerGray,
+          backgroundColor: theme.colors.secondaryBlue,
         },
       },
     },
@@ -30,7 +30,7 @@ export const IndexStack = createNativeStackNavigator({
         headerShown: true,
         title: "",
         headerStyle: {
-          // backgroundColor: colors.darkerGray,
+          backgroundColor: theme.colors.secondaryBlue,
         },
       },
     },

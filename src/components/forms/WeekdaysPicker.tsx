@@ -26,6 +26,7 @@ interface Props {
 
 export default function WeekDaysPicker({ name, control, label, rules }: Props) {
   const { colors } = useColorScheme();
+
   const styles = StyleSheet.create({
     container: {
       flexDirection: "row",
@@ -34,7 +35,6 @@ export default function WeekDaysPicker({ name, control, label, rules }: Props) {
       flexWrap: "wrap",
     },
     label: {
-      color: colors.lightGray,
       fontFamily: theme.fontFamily.regular,
       fontSize: theme.fontSizes.md,
       marginLeft: theme.spacing.sm,
@@ -60,15 +60,20 @@ export default function WeekDaysPicker({ name, control, label, rules }: Props) {
       fontFamily: theme.fontFamily.bold,
     },
   });
+
   return (
     <Controller
       name={name}
       control={control}
       rules={rules}
-      defaultValue={[]} // Por defecto vacío
+      defaultValue={[]}
       render={({ field: { value = [], onChange }, fieldState: { error } }) => (
         <View style={{ marginBottom: 10 }}>
-          {label && <Text style={styles.label}>{label}</Text>}
+          {label && (
+            <Text color={colors.text} style={styles.label}>
+              {label}
+            </Text>
+          )}
           <View style={styles.container}>
             {weekDays.map((day) => (
               <Pressable

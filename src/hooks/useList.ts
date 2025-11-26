@@ -62,19 +62,21 @@ import { useQuery } from "@tanstack/react-query";
 import { pb } from "../lib/pocketbase";
 import { PBCollectionsMap } from "@/utils/collections";
 import { ClientResponseError, RecordFullListOptions } from "pocketbase";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export default function useList<K extends keyof PBCollectionsMap>(
   collection: K,
-  options?: RecordFullListOptions & {
+  initialOptions?: RecordFullListOptions & {
     notRefreshOnFocus?: boolean;
   }
 ) {
-  const fetchPB = async (opts: typeof options) => {
+  const [opts, setOpts] = useState(initialOptions);
+
+  const fetchPB = async () => {
     try {
       const res = await pb
         .collection(collection)
-        .getFullList<PBCollectionsMap[K]>(opts ?? options);
+        .getFullList<PBCollectionsMap[K]>(opts);
       return res;
     } catch (error) {
       const message =
@@ -84,17 +86,23 @@ export default function useList<K extends keyof PBCollectionsMap>(
   };
 
   const { data, status, error, refetch } = useQuery({
-    queryKey: [collection, options],
-    queryFn: () => fetchPB(options),
-    staleTime: 1000 * 60 * 5, // 5 minutos de caché antes de volver a refrescar
-    refetchOnWindowFocus: !options?.notRefreshOnFocus, // controla si recarga al enfocar
+    queryKey: [collection, opts], // <- si opts cambia, se re-ejecuta fetchPB
+    queryFn: fetchPB,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: !opts?.notRefreshOnFocus,
     refetchOnReconnect: true,
     retry: 2,
   });
 
-  const queryStatus = useMemo(() => {
-    return status === "pending" ? "loading" : status;
-  }, [status]);
+  const queryStatus = useMemo(
+    () => (status === "pending" ? "loading" : status),
+    [status]
+  );
 
-  return [data ?? [], { status: queryStatus, error }, fetchPB] as const;
+  // Para actualizar las opciones del query (y refrescar automáticamente)
+  const updateOptions = (newOptions?: RecordFullListOptions) => {
+    setOpts((prev) => ({ ...prev, ...newOptions }));
+  };
+
+  return [data ?? [], { status: queryStatus, error }, updateOptions] as const;
 }

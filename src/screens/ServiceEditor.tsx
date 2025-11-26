@@ -1,6 +1,6 @@
 import { KeyboardAvoidingView, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
-import { StaticScreenProps } from "@react-navigation/native";
+import { StaticScreenProps, useNavigation } from "@react-navigation/native";
 import { useEffect } from "react";
 
 import { theme } from "@/theme/theme";
@@ -16,16 +16,18 @@ import Button from "@/components/ui/Button";
 import PhotoPicker from "@/components/forms/PhotoPicker";
 import useMutate from "@/hooks/useMutate";
 import useColorScheme from "@/hooks/useColorScheme";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Props = StaticScreenProps<{ serviceToEdit?: Service }>;
 
 export default function ServiceEditor({ route }: Props) {
   let service = route.params.serviceToEdit;
-
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
+  const navigation = useNavigation();
   const [categories, { status }] = useList("service_category", {});
   const { create, update, mutationState } = useMutate("service");
+  const queryClient = useQueryClient();
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -47,6 +49,8 @@ export default function ServiceEditor({ route }: Props) {
         icon: "check-circle",
         iconColor: theme.colors.successGreen,
       });
+      queryClient.invalidateQueries();
+      navigation.goBack();
     }
   }, [mutationState]);
 

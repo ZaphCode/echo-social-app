@@ -44,7 +44,7 @@ export default function SearchService({ route }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.titleContainer}>
-        <Text fontFamily="bold" size={theme.fontSizes.xl} color="white">
+        <Text fontFamily="bold" size={theme.fontSizes.xl} color={colors.text}>
           Resultados de
         </Text>
         <Text

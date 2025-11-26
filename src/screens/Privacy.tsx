@@ -76,7 +76,9 @@ export default function Privacy() {
         color={theme.colors.primaryBlue}
         style={{ alignSelf: "center", marginBottom: 10 }}
       />
-      <Text style={styles.title}>Privacidad</Text>
+      <Text color={colors.text} style={styles.title}>
+        Privacidad
+      </Text>
       <Text>
         Puedes descargar, guardar o compartir el documento completo de nuestra
         política de privacidad en tu dispositivo para revisarlo cuando lo
@@ -107,7 +109,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: theme.fontSizes.xxl,
     fontFamily: theme.fontFamily.bold,
-    color: "white",
   },
   button: {
     marginTop: 10,

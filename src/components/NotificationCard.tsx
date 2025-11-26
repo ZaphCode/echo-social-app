@@ -31,7 +31,7 @@ export default function NotificationCard({ notification }: Props) {
       <View style={{ flex: 1 }}>
         <RNText>
           {parseBold(notification.message, {
-            color: "#fff",
+            color: colors.text,
             fontSize: theme.fontSizes.md,
           })}
         </RNText>

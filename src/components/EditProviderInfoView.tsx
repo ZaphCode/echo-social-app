@@ -55,7 +55,7 @@ export default function EditProviderInfoView({
   return (
     <View style={styles.container}>
       <View style={{ padding: 16 }}>
-        <Text fontFamily="bold" style={styles.title}>
+        <Text fontFamily="bold" color={colors.text} style={styles.title}>
           Editar Perfil
         </Text>
       </View>
@@ -76,6 +76,5 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.fontSizes.xl,
     textAlign: "center",
-    color: "white",
   },
 });
