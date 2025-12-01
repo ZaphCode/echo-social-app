@@ -95,11 +95,11 @@ function ErrorNotificationComponent() {
       />
       <Text
         fontFamily="bold"
-        size={theme.fontSizes.lg + 1}
-        color={colors.redError}
-        style={{ marginBottom: 3 }}
+        size={theme.fontSizes.lg}
+        color={colors.text}
+        style={{ marginBottom: 3, textAlign: "center" }}
       >
-        No se pudieron cargar las notificaciones
+        Error al cargar las notificaciones
       </Text>
       <Text
         style={{ textAlign: "center" }}
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingTop: 54,
     paddingBottom: 30,
-    paddingHorizontal: 30,
+    paddingHorizontal: 16,
     gap: 3,
     opacity: 0.92,
   },

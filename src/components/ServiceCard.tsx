@@ -101,6 +101,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     width: DEVICE_WIDTH * 0.89,
+    shadowColor: "#000000",
+    shadowOpacity: 0.1,
+    shadowOffset: {
+      width: 6,
+      height: 6,
+    },
   },
   image: {
     width: "100%",

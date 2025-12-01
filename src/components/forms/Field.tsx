@@ -112,6 +112,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: Platform.OS === "android" ? 6 : 4,
     paddingHorizontal: theme.spacing.md,
+    shadowColor: "#000000",
+    shadowOpacity: 0.05,
+    shadowOffset: {
+      width: 4,
+      height: 4,
+    },
   },
   input: {
     flex: 1,

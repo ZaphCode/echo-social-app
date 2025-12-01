@@ -9,6 +9,7 @@ import { AlertProvider } from "@/context/Alert";
 import { AlertModal } from "@/components/ui/AlertModal";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import useColorScheme from "@/hooks/useColorScheme";
+import usePBCheck from "@/hooks/usePBCheck";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,6 +23,8 @@ export default function App() {
     "Geist-Bold": require("./assets/fonts/Geist-Bold.ttf"),
     "Geist-Regular": require("./assets/fonts/Geist-Regular.ttf"),
   });
+
+  usePBCheck();
 
   useEffect(() => {
     if (appIsReady && loaded) SplashScreen.hideAsync();
