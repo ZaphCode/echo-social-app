@@ -4,11 +4,11 @@
     "slug": "echo-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/echo-icon.png",
+    "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/app-splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#111315"
     },
@@ -19,7 +19,7 @@
     "android": {
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/app-icon.png",
+        "foregroundImage": "./assets/app-splash-icon.png",
         "backgroundColor": "#111315"
       },
       "package": "com.anonymous.echoapp"
