@@ -59,7 +59,7 @@ export default function EditProfileView({
 
   return (
     <View>
-      <Text fontFamily="bold" style={styles.title}>
+      <Text fontFamily="bold" style={styles.title} color={colors.text}>
         Editar Datos Personales
       </Text>
       <ProfileForm
@@ -74,7 +74,6 @@ export default function EditProfileView({
 
 const styles = StyleSheet.create({
   title: {
-    color: "white",
     fontSize: theme.fontSizes.xl,
     marginBottom: 16,
     textAlign: "center",

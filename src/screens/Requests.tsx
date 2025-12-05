@@ -6,6 +6,7 @@ import Text from "@/components/ui/Text";
 import RequestsList from "@/components/RequestsList";
 import Divider from "@/components/ui/Divider";
 import useColorScheme from "@/hooks/useColorScheme";
+import Title from "@/components/ui/Title";
 
 export default function Requests() {
   const { colors } = useColorScheme();
@@ -13,9 +14,7 @@ export default function Requests() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <Text fontFamily="bold" color={colors.text} size={theme.fontSizes.xxl}>
-        Solicitudes
-      </Text>
+      <Title title="Solicitudes" />
       <Divider />
       <RequestsList />
     </SafeAreaView>

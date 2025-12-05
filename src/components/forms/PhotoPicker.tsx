@@ -109,7 +109,11 @@ function PhotoPicker({ control, name, rules, service }: Props) {
               onChange([...images, result.assets[0].uri]);
             }
           } catch (err) {
-            Alert.alert("Error", "No se pudo obtener la imagen.");
+            console.log(err);
+            Alert.alert(
+              "Error al añadir imagen",
+              "No pudimos capturar / cargar la foto. Verifica los permisos o intenta nuevamente."
+            );
           } finally {
             close();
           }

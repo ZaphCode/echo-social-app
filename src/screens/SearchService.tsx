@@ -120,7 +120,7 @@ export function EmptySearchResults({ query }: { query: string }) {
       <Text
         fontFamily="bold"
         size={theme.fontSizes.lg + 2}
-        color="white"
+        color={colors.text}
         style={{ marginBottom: 6, textAlign: "center" }}
       >
         No se encontraron servicios

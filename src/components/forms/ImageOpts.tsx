@@ -28,19 +28,23 @@ export default function ImageOpts({ onPressCamera, onPressLibrary }: Props) {
       >
         <TouchableOpacity
           style={[styles.buttons, { backgroundColor: colors.darkGray }]}
+          onPress={() => {
+            console.log("Camera press");
+            onPressCamera();
+          }}
         >
           <Feather name="camera" size={24} color={colors.primaryBlue} />
-          <Text color={colors.text} onPress={onPressCamera}>
-            Cámara
-          </Text>
+          <Text color={colors.text}>Cámara</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.buttons, { backgroundColor: colors.darkGray }]}
+          onPress={() => {
+            console.log("Library press");
+            onPressLibrary();
+          }}
         >
           <Feather name="image" size={24} color={colors.primaryBlue} />
-          <Text color={colors.text} onPress={onPressLibrary}>
-            Galería
-          </Text>
+          <Text color={colors.text}>Galería</Text>
         </TouchableOpacity>
       </View>
     </View>

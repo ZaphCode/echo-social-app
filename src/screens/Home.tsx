@@ -10,6 +10,7 @@ import ServiceList from "@/components/ServiceList";
 import SearchBar from "@/components/forms/SearchBar";
 import Divider from "@/components/ui/Divider";
 import useColorScheme from "@/hooks/useColorScheme";
+import Title from "@/components/ui/Title";
 
 export default function Home() {
   const { user } = useAuthCtx();
@@ -20,15 +21,8 @@ export default function Home() {
     <ScrollView
       style={{ ...styles.container, backgroundColor: colors.background }}
     >
-      <SafeAreaView style={{ gap: theme.spacing.md - 2 }}>
-        <Text
-          numberOfLines={1}
-          fontFamily="bold"
-          color={colors.text}
-          size={theme.fontSizes.xxl}
-        >
-          {"Bienvenido " + getFirstName(user.name) + "!"}
-        </Text>
+      <SafeAreaView style={{ gap: theme.spacing.md }}>
+        <Title title={`Hola, ${getFirstName(user.name)} 👋`} />
         <SearchBar />
         <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.lg}>
           Categorías

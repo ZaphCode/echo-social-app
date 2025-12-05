@@ -86,7 +86,7 @@ export default function useList<K extends keyof PBCollectionsMap>(
     }
   };
 
-  const { data, status, error } = useQuery({
+  const { data, status, error, isRefetching } = useQuery({
     queryKey: [collection, opts], // <- si opts cambia, se re-ejecuta fetchPB
     queryFn: fetchPB,
     staleTime: 1000 * 60 * 2,
@@ -97,8 +97,8 @@ export default function useList<K extends keyof PBCollectionsMap>(
   });
 
   const queryStatus = useMemo(
-    () => (status === "pending" ? "loading" : status),
-    [status]
+    () => (status === "pending" || isRefetching ? "loading" : status),
+    [status, isRefetching]
   );
 
   // Para actualizar las opciones del query (y refrescar automáticamente)

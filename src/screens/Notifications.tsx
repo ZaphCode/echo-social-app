@@ -7,6 +7,7 @@ import NotificationList from "@/components/NotificationList";
 import Divider from "@/components/ui/Divider";
 import { useAlertCtx } from "@/context/Alert";
 import useColorScheme from "@/hooks/useColorScheme";
+import Title from "@/components/ui/Title";
 
 export default function Notifications() {
   const { colors } = useColorScheme();
@@ -15,9 +16,7 @@ export default function Notifications() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <Text fontFamily="bold" color={colors.text} size={theme.fontSizes.xxl}>
-        Notificaciones
-      </Text>
+      <Title title="Notificaciones" />
       <Divider />
       <NotificationList />
     </SafeAreaView>

@@ -29,7 +29,7 @@ export default function SearchBar({ onSearch }: Props) {
   });
 
   return (
-    <View>
+    <View style={{ marginBottom: 8 }}>
       <Field
         name="search"
         placeholder="Buscar..."
