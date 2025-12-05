@@ -17,12 +17,14 @@ import RequestForm from "@/components/forms/RequestForm";
 import ReviewSection from "@/components/ReviewSection";
 import useModal from "@/hooks/useModal";
 import useColorScheme from "@/hooks/useColorScheme";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Props = StaticScreenProps<{ service: Service }>;
 
 export default function ServiceOverview({ route }: Props) {
   const { service } = route.params;
   const { user } = useAuthCtx();
+  const queryClient = useQueryClient();
 
   const [activeRequest, setActiveRequest] = useState<ServiceRequest | null>();
   const [requestVisible, openRequestModal, closeRequestModal] = useModal();
@@ -110,6 +112,7 @@ export default function ServiceOverview({ route }: Props) {
           onSuccess={(newRequest) => {
             setActiveRequest(newRequest);
             closeRequestModal();
+            queryClient.invalidateQueries({ queryKey: ["service_requests"] });
           }}
         />
       </SlideModal>

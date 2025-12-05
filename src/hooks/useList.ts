@@ -68,6 +68,7 @@ export default function useList<K extends keyof PBCollectionsMap>(
   collection: K,
   initialOptions?: RecordFullListOptions & {
     notRefreshOnFocus?: boolean;
+    cacheTime?: number;
   }
 ) {
   const [opts, setOpts] = useState(initialOptions);
@@ -85,13 +86,14 @@ export default function useList<K extends keyof PBCollectionsMap>(
     }
   };
 
-  const { data, status, error, refetch } = useQuery({
+  const { data, status, error } = useQuery({
     queryKey: [collection, opts], // <- si opts cambia, se re-ejecuta fetchPB
     queryFn: fetchPB,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: !opts?.notRefreshOnFocus,
     refetchOnReconnect: true,
     retry: 2,
+    gcTime: opts?.cacheTime ?? 1000 * 60 * 3,
   });
 
   const queryStatus = useMemo(

@@ -1,8 +1,11 @@
 import { Alert } from "react-native";
 import { useEffect } from "react";
 import { pb } from "@/lib/pocketbase";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function usePBCheck() {
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     pb.health.check().catch((err) => {
       console.log("PocketBase is down!");

@@ -10,11 +10,14 @@ import {
 } from "react-native";
 import { Controller, Control, RegisterOptions } from "react-hook-form";
 import { Feather } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
 import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
 import { getFileUrl } from "@/utils/format";
 import useColorScheme from "@/hooks/useColorScheme";
+import useImage from "@/hooks/useImage";
+import { SlideModal } from "../ui/SlideModal";
+import useModal from "@/hooks/useModal";
+import ImageOpts from "./ImageOpts";
 
 const MAX_IMAGES = 5;
 
@@ -32,6 +35,9 @@ function PhotoPicker({ control, name, rules, service }: Props) {
     if (service?.id) return getFileUrl("service", service.id, img);
     return img;
   };
+  const [visible, open, close] = useModal();
+
+  const { pickImage } = useImage();
 
   const styles = StyleSheet.create({
     photosSection: {
@@ -91,24 +97,21 @@ function PhotoPicker({ control, name, rules, service }: Props) {
       render={({ field: { value, onChange }, fieldState: { error } }) => {
         const images = value || [];
 
-        const pickImage = async () => {
-          const permissionResult =
-            await ImagePicker.requestMediaLibraryPermissionsAsync();
-          if (!permissionResult.granted) {
-            Alert.alert(
-              "Permiso denegado",
-              "Necesitamos acceso a tu galería para seleccionar fotos."
-            );
-            return;
-          }
+        const handleImagePick = async (option: "camera" | "library") => {
+          try {
+            const result = await pickImage(option, {
+              mediaTypes: "images",
+              allowsEditing: true,
+              quality: 0.7,
+            });
 
-          const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: "images",
-            allowsEditing: true,
-            quality: 0.7,
-          });
-          if (!result.canceled && result.assets?.length) {
-            onChange([...images, result.assets[0].uri]);
+            if (!result.canceled && result.assets?.length) {
+              onChange([...images, result.assets[0].uri]);
+            }
+          } catch (err) {
+            Alert.alert("Error", "No se pudo obtener la imagen.");
+          } finally {
+            close();
           }
         };
 
@@ -139,7 +142,7 @@ function PhotoPicker({ control, name, rules, service }: Props) {
                 </View>
               ))}
               {images.length < MAX_IMAGES && (
-                <Pressable style={styles.addBtn} onPress={pickImage}>
+                <Pressable style={styles.addBtn} onPress={open}>
                   <Feather name="plus" size={28} color={colors.lightGray} />
                 </Pressable>
               )}
@@ -161,6 +164,12 @@ function PhotoPicker({ control, name, rules, service }: Props) {
                 portada.
               </Text>
             )}
+            <SlideModal visible={visible} onClose={close}>
+              <ImageOpts
+                onPressCamera={() => handleImagePick("camera")}
+                onPressLibrary={() => handleImagePick("library")}
+              />
+            </SlideModal>
           </View>
         );
       }}

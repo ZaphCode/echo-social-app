@@ -17,6 +17,7 @@ import ReviewForm from "@/components/ReviewForm";
 import useCheckReviews from "@/hooks/useCheckReviews";
 import { useAuthCtx } from "@/context/Auth";
 import useColorScheme from "@/hooks/useColorScheme";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Props = StaticScreenProps<{ request: ServiceRequest }>;
 
@@ -26,6 +27,7 @@ export default function Chatroom({ route }: Props) {
   const { request } = route.params;
   const { service, client } = request.expand!;
   const { provider } = service.expand!;
+  const queryClient = useQueryClient();
 
   const [offerModalVisible, openOfferModal, closeOfferModal] = useModal();
   const [reviewModalVisible, openReviewModal, closeReviewModal] = useModal();
@@ -65,6 +67,7 @@ export default function Chatroom({ route }: Props) {
           <ReviewForm
             onSuccess={() => {
               closeReviewModal();
+              queryClient.invalidateQueries({ queryKey: ["review"] });
               markAsReviewed();
             }}
           />

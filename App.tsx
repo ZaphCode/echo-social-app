@@ -1,5 +1,4 @@
 import { Navigation } from "./src/navigation/Navigation";
-import { useEffect, useState } from "react";
 
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
@@ -15,20 +14,11 @@ SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
-export default function App() {
-  const [appIsReady, SetAppIsReady] = useState(false);
-  const { activeMode } = useColorScheme();
-
+export default function AppWrapped() {
   const [loaded, error] = useFonts({
     "Geist-Bold": require("./assets/fonts/Geist-Bold.ttf"),
     "Geist-Regular": require("./assets/fonts/Geist-Regular.ttf"),
   });
-
-  usePBCheck();
-
-  useEffect(() => {
-    if (appIsReady && loaded) SplashScreen.hideAsync();
-  }, [appIsReady, loaded, error]);
 
   if (!loaded && error) {
     return console.log("Error loading fonts", error);
@@ -38,11 +28,21 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AlertProvider>
-          <StatusBar style={activeMode === "dark" ? "light" : "dark"} />
-          <Navigation onReady={() => SetAppIsReady(true)} />
-          <AlertModal />
+          <App />
         </AlertProvider>
       </AuthProvider>
     </QueryClientProvider>
+  );
+}
+
+function App() {
+  const { activeMode } = useColorScheme();
+  usePBCheck();
+  return (
+    <>
+      <StatusBar style={activeMode === "dark" ? "light" : "dark"} />
+      <Navigation onReady={SplashScreen.hide} />
+      <AlertModal />
+    </>
   );
 }

@@ -24,10 +24,11 @@ export default function ServiceEditor({ route }: Props) {
   let service = route.params.serviceToEdit;
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
-  const navigation = useNavigation();
+  const { colors } = useColorScheme();
   const [categories, { status }] = useList("service_category", {});
   const { create, update, mutationState } = useMutate("service");
   const queryClient = useQueryClient();
+  const navigation = useNavigation();
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -93,8 +94,6 @@ export default function ServiceEditor({ route }: Props) {
       });
     }
   });
-
-  const { colors } = useColorScheme();
 
   return (
     <KeyboardAvoidingView
