@@ -1,14 +1,13 @@
 import { Navigation } from "./src/navigation/Navigation";
-
 import { StatusBar } from "expo-status-bar";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as SplashScreen from "expo-splash-screen";
+
 import { AuthProvider } from "./src/context/Auth";
 import { useFonts } from "expo-font";
 import { AlertProvider } from "@/context/Alert";
 import { AlertModal } from "@/components/ui/AlertModal";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import useColorScheme from "@/hooks/useColorScheme";
-import usePBCheck from "@/hooks/usePBCheck";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -37,7 +36,7 @@ export default function AppWrapped() {
 
 function App() {
   const { activeMode } = useColorScheme();
-  usePBCheck();
+
   return (
     <>
       <StatusBar style={activeMode === "dark" ? "light" : "dark"} />

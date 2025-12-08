@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
   error: {
     color: theme.colors.redError,
     marginTop: theme.spacing.sm,
+    paddingLeft: theme.spacing.sm,
     fontSize: theme.fontSizes.sm,
   },
 });

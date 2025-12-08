@@ -6,6 +6,9 @@ import {
 import { useAuthCtx } from "@/context/Auth";
 import { AuthStack } from "./stacks/Auth";
 import { MainStack } from "./stacks/Main";
+import ChangeApi from "@/screens/ChangeApi";
+import usePBCheck from "@/hooks/usePBCheck";
+import { theme } from "@/theme/theme";
 
 const RootStack = createNativeStackNavigator({
   screenOptions: {
@@ -15,10 +18,29 @@ const RootStack = createNativeStackNavigator({
   screens: {
     Main: {
       screen: MainStack,
-      if: () => useAuthCtx().authenticated,
+      if() {
+        usePBCheck();
+        return useAuthCtx().authenticated;
+      },
     },
     Auth: {
       screen: AuthStack,
+      if() {
+        usePBCheck();
+        return true;
+      },
+    },
+    ChangeApi: {
+      screen: ChangeApi,
+      options: {
+        headerShown: true,
+        headerTintColor: "white",
+        headerBackVisible: false,
+        title: "Configuración de API",
+        headerStyle: {
+          backgroundColor: theme.colors.secondaryBlue,
+        },
+      },
     },
   },
 });

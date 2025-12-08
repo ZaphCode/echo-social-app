@@ -121,3 +121,11 @@ export const validServicesPhotoRules: RegisterOptions = {
     return true;
   },
 };
+
+export const validUrlRules: RegisterOptions = {
+  required: "La URL es requerida",
+  pattern: {
+    value: /^(https?:\/\/)?([\w-]+(\.[\w-]+)+)(\/[\w-./?%&=]*)?$/i,
+    message: "La URL no es válida",
+  },
+};
