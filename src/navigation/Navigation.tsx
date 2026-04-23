@@ -19,14 +19,14 @@ const RootStack = createNativeStackNavigator({
     Main: {
       screen: MainStack,
       if() {
-        usePBCheck();
+        // usePBCheck();
         return useAuthCtx().authenticated;
       },
     },
     Auth: {
       screen: AuthStack,
       if() {
-        usePBCheck();
+        // usePBCheck();
         return true;
       },
     },

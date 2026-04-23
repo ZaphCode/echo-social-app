@@ -38,6 +38,7 @@
         }
       ],
       "expo-asset",
+
       [
         "expo-build-properties",
         {
@@ -53,7 +54,8 @@
           "cameraPermission": "La aplicación accede a tu cámara para permitirte tomar fotos y compartirlas con tus amigos.",
           "microphonePermission": "La aplicación accede a tu micrófono para permitirte grabar videos con sonido."
         }
-      ]
+      ],
+      "./plugins/withFmtConsteval"
     ]
   }
 }

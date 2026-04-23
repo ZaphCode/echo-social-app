@@ -32,7 +32,7 @@ export default function ProfileConfigSection() {
       } catch (e) {
         Alert.alert(
           "Error al cargar configuración",
-          "Hubo un problema al cargar tu configuración de notificaciones. Por favor, intenta más tarde."
+          "Hubo un problema al cargar tu configuración de notificaciones. Por favor, intenta más tarde.",
         );
       } finally {
         setLoading(false);
@@ -48,7 +48,7 @@ export default function ProfileConfigSection() {
     } catch (e) {
       Alert.alert(
         "Error al guardar configuración",
-        "Hubo un problema al guardar tu configuración de notificaciones. Por favor, intenta más tarde."
+        "Hubo un problema al guardar tu configuración de notificaciones. Por favor, intenta más tarde.",
       );
     }
   };
