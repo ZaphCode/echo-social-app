@@ -14,9 +14,9 @@ import useColorScheme from "@/hooks/useColorScheme";
 export default function RequestsList() {
   const { user } = useAuthCtx();
   const [serviceRequests, { status }] = useList("service_request", {
-    expand: "service, service.provider, client",
-    sort: "-updated",
-    filter: `service.provider.id = "${user.id}" || client.id = "${user.id}"`,
+    select: "*, service:service!service(*, provider:profiles!provider(*)), client_profile:profiles!client(*)",
+    or: `client.eq.${user.id}`,
+    order: { column: "updated_at", ascending: false },
   });
 
   if (status === "loading")

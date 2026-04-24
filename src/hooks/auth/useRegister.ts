@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { pb } from "@/lib/pocketbase";
+import { supabase } from "@/lib/supabase";
 import { User } from "@/models/User";
-import { logPBError } from "@/utils/testing";
+import { logError } from "@/utils/testing";
 import useLogin from "./useLogin";
 
 export default function useRegister() {
@@ -10,30 +10,53 @@ export default function useRegister() {
   const [registrationLoading, setRegistrationLoading] = useState(false);
 
   const createUser = async (params: RegisterClientParams) => {
-    const formData = new FormData();
+    // Sign up via Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email: params.email,
+      password: params.password,
+      options: {
+        data: {
+          name: params.name,
+          role: params.role,
+          email_visibility: true,
+        },
+      },
+    });
 
-    formData.append("name", params.name);
-    formData.append("email", params.email);
-    formData.append("password", params.password);
-    formData.append("passwordConfirm", params.confirmPassword);
-    formData.append("role", params.role);
-    formData.append("emailVisibility", true);
+    if (error) throw error;
+    if (!data.user) throw new Error("User creation failed");
 
+    // Update profile with additional fields if needed
+    const updates: Record<string, unknown> = {};
     if (params.location) {
-      formData.append("location", JSON.stringify(params.location));
+      updates.location = params.location;
     }
-
     if (params.avatar) {
-      formData.append("avatar", {
-        uri: params.avatar,
-        name: params.avatar.split("/").pop() || `avatar_${Date.now()}.jpg`,
-        type: "image/jpeg",
-      });
+      // Upload avatar to storage
+      const fileName = `${data.user.id}/avatar_${Date.now()}.jpg`;
+      const response = await fetch(params.avatar);
+      const blob = await response.blob();
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, blob, { contentType: "image/jpeg" });
+
+      if (!uploadError) {
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("avatars").getPublicUrl(fileName);
+        updates.avatar = publicUrl;
+      }
     }
 
-    const newUser = await pb.collection("users").create<User>(formData);
+    if (Object.keys(updates).length > 0) {
+      await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", data.user.id);
+    }
 
-    return newUser;
+    return { id: data.user.id } as { id: string };
   };
 
   const registerClient = async (params: RegisterClientParams) => {
@@ -41,9 +64,13 @@ export default function useRegister() {
     try {
       const newUser = await createUser(params);
 
-      await pb.collection("client_profile").create({
+      await supabase.from("client_profile").insert({
         user: newUser.id,
-        ...params,
+        phone: params.phone,
+        address: params.address,
+        state: params.state,
+        city: params.city,
+        zip: params.zip,
       });
 
       const loginError = await login(params.email, params.password);
@@ -52,7 +79,7 @@ export default function useRegister() {
 
       return null;
     } catch (error) {
-      logPBError(error);
+      logError(error);
       return error;
     } finally {
       setRegistrationLoading(false);
@@ -64,9 +91,17 @@ export default function useRegister() {
     try {
       const { id } = await createUser(params);
 
-      await pb.collection("provider_profile").create({
+      await supabase.from("provider_profile").insert({
         user: id,
-        ...params,
+        phone: params.phone,
+        description: params.description,
+        specialty: params.specialty,
+        experience_years: params.experience_years,
+        available_days: params.available_days,
+        address: params.address,
+        state: params.state,
+        city: params.city,
+        zip: params.zip,
       });
 
       const loginError = await login(params.email, params.password);
@@ -75,7 +110,7 @@ export default function useRegister() {
 
       return null;
     } catch (error) {
-      logPBError(error);
+      logError(error);
       return error;
     } finally {
       setRegistrationLoading(false);

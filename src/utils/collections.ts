@@ -8,8 +8,8 @@ import { Service } from "@/models/Service";
 import { ServiceRequest } from "@/models/ServiceRequest";
 import { User } from "@/models/User";
 
-export type PBCollectionsMap = {
-  users: User;
+export type TablesMap = {
+  profiles: User;
   service_category: Category;
   service: Service;
   service_request: ServiceRequest;
@@ -19,3 +19,6 @@ export type PBCollectionsMap = {
   client_profile: ClientProfile;
   provider_profile: ProviderProfile;
 };
+
+// Keep backward compat alias
+export type PBCollectionsMap = TablesMap;

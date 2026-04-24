@@ -15,7 +15,7 @@ export default function ReviewCard({ review }: Props) {
   return (
     <View key={review.id} style={{ gap: 3 }}>
       <Text color="white" size={theme.fontSizes.lg} fontFamily="bold">
-        {review.expand!.reviewer.name || "Usuario Anónimo"}
+        {(review as any).reviewer?.name || "Usuario Anónimo"}
       </Text>
       {review.comment && (
         <Text

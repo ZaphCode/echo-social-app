@@ -43,8 +43,9 @@ export default function ServiceCard({ service, authUser }: Props) {
       <Image
         source={{
           uri:
-            getFileUrl("service", service.id, service.photos[0]) ||
-            "https://via.placeholder.com/300",
+            service.photos?.[0]
+              ? getFileUrl("service-photos", service.photos[0])
+              : "https://via.placeholder.com/300",
         }}
         style={styles.image}
       />
@@ -84,7 +85,7 @@ export default function ServiceCard({ service, authUser }: Props) {
               <>
                 <Feather name="user" size={14} color={colors.lightGray} />
                 <Text style={styles.username}>
-                  {service.expand!.provider.name}
+                  {(service as any).profiles?.name || "Proveedor"}
                 </Text>
               </>
             )}

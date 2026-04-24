@@ -10,7 +10,7 @@ export default function useRequestStatus(authUser: User) {
   const { addJob } = useJobsDone(provider);
 
   const { update } = useMutate("service_request", {
-    expand: "service.provider",
+    select: "*, service:service!service(*, provider:profiles!provider(*))",
   });
 
   async function setUserToAgreed() {

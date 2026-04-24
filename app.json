@@ -14,7 +14,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.echoapp"
+      "bundleIdentifier": "com.anonymous.echoapp",
+      "appleTeamId": "K3X2W74GBX"
     },
     "android": {
       "usesCleartextTraffic": true,
@@ -22,7 +23,10 @@
         "foregroundImage": "./assets/app-splash-icon.png",
         "backgroundColor": "#111315"
       },
-      "package": "com.anonymous.echoapp"
+      "package": "com.anonymous.echoapp",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,7 +42,6 @@
         }
       ],
       "expo-asset",
-
       [
         "expo-build-properties",
         {

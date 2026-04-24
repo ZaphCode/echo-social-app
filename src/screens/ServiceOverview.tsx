@@ -31,8 +31,8 @@ export default function ServiceOverview({ route }: Props) {
   const navigation = useNavigation();
 
   const [serviceRequests, { status }] = useList("service_request", {
-    filter: `service = "${service.id}" && client = "${user.id}" && agreement_state != "FINISHED"`,
-    expand: "service.provider, client",
+    filter: { service: service.id, client: user.id },
+    select: "*, service:service!service(*, provider:profiles!provider(*)), client_profile:profiles!client(*)",
   });
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function ServiceOverview({ route }: Props) {
     }
     navigation.navigate("Main", {
       screen: "UserProfile",
-      params: { user: service.expand!.provider },
+      params: { user: (service as any).profiles || { id: service.provider, name: "Proveedor" } },
     });
   };
 
@@ -80,7 +80,7 @@ export default function ServiceOverview({ route }: Props) {
               size={theme.fontSizes.md + 1}
               style={{ textDecorationLine: "underline" }}
             >
-              {service.expand!.provider.name}
+              {(service as any).profiles?.name || "Proveedor"}
             </Text>
           </Pressable>
           <Text

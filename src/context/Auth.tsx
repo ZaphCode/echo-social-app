@@ -1,5 +1,5 @@
-import { createContext, useContext, useState } from "react";
-import { pb } from "../lib/pocketbase";
+import { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 import { User } from "@/models/User";
 
 const initialUser: User = {
@@ -7,10 +7,10 @@ const initialUser: User = {
   email: "",
   name: "",
   role: "client",
-  created: "",
-  updated: "",
+  created_at: "",
+  updated_at: "",
   avatar: "",
-  emailVisibility: false,
+  email_visibility: false,
   verified: false,
 };
 
@@ -24,33 +24,45 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [authData, setAuthData] = useState(
-    pb.authStore.isValid
-      ? {
-          user: {
-            id: pb.authStore.record!.id,
-            name: pb.authStore.record!.name,
-            email: pb.authStore.record!.email,
-            role: pb.authStore.record!.role,
-            created: pb.authStore.record!.created,
-            avatar: pb.authStore.record!.avatar,
-            updated: pb.authStore.record!.updated,
-            emailVisibility: pb.authStore.record!.emailVisibility,
-            verified: pb.authStore.record!.verified,
-            location: pb.authStore.record!.location
-              ? pb.authStore.record!.location
-              : undefined,
-          } as User,
-          authenticated: true,
+  const [authData, setAuthData] = useState({
+    user: initialUser,
+    authenticated: false,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id);
+        if (profile) {
+          setAuthData({ user: profile, authenticated: true });
         }
-      : {
-          user: initialUser,
-          authenticated: false,
+      }
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id);
+        if (profile) {
+          setAuthData({ user: profile, authenticated: true });
         }
-  );
+      } else {
+        setAuthData({ user: initialUser, authenticated: false });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const login = (user: User) => setAuthData({ user, authenticated: true });
   const logout = () => setAuthData({ user: initialUser, authenticated: false });
+
+  if (loading) return null; // Or a splash screen
 
   return (
     <AuthContext.Provider value={{ ...authData, login, logout }}>
@@ -58,6 +70,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+
+async function fetchProfile(userId: string): Promise<User | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    role: data.role,
+    avatar: data.avatar || "",
+    email_visibility: data.email_visibility,
+    verified: data.verified,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+    location: data.location || undefined,
+  };
+}
 
 export const useAuthCtx = () => {
   return useContext(AuthContext);

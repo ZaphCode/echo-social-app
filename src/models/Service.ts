@@ -3,17 +3,16 @@ import { User } from "./User";
 
 export type Service = {
   id: string;
-  provider: string; // fk: User ID
-  category: string; // fk: Category ID
+  provider: string; // FK: profiles.id
+  category: string; // FK: service_category.id
   name: string;
   description: string;
   base_price: number;
   photos: string[];
-  created: string;
-  updated: string;
+  created_at: string;
+  updated_at: string;
 
-  expand?: {
-    provider: User;
-    category: Category;
-  };
+  // Supabase joined data
+  profiles?: User; // provider profile joined via "provider" FK
+  service_category?: Category; // category joined via "category" FK
 };

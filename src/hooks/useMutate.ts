@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { pb } from "../lib/pocketbase";
-import { RecordOptions } from "pocketbase";
-import { PBCollectionsMap } from "@/utils/collections";
-import { logPBError } from "@/utils/testing";
+import { supabase } from "../lib/supabase";
+import { TablesMap } from "@/utils/collections";
+import { logError } from "@/utils/testing";
 
 type MutationStatus = "idle" | "loading" | "success" | "error";
 
@@ -11,27 +10,38 @@ type MutationState = {
   error: string | null;
 };
 
-export default function useMutate<K extends keyof PBCollectionsMap>(
+type MutateOptions = {
+  select?: string;
+};
+
+export default function useMutate<K extends keyof TablesMap>(
   collection: K,
-  options?: RecordOptions
+  options?: MutateOptions
 ) {
   const [mutationState, setMutationState] = useState<MutationState>({
     status: "idle",
     error: null,
   });
 
-  const create = async (data: Partial<PBCollectionsMap[K]> | FormData) => {
+  const selectClause = options?.select || "*";
+
+  const create = async (data: Partial<TablesMap[K]>) => {
     setMutationState({ status: "loading", error: null });
 
     try {
-      const res = await pb
-        .collection(collection)
-        .create<PBCollectionsMap[K]>(data, options || {});
+      const { data: result, error } = await supabase
+        .from(collection)
+        .insert(data as Record<string, unknown>)
+        .select(selectClause)
+        .single();
+
+      if (error) throw error;
+
       setMutationState({ status: "success", error: null });
-      return res;
+      return result as TablesMap[K];
     } catch (error) {
-      console.log("PB Create Error:", error);
-      logPBError(error);
+      console.log("Supabase Create Error:", error);
+      logError(error);
       setMutationState({ status: "error", error: "Error al crear" });
       return null;
     }
@@ -39,19 +49,25 @@ export default function useMutate<K extends keyof PBCollectionsMap>(
 
   const update = async (
     id: string,
-    data: Partial<PBCollectionsMap[K]> | FormData
+    data: Partial<TablesMap[K]>
   ) => {
     setMutationState({ status: "loading", error: null });
 
     try {
-      const res = await pb
-        .collection(collection)
-        .update<PBCollectionsMap[K]>(id, data, options || {});
+      const { data: result, error } = await supabase
+        .from(collection)
+        .update(data as Record<string, unknown>)
+        .eq("id", id)
+        .select(selectClause)
+        .single();
+
+      if (error) throw error;
+
       setMutationState({ status: "success", error: null });
-      return res;
+      return result as TablesMap[K];
     } catch (error) {
-      console.log("PB Update Error:", error);
-      logPBError(error);
+      console.log("Supabase Update Error:", error);
+      logError(error);
       setMutationState({ status: "error", error: "Error al actualizar" });
       return null;
     }
@@ -61,12 +77,18 @@ export default function useMutate<K extends keyof PBCollectionsMap>(
     setMutationState({ status: "loading", error: null });
 
     try {
-      const res = await pb.collection(collection).delete(id, options || {});
+      const { error } = await supabase
+        .from(collection)
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
       setMutationState({ status: "success", error: null });
-      return res;
+      return true;
     } catch (error) {
-      console.log("PB Delete Error:", error);
-      logPBError(error);
+      console.log("Supabase Delete Error:", error);
+      logError(error);
       setMutationState({ status: "error", error: "Error al eliminar" });
       return null;
     }

@@ -18,7 +18,12 @@ type Props = StaticScreenProps<{ user: User }>;
 export default function UserProfile({ route }: Props) {
   const { user } = route.params;
   const { colors } = useColorScheme();
-  const [profile, profileState] = useProfile(user, { expand: "specialty" });
+  const [profile, profileState] = useProfile(user, {
+    select:
+      user.role === "provider"
+        ? "*, service_category:service_category!specialty(*)"
+        : "*",
+  });
 
   if (profileState.status === "loading") {
     return (
@@ -86,7 +91,7 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     width: "90%",
-    backgroundColor: theme.colors.darkGray,
+    backgroundColor: theme.colors.primaryBlue,
     borderRadius: 15,
     padding: 26,
     gap: 13,

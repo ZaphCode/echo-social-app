@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { pb as client } from "../lib/pocketbase";
-import { ClientResponseError, RecordFullListOptions } from "pocketbase";
-import { PBCollectionsMap } from "@/utils/collections";
+import { supabase } from "../lib/supabase";
+import { TablesMap } from "@/utils/collections";
 
 type QueryStatus = "idle" | "loading" | "success" | "error";
 
@@ -10,12 +9,16 @@ type QueryState = {
   error: string | null;
 };
 
-export default function useView<K extends keyof PBCollectionsMap>(
+type ViewOptions = {
+  select?: string;
+};
+
+export default function useView<K extends keyof TablesMap>(
   collection: K,
   id: string,
-  options?: RecordFullListOptions
+  options?: ViewOptions
 ) {
-  const [data, setData] = useState<PBCollectionsMap[K] | null>(null);
+  const [data, setData] = useState<TablesMap[K] | null>(null);
   const [queryState, setQueryState] = useState<QueryState>({
     status: "idle",
     error: null,
@@ -24,15 +27,20 @@ export default function useView<K extends keyof PBCollectionsMap>(
   const getData = async () => {
     setQueryState({ status: "loading", error: null });
     try {
-      const res = await client
-        .collection(collection)
-        .getOne<PBCollectionsMap[K]>(id, options);
-      setData(res);
+      const { data: result, error } = await supabase
+        .from(collection)
+        .select(options?.select || "*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      setData(result as TablesMap[K]);
       setQueryState({ status: "success", error: null });
     } catch (error) {
       const message =
-        error instanceof ClientResponseError ? error.message : "Unknown error";
-      console.log("PB Error:", error);
+        error instanceof Error ? error.message : "Unknown error";
+      console.log("Supabase Error:", error);
       setQueryState({ status: "error", error: message });
     }
   };

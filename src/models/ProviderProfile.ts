@@ -3,8 +3,8 @@ import { User } from "./User";
 
 export type ProviderProfile = {
   id: string;
-  user: string; // fk: User ID
-  specialty: string; // fk: ServiceCategory ID
+  user: string; // FK: profiles.id
+  specialty: string; // FK: service_category.id
   phone: string;
   description: string;
   state: string;
@@ -13,12 +13,11 @@ export type ProviderProfile = {
   zip: string;
   jobs_done: number;
   experience_years: number;
-  available_days: string[]; // ["MON", "TUE", ...]
-  updated: string;
-  created: string;
+  available_days: string[]; // ["LUN", "MAR", ...]
+  updated_at: string;
+  created_at: string;
 
-  expand?: {
-    user: User;
-    specialty: Category;
-  };
+  // Supabase joined data
+  profiles?: User;
+  service_category?: Category;
 };

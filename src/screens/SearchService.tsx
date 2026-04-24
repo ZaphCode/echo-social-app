@@ -1,7 +1,6 @@
 import { View, StyleSheet, FlatList } from "react-native";
 import { StaticScreenProps } from "@react-navigation/native";
 
-import { pb } from "@/lib/pocketbase";
 import { theme } from "@/theme/theme";
 import { useAuthCtx } from "@/context/Auth";
 import { useState } from "react";
@@ -22,22 +21,16 @@ export default function SearchService({ route }: Props) {
   const initialSearch = route.params.search;
   const [search, setSearch] = useState(initialSearch);
 
-  const getFilter = (search: string) =>
-    pb.filter(
-      "name ~ {:search} || description ~ {:search} || category.name ~ {:search}",
-      { search }
-    );
-
   const [services, { status }, refetch] = useList("service", {
-    filter: getFilter(search),
-    expand: "provider, category",
+    select: "*, provider:profiles!provider(*), category:service_category!category(*)",
+    or: `name.ilike.%${search}%,description.ilike.%${search}%`,
   });
 
   async function handleSearch(newSearch: string) {
     setSearch(newSearch);
     await refetch({
-      filter: getFilter(newSearch),
-      expand: "provider, category",
+      select: "*, provider:profiles!provider(*), category:service_category!category(*)",
+      or: `name.ilike.%${newSearch}%,description.ilike.%${newSearch}%`,
     });
   }
 

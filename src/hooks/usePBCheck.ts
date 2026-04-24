@@ -1,13 +1,25 @@
 import { useEffect } from "react";
-import { pb } from "@/lib/pocketbase";
+import { supabase } from "@/lib/supabase";
 import { useNavigation } from "@react-navigation/native";
 
-export default function usePBCheck() {
+/**
+ * Health check hook - verifies Supabase connection is alive.
+ * With Supabase cloud this is rarely needed, but kept for parity.
+ */
+export default function useHealthCheck() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    pb.health.check().catch((err) => {
-      navigation.navigate("ChangeApi");
-    });
+    supabase
+      .from("service_category")
+      .select("id")
+      .limit(1)
+      .then(({ error }) => {
+        if (error) {
+          console.warn("Supabase health check failed:", error.message);
+          // Optionally navigate to an error screen
+          // navigation.navigate("ChangeApi");
+        }
+      });
   }, []);
 }

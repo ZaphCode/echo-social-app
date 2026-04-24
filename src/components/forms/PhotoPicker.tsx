@@ -32,7 +32,7 @@ function PhotoPicker({ control, name, rules, service }: Props) {
   const { colors } = useColorScheme();
   const getPreviewUrl = (img: string) => {
     if (img.startsWith("file://") || img.startsWith("http")) return img;
-    if (service?.id) return getFileUrl("service", service.id, img);
+    if (service?.id) return getFileUrl("service-photos", img);
     return img;
   };
   const [visible, open, close] = useModal();

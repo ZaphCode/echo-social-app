@@ -21,9 +21,9 @@ export default function MessageList({ requestId }: Props) {
   const flatListRef = useRef<FlatList<Message>>(null);
 
   const [initialMessages, { status }] = useList("message", {
-    expand: "sender, request.service.provider",
-    filter: `request.id = "${requestId}"`,
-    sort: "created",
+    select: "*, profiles:profiles!sender(*)",
+    filter: { request: requestId },
+    order: { column: "created_at", ascending: true },
   });
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,7 +33,7 @@ export default function MessageList({ requestId }: Props) {
   }, [status]);
 
   useSubscription("message", "*", async ({ action, record }) => {
-    if (action === "create" && record.request === requestId) {
+    if (action === "INSERT" && record.request === requestId) {
       setMessages((prevMessages) => [...prevMessages, record]);
     }
   });

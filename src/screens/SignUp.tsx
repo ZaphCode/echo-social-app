@@ -7,7 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import { theme } from "@/theme/theme";
 import { useAlertCtx } from "@/context/Alert";
 import { User } from "@/models/User";
-import { pb } from "@/lib/pocketbase";
+import { supabase } from "@/lib/supabase";
 import * as rules from "@/utils/validations";
 import Text from "@/components/ui/Text";
 import Field from "@/components/forms/Field";
@@ -36,10 +36,14 @@ export default function SignUp() {
   // TODO: Move this to a separate utility file
   async function emailExists(email: string): Promise<boolean> {
     try {
-      const users = await pb.collection("users").getList(1, 1, {
-        filter: `email = "${email}"`,
-      });
-      return users.items.length > 0;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .limit(1);
+
+      if (error) return false;
+      return (data?.length ?? 0) > 0;
     } catch (err) {
       return false;
     }

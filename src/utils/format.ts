@@ -1,12 +1,14 @@
-import { pb } from "@/lib/pocketbase";
-import { PBCollectionsMap } from "./collections";
+import { supabase } from "@/lib/supabase";
+import { TablesMap } from "./collections";
 
 export const getFileUrl = (
-  coll: keyof PBCollectionsMap,
-  recordId: string,
-  fileName: string
+  bucket: string,
+  filePath: string
 ): string => {
-  return pb.files.getURL({ id: recordId, collectionName: coll }, fileName);
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(bucket).getPublicUrl(filePath);
+  return publicUrl;
 };
 
 export const formatDate = (date: string): string => {

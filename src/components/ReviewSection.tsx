@@ -14,8 +14,8 @@ type Props = { service: Service; authUser: User };
 
 export default function ReviewSection({ service, authUser }: Props) {
   const [reviews, { status }] = useList("review", {
-    filter: `service = "${service.id}" && reviewer != "${service.provider}"`,
-    expand: "reviewer, reviewed",
+    filter: { service: service.id },
+    select: "*, reviewer:profiles!reviewer(*), reviewed:profiles!reviewed(*)",
   });
   const { colors } = useColorScheme();
 

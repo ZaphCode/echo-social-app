@@ -3,8 +3,8 @@ import { User } from "./User";
 
 export type ServiceRequest = {
   id: string;
-  client: string; // User ID of the client
-  service: string; // Service ID of the requested service
+  client: string; // FK: profiles.id
+  service: string; // FK: service.id
   last_offer_user: string;
 
   agreed_price: number;
@@ -19,10 +19,9 @@ export type ServiceRequest = {
   canceled?: string;
 
   requested: string;
-  updated: string;
+  updated_at: string;
 
-  expand?: {
-    client: User;
-    service: Service;
-  };
+  // Supabase joined data
+  client_profile?: User;
+  service_detail?: Service;
 };

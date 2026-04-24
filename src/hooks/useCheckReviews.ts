@@ -10,7 +10,7 @@ export default function useCheckReviews(
   const [hasReviewed, setHasReviewed] = useState(false);
 
   const [reviews, { status }] = useList("review", {
-    filter: `reviewer = "${authUser.id}" && service = "${request.service}"`,
+    filter: { reviewer: authUser.id, service: request.service },
   });
 
   useEffect(() => {

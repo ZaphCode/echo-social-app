@@ -35,7 +35,7 @@ export default function ProfessionalInfoSection({
   const [optimisticProfile, setOptimisticProfile] = useState(providerProfile);
 
   const { available_days, experience_years } = optimisticProfile;
-  const specialty = optimisticProfile.expand?.specialty?.name;
+  const specialty = (optimisticProfile as any).service_category?.name;
 
   const experience_years_value = `${experience_years} ${
     experience_years === 1 ? "año" : "años"

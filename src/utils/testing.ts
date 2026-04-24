@@ -2,18 +2,17 @@
 
 import { Notification } from "@/models/Notification";
 import { User } from "@/models/User";
-import { ClientResponseError, RecordFullListOptions } from "pocketbase";
 
-export interface PBClient {
+export interface DBClient {
   collection: (collection: string) => {
-    getFullList: <T>(options?: RecordFullListOptions) => Promise<T[]>;
+    getFullList: <T>(options?: Record<string, unknown>) => Promise<T[]>;
   };
 }
 
-export const mockPBClient: PBClient = {
+export const mockDBClient: DBClient = {
   collection: (collection: string) => ({
-    getFullList: async <T>(options?: any): Promise<T[]> => {
-      if (collection === "users") return mockUsers as unknown as T[];
+    getFullList: async <T>(options?: Record<string, unknown>): Promise<T[]> => {
+      if (collection === "profiles") return mockUsers as unknown as T[];
       else throw new Error("Invalid collection");
     },
   }),
@@ -25,35 +24,34 @@ const mockUsers: User[] = [
     name: "Juan Pérez",
     email: "test@gmail.com",
     avatar: "https://example.com/avatar.jpg",
-    emailVisibility: true,
+    email_visibility: true,
     role: "client",
     verified: true,
-    created: "2023-02-01T00:00:00.000Z",
-    updated: "2023-02-02T00:00:00.000Z",
+    created_at: "2023-02-01T00:00:00.000Z",
+    updated_at: "2023-02-02T00:00:00.000Z",
   },
   {
     id: "user456",
     name: "María López",
     email: "a@atac.dev",
     avatar: "https://example.com/avatar2.jpg",
-    emailVisibility: false,
+    email_visibility: false,
     role: "client",
     verified: false,
-    created: "2023-02-01T00:00:00.000Z",
-    updated: "2023-02-02T00:00:00.000Z",
+    created_at: "2023-02-01T00:00:00.000Z",
+    updated_at: "2023-02-02T00:00:00.000Z",
   },
 ];
 
-export function logPBError(error: unknown) {
-  if (error instanceof ClientResponseError) {
-    console.log("PB Error message:", error.message);
-    console.log("PB Error data:", error.data);
-    console.log("PB Error originalError:", error.originalError);
-    console.log("PB Error cause:", error.cause);
-    console.log("PB Error name:", error.name);
-    console.log("PB Error status:", error.status);
-    console.log("PB Error response:", error.response);
+export function logError(error: unknown) {
+  if (error instanceof Error) {
+    console.log("Error message:", error.message);
+    console.log("Error name:", error.name);
+    console.log("Error cause:", error.cause);
   } else {
     console.log("Unknown error:", error);
   }
 }
+
+// Keep backward compat alias
+export const logPBError = logError;

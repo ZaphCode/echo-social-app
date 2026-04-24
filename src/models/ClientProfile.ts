@@ -2,16 +2,15 @@ import { User } from "./User";
 
 export type ClientProfile = {
   id: string;
-  user: string; // fk: User ID
+  user: string; // FK: profiles.id
   phone: string;
   state: string;
   city: string;
   address: string;
   zip: string;
-  updated: string;
-  created: string;
+  updated_at: string;
+  created_at: string;
 
-  expand?: {
-    user: User;
-  };
+  // Supabase joined data (via select with joins)
+  profiles?: User;
 };

@@ -30,7 +30,7 @@ export default function EditProviderInfoView({
   });
 
   const { update, mutationState } = useMutate("provider_profile", {
-    expand: "specialty",
+    select: "*, service_category:service_category!specialty(*)",
   });
 
   const onContinue = handleSubmit(async (data) => {

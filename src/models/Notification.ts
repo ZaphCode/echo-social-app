@@ -2,7 +2,7 @@ import { User } from "./User";
 
 export type Notification = {
   id: string;
-  user: string; // fk: User ID
+  user: string; // FK: profiles.id
   message: string;
   type:
     | "PROVIDER:NEW_REQUEST"
@@ -10,14 +10,13 @@ export type Notification = {
     | "PROVIDER:NEW_OFFER"
     | "SYSTEM:INFO";
   read: boolean;
-  created: string;
-  updated: string;
+  created_at: string;
+  updated_at: string;
 
-  // Optional fields for relationships
-  request?: string; // fk: ServiceRequest ID
-  service?: string; // fk: Service ID
+  // Optional FK fields
+  request?: string; // FK: service_request.id
+  service?: string; // FK: service.id
 
-  expand?: {
-    user: User;
-  };
+  // Supabase joined data
+  profiles?: User;
 };

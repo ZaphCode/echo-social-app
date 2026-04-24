@@ -10,7 +10,7 @@ type Props = {
 };
 
 export default function ServicePhotoCarousel({ photos, serviceId }: Props) {
-  const formatted = photos.map((p) => getFileUrl("service", serviceId, p));
+  const formatted = photos.map((p) => getFileUrl("service-photos", p));
 
   return (
     <ScrollView

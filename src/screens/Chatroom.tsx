@@ -25,8 +25,9 @@ export default function Chatroom({ route }: Props) {
   const { colors } = useColorScheme();
   const { user: authUser } = useAuthCtx();
   const { request } = route.params;
-  const { service, client } = request.expand!;
-  const { provider } = service.expand!;
+  const service = (request as any).service || {} as any;
+  const client = (request as any).client_profile || {} as any;
+  const provider = service?.provider || {} as any;
   const queryClient = useQueryClient();
 
   const [offerModalVisible, openOfferModal, closeOfferModal] = useModal();

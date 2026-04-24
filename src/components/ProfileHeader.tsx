@@ -41,7 +41,7 @@ export default function ProfileHeader({ user, editable }: Props) {
   return (
     <View style={styles.header}>
       <AvatarPicker
-        image={user.avatar && getFileUrl("users", user.id, user.avatar)}
+        image={user.avatar && getFileUrl("avatars", user.avatar)}
         onChange={onAvatarChange}
         viewOnly={!editable}
       />

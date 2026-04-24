@@ -1,64 +1,43 @@
 import { View, Alert, StyleSheet } from "react-native";
-import { useEffect } from "react";
 import useColorScheme from "@/hooks/useColorScheme";
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 import { Feather } from "@expo/vector-icons";
 import Button from "@/components/ui/Button";
-import Field from "@/components/forms/Field";
-import { useForm } from "react-hook-form";
-import { validUrlRules } from "@/utils/validations";
-import { pb } from "@/lib/pocketbase";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
 
+/**
+ * This screen is no longer needed with Supabase cloud.
+ * Kept as a simple info screen that redirects back.
+ */
 export default function ChangeApi() {
   const { colors } = useColorScheme();
-
-  const queryClient = useQueryClient();
   const navigation = useNavigation();
-
-  const { control, handleSubmit } = useForm({
-    defaultValues: {
-      apiUrl: "",
-    },
-  });
-
-  const onSubmit = handleSubmit(({ apiUrl }) => {
-    pb.settings.client.baseURL = apiUrl;
-    queryClient.refetchQueries();
-    navigation.navigate("Main");
-    Alert.alert("URL de API guardada", `Nueva URL: ${apiUrl}`);
-  });
-
-  useEffect(() => {
-    Alert.alert(
-      "El servidor está caído",
-      "Probablemente el enlace a la api esté roto en tu dispositivo o el servidor esté inactivo.\nSerá necesario que ingreses un enlace válido a la API para conectarte a nuestros servicios.\nPuedes pedirle a un desarrollador de Echo un nuevo enlace activo.",
-      [{ text: "Entendido" }]
-    );
-  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Feather
-        name="settings"
+        name="cloud"
         size={54}
         color={theme.colors.primaryBlue}
         style={{ alignSelf: "center", marginBottom: 10 }}
       />
       <Text color={colors.text} style={styles.title}>
-        Configuración de API
+        Conexión al Servidor
       </Text>
-      <Field
-        name="apiUrl"
-        control={control}
-        label="Introduzca el nuevo enlace url de la API para conectarse al servidor"
-        placeholder="https://api.ejemplo.com"
-        rules={validUrlRules}
-      />
+      <Text
+        color={colors.text}
+        style={{ textAlign: "center", fontSize: theme.fontSizes.md }}
+      >
+        La aplicación está conectada a Supabase en la nube. Si experimentas
+        problemas de conexión, verifica tu conexión a internet.
+      </Text>
       <View style={{ marginTop: 20 }}>
-        <Button style={styles.button} title={"Guardar"} onPress={onSubmit} />
+        <Button
+          style={styles.button}
+          title={"Volver"}
+          onPress={() => navigation.goBack()}
+        />
       </View>
     </View>
   );

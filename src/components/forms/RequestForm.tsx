@@ -49,7 +49,7 @@ export default function RequestForm({
   });
 
   const requestMutation = useMutate("service_request", {
-    expand: "service.provider, client",
+    select: "*, service:service!service(*, provider:profiles!provider(*)), client_profile:profiles!client(*)",
   });
 
   const notificationMutation = useMutate("notification");

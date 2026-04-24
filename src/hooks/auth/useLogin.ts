@@ -1,6 +1,6 @@
 import { useAuthCtx } from "@/context/Auth";
-import { pb } from "@/lib/pocketbase";
-import { logPBError } from "@/utils/testing";
+import { supabase } from "@/lib/supabase";
+import { logError } from "@/utils/testing";
 import { useState } from "react";
 
 export default function useLogin() {
@@ -10,19 +10,43 @@ export default function useLogin() {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const res = await pb
-        .collection<typeof auth.user>("users")
-        .authWithPassword(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (!res.record) return "Usuario no encontrado";
-
-      auth.login(res.record);
-    } catch (error) {
-      if (error instanceof Error) {
-        logPBError(error);
-        if (error.message.includes("Failed to authenticate"))
+      if (error) {
+        logError(error);
+        if (error.message.includes("Invalid login credentials"))
           return "invalid-credentials";
+        return "server-error";
       }
+
+      if (!data.user) return "Usuario no encontrado";
+
+      // Fetch profile from profiles table
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profileError || !profile) return "server-error";
+
+      auth.login({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        role: profile.role,
+        avatar: profile.avatar || "",
+        email_visibility: profile.email_visibility,
+        verified: profile.verified,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+        location: profile.location || undefined,
+      });
+    } catch (error) {
+      logError(error);
       return "server-error";
     } finally {
       setLoading(false);

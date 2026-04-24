@@ -23,7 +23,9 @@ export default function MyProfile() {
   const logout = useLogout();
   const navigation = useNavigation();
   const { colors } = useColorScheme();
-  const [profile, profileState] = useProfile(user, { expand: "specialty" });
+  const [profile, profileState] = useProfile(user, { 
+    select: user.role === "provider" ? "*, service_category:service_category!specialty(*)" : "*" 
+  });
 
   const containerStyle = {
     flex: 1,

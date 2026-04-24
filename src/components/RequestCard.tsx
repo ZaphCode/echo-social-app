@@ -25,12 +25,12 @@ export default function RequestCard({ request }: Props) {
   const navigation = useNavigation();
   const { user } = useAuthCtx();
 
-  const service = request.expand!.service;
-  const provider = service!.expand!.provider;
-  const client = request.expand!.client;
+  const service = (request as any).service;
+  const provider = service?.provider || {} as any;
+  const client = (request as any).client_profile || {} as any;
 
-  const imageUrl = service!.photos?.[0]
-    ? getFileUrl("service", service.id, service.photos[0])
+  const imageUrl = service?.photos?.[0]
+    ? getFileUrl("service-photos", service.photos[0])
     : "https://via.placeholder.com/100x100";
 
   const statusData = STATUS_MAP[request.agreement_state] || {

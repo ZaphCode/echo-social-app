@@ -4,10 +4,10 @@ export type User = {
   avatar: string;
   name: string;
   role: "client" | "provider";
-  emailVisibility: boolean;
+  email_visibility: boolean;
   verified: boolean;
-  created: string;
-  updated: string;
+  created_at: string;
+  updated_at: string;
   location?: {
     lat: number;
     lon: number;

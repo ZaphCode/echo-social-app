@@ -13,8 +13,8 @@ import useColorScheme from "@/hooks/useColorScheme";
 
 export default function NotificationList() {
   const [notifications, { status }] = useList("notification", {
-    expand: "user",
-    sort: "-created",
+    select: "*, profiles:profiles!user(*)",
+    order: { column: "created_at", ascending: false },
   });
 
   const { update } = useMutate("notification");

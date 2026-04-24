@@ -3,12 +3,13 @@ import useList from "./useList";
 
 export default function useStats(userId: string) {
   const [reviews, reviewsFetch] = useList("review", {
-    filter: `reviewed = "${userId}"`,
+    filter: { reviewed: userId },
   });
 
   const [requests, requestsFetch] = useList("service_request", {
-    expand: "service, service.provider",
-    filter: `(client = "${userId}" || service.provider = "${userId}") && agreement_state = "FINISHED"`,
+    select: "*, service:service!service(*, provider:profiles!provider(*))",
+    or: `client.eq.${userId},service.provider.eq.${userId}`,
+    filter: { agreement_state: "FINISHED" },
   });
 
   const requestsDone = useMemo(() => {

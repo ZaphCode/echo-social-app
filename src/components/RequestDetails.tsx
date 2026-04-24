@@ -70,7 +70,7 @@ function UserMiniCard({
   return (
     <View style={styles.userCard}>
       <Image
-        source={{ uri: getFileUrl("users", id, avatar!) }}
+        source={{ uri: avatar ? getFileUrl("avatars", avatar) : undefined }}
         style={styles.avatar}
       />
       <Text color={colors.lightGray} size={12}>

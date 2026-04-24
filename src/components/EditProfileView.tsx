@@ -38,7 +38,7 @@ export default function EditProfileView({
     userRole === "client" ? "client_profile" : "provider_profile";
 
   const { update, mutationState } = useMutate(collectionName, {
-    expand: "user",
+    select: "*, profiles:profiles!user(*)",
   });
 
   const onSubmit = handleSubmit(async (data) => {

@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { pb as client } from "@/lib/pocketbase";
-import { ClientResponseError, RecordFullListOptions } from "pocketbase";
+import { supabase } from "@/lib/supabase";
 import { ClientProfile } from "@/models/ClientProfile";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import { User } from "@/models/User";
@@ -11,9 +10,13 @@ type QueryStatus = "idle" | "loading" | "success" | "error";
 
 type QueryState = { status: QueryStatus; error: string | null };
 
+type ProfileOptions = {
+  select?: string;
+};
+
 export default function useProfile(
   user: User,
-  options?: RecordFullListOptions
+  options?: ProfileOptions
 ) {
   const [profile, setProfile] = useState<Profile>(null);
   const [queryState, setQueryState] = useState<QueryState>({
@@ -27,14 +30,20 @@ export default function useProfile(
     try {
       const collection =
         user.role === "client" ? "client_profile" : "provider_profile";
-      const res = await client
-        .collection(collection)
-        .getFirstListItem<Profile>(`user="${user.id}"`, options);
-      setProfile(res);
+
+      const { data, error } = await supabase
+        .from(collection)
+        .select(options?.select || "*")
+        .eq("user", user.id)
+        .single();
+
+      if (error) throw error;
+
+      setProfile(data as Profile);
       setQueryState({ status: "success", error: null });
     } catch (error) {
       const message =
-        error instanceof ClientResponseError ? error.message : "Unknown error";
+        error instanceof Error ? error.message : "Unknown error";
       setQueryState({ status: "error", error: message });
       setProfile(null);
     }

@@ -17,14 +17,14 @@ type Props = {
 
 export default function ServiceList({ authUser, category }: Props) {
   const [services, { status }, updateOptions] = useList("service", {
-    expand: "provider",
+    select: "*, profiles:profiles!provider(*)",
     filter: getFilter(category),
   });
 
   useEffect(() => {
     if (status !== "loading")
       updateOptions({
-        expand: "provider",
+        select: "*, profiles:profiles!provider(*)",
         filter: getFilter(category),
       });
   }, [category]);
@@ -116,7 +116,7 @@ export function ErrorServicesComponent() {
 }
 
 function getFilter(category: string) {
-  return category === "all" ? "" : `category = '${category}'`;
+  return category === "all" ? {} : { category };
 }
 
 const styles = StyleSheet.create({

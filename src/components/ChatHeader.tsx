@@ -27,7 +27,7 @@ export default function ChatHeader() {
       <Image
         source={{
           uri:
-            getFileUrl("service", service.id, service.photos[0]) ||
+            (service.photos?.[0] ? getFileUrl("service-photos", service.photos[0]) : undefined) ||
             "https://via.placeholder.com/300",
         }}
         style={styles.image}
