@@ -34,11 +34,11 @@ const RootStack = createNativeStackNavigator({
       screen: ChangeApi,
       options: {
         headerShown: true,
-        headerTintColor: "white",
+        headerTintColor: theme.colors.textOnBrand,
         headerBackVisible: false,
         title: "Configuración de API",
         headerStyle: {
-          backgroundColor: theme.colors.secondaryBlue,
+          backgroundColor: theme.colors.brandSurface,
         },
       },
     },

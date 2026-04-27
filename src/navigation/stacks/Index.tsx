@@ -19,8 +19,9 @@ export const IndexStack = createNativeStackNavigator({
       options: {
         headerShown: true,
         title: "",
+        headerTintColor: theme.colors.textOnBrand,
         headerStyle: {
-          backgroundColor: theme.colors.secondaryBlue,
+          backgroundColor: theme.colors.brandSurface,
         },
       },
     },
@@ -29,8 +30,9 @@ export const IndexStack = createNativeStackNavigator({
       options: {
         headerShown: true,
         title: "",
+        headerTintColor: theme.colors.textOnBrand,
         headerStyle: {
-          backgroundColor: theme.colors.secondaryBlue,
+          backgroundColor: theme.colors.brandSurface,
         },
       },
     },

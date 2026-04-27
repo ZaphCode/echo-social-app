@@ -14,13 +14,25 @@ import Text from "@/components/ui/Text";
 import { theme } from "@/theme/theme";
 import { useNavigation } from "@react-navigation/native";
 import { NOTIFICATIONS_KEY } from "@/utils/constants";
-import useColorScheme from "@/hooks/useColorScheme";
+import useAppTheme from "@/hooks/useAppTheme";
+
+const THEME_OPTIONS = [
+  { label: "Auto", value: "auto" as const },
+  { label: "Claro", value: "light" as const },
+  { label: "Oscuro", value: "dark" as const },
+];
 
 export default function ProfileConfigSection() {
   const navigation = useNavigation();
-  const { colors, activeMode, setDarkMode, setLightMode } = useColorScheme();
+  const {
+    theme: appTheme,
+    preference,
+    resolvedTheme,
+    setThemePreference,
+  } = useAppTheme();
   const [notificationsOn, setNotificationOn] = useState(true);
   const [loading, setLoading] = useState(true);
+  const { colors } = appTheme;
 
   useEffect(() => {
     (async () => {
@@ -50,14 +62,6 @@ export default function ProfileConfigSection() {
         "Error al guardar configuración",
         "Hubo un problema al guardar tu configuración de notificaciones. Por favor, intenta más tarde.",
       );
-    }
-  };
-
-  const toggleTheme = () => {
-    if (activeMode === "dark") {
-      setLightMode();
-    } else {
-      setDarkMode();
     }
   };
 
@@ -100,22 +104,46 @@ export default function ProfileConfigSection() {
       <View style={[styles.settingRow, { borderBottomColor: colors.darkGray }]}>
         <View style={styles.labelContainer}>
           <Feather name="moon" size={20} color={colors.text} />
-          <Text color={colors.text} style={styles.settingLabel}>
-            Modo Oscuro
-          </Text>
+          <View>
+            <Text color={colors.text} style={styles.settingLabel}>
+              Tema
+            </Text>
+            <Text color={colors.lightGray} style={styles.settingHint}>
+              {preference === "auto"
+                ? `Automático (${resolvedTheme === "dark" ? "Oscuro" : "Claro"})`
+                : resolvedTheme === "dark"
+                  ? "Oscuro"
+                  : "Claro"}
+            </Text>
+          </View>
         </View>
-        <Switch
-          trackColor={{
-            false: colors.lightGray,
-            true: colors.primaryBlue,
-          }}
-          thumbColor={"white"}
-          style={styles.switch}
-          ios_backgroundColor={colors.lightGray}
-          value={activeMode === "dark"}
-          onValueChange={toggleTheme}
-          disabled={loading}
-        />
+      </View>
+      <View style={[styles.segmentedControl, { backgroundColor: colors.surface }]}>
+        {THEME_OPTIONS.map((option) => {
+          const isSelected = preference === option.value;
+
+          return (
+            <Pressable
+              key={option.value}
+              style={[
+                styles.segmentButton,
+                isSelected && {
+                  backgroundColor: colors.brandSurface,
+                  borderColor: colors.brandSurface,
+                },
+                !isSelected && { borderColor: colors.border },
+              ]}
+              onPress={() => setThemePreference(option.value)}
+            >
+              <Text
+                style={styles.segmentLabel}
+                color={isSelected ? colors.textOnBrand : colors.text}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
       <Pressable
         style={[styles.settingRow, { borderBottomColor: colors.darkGray }]}
@@ -161,10 +189,31 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: theme.fontSizes.md,
   },
+  settingHint: {
+    fontSize: theme.fontSizes.sm - 1,
+    marginTop: 2,
+  },
   switch: {
     transform:
       Platform.OS === "ios"
         ? [{ scaleX: 0.75 }, { scaleY: 0.75 }]
         : [{ scaleX: 1.2 }, { scaleY: 1.2 }],
+  },
+  segmentedControl: {
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  segmentButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: theme.radii.pill,
+    paddingVertical: theme.spacing.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  segmentLabel: {
+    fontSize: theme.fontSizes.sm,
   },
 });

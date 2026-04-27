@@ -7,7 +7,7 @@ import { AuthProvider } from "./src/context/Auth";
 import { useFonts } from "expo-font";
 import { AlertProvider } from "@/context/Alert";
 import { AlertModal } from "@/components/ui/AlertModal";
-import useColorScheme from "@/hooks/useColorScheme";
+import useAppTheme from "@/hooks/useAppTheme";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,12 +36,12 @@ export default function AppWrapped() {
 }
 
 function App() {
-  const { activeMode } = useColorScheme();
+  const { resolvedTheme, theme } = useAppTheme();
 
   return (
     <>
-      <StatusBar style={activeMode === "dark" ? "light" : "dark"} />
-      <Navigation onReady={SplashScreen.hide} />
+      <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
+      <Navigation theme={theme.navigationTheme} onReady={SplashScreen.hide} />
       <AlertModal />
     </>
   );

@@ -1,4 +1,4 @@
-import useColorScheme from "@/hooks/useColorScheme";
+import useAppTheme from "@/hooks/useAppTheme";
 import { theme } from "../../theme/theme";
 import { Text as RNText, TextProps } from "react-native";
 
@@ -19,7 +19,7 @@ export default function Text({
   size,
   ...rest
 }: Props) {
-  const { colors } = useColorScheme();
+  const { theme: appTheme } = useAppTheme();
   return (
     <RNText
       {...rest}
@@ -28,7 +28,7 @@ export default function Text({
           fontFamily: fontFamily
             ? theme.fontFamily[fontFamily]
             : theme.fontFamily.regular,
-          color: color ?? colors.text,
+          color: color ?? appTheme.colors.text,
           fontSize: size ?? theme.fontSizes.md,
         },
         style,

@@ -24,12 +24,13 @@ export const MainStack = createNativeStackNavigator({
         headerShown: true,
         title: "Editor de Servicio",
         headerTitleStyle: {
-          color: "white",
+          color: theme.colors.textOnBrand,
           fontSize: theme.fontSizes.lg,
           fontFamily: theme.fontFamily.bold,
         },
+        headerTintColor: theme.colors.textOnBrand,
         headerStyle: {
-          backgroundColor: theme.colors.secondaryBlue,
+          backgroundColor: theme.colors.brandSurface,
         },
       },
     },
@@ -38,8 +39,9 @@ export const MainStack = createNativeStackNavigator({
       options: {
         headerShown: true,
         title: "",
+        headerTintColor: theme.colors.textOnBrand,
         headerStyle: {
-          backgroundColor: theme.colors.secondaryBlue,
+          backgroundColor: theme.colors.brandSurface,
         },
       },
     },
@@ -48,8 +50,9 @@ export const MainStack = createNativeStackNavigator({
       options: {
         headerShown: true,
         title: "",
+        headerTintColor: theme.colors.textOnBrand,
         headerStyle: {
-          backgroundColor: theme.colors.secondaryBlue,
+          backgroundColor: theme.colors.brandSurface,
         },
       },
     },

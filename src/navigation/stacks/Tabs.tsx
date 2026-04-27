@@ -13,11 +13,12 @@ export const Tabs = createBottomTabNavigator({
   screenOptions: {
     headerShown: false,
     tabBarStyle: {
-      backgroundColor: theme.colors.secondaryBlue,
+      backgroundColor: theme.colors.brandSurface,
       borderTopWidth: 0,
       height: Platform.OS === "ios" ? 90 : 70,
     },
-    tabBarInactiveTintColor: "#D6D6D6FF",
+    tabBarActiveTintColor: theme.colors.textOnBrand,
+    tabBarInactiveTintColor: theme.colors.textOnBrandMuted,
     tabBarLabelStyle: {
       fontSize: 12,
     },

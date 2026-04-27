@@ -8,6 +8,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { theme } from "@/theme/theme";
+import useAppTheme from "@/hooks/useAppTheme";
 
 interface ButtonProps {
   title: string;
@@ -26,14 +27,21 @@ const Button: React.FC<ButtonProps> = ({
   style,
   labelColor = theme.colors.primaryBlue,
 }) => {
+  const { theme: appTheme } = useAppTheme();
+
   return (
     <Pressable
-      style={[styles.button, disabled && styles.disabled, style]}
+      style={[
+        styles.button,
+        { backgroundColor: appTheme.colors.brandSurface },
+        disabled && styles.disabled,
+        style,
+      ]}
       onPress={onPress}
       disabled={disabled || loading}
     >
       {loading ? (
-        <ActivityIndicator color={theme.colors.primaryBlue} />
+        <ActivityIndicator color={appTheme.colors.primary} />
       ) : (
         <Text style={[styles.text, { color: labelColor }]}>{title}</Text>
       )}
@@ -43,7 +51,6 @@ const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: theme.colors.secondaryBlue,
     paddingVertical: theme.spacing.sm,
     height: 54,
     borderRadius: 12,
