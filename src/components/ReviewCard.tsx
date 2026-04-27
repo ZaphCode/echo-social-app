@@ -1,13 +1,13 @@
 import { View } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 
-import { Review } from "@/models/Review";
+import { ReviewWithProfiles } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { User } from "@/models/User";
 import Text from "./ui/Text";
 
 type Props = {
-  review: Review;
+  review: ReviewWithProfiles;
   authUser: User;
 };
 
@@ -15,7 +15,7 @@ export default function ReviewCard({ review }: Props) {
   return (
     <View key={review.id} style={{ gap: 3 }}>
       <Text color="white" size={theme.fontSizes.lg} fontFamily="bold">
-        {(review as any).reviewer?.name || "Usuario Anónimo"}
+        {review.reviewer_profile?.name || "Usuario Anónimo"}
       </Text>
       {review.comment && (
         <Text

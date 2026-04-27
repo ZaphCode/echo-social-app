@@ -1,4 +1,4 @@
-import { Service } from "@/models/Service";
+import { ServiceWithProvider } from "@/api/types";
 import { ServiceRequest } from "@/models/ServiceRequest";
 import { User } from "@/models/User";
 import { createContext, useContext, useState } from "react";
@@ -7,7 +7,7 @@ type NegotiationContextType = {
   request: ServiceRequest;
   client: User;
   provider: User;
-  service: Service;
+  service: ServiceWithProvider;
   setRequest: (request: ServiceRequest) => void;
 };
 
@@ -17,7 +17,7 @@ const NegotiationContext = createContext<NegotiationContextType>(
 
 type Props = {
   initialRequest: ServiceRequest;
-  service: Service;
+  service: ServiceWithProvider;
   client: User;
   provider: User;
   children: React.ReactNode;

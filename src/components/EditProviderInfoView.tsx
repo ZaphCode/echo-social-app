@@ -1,17 +1,22 @@
 import { StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import {
+  profilesKeys,
+  updateProviderProfile,
+} from "@/api/profiles";
+import { ProviderProfileWithCategory } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import { useAlertCtx } from "@/context/Alert";
 import Text from "./ui/Text";
 import ProviderInfoForm from "./forms/ProviderInfoForm";
-import useMutate from "@/hooks/useMutate";
 import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   providerProfile: ProviderProfile;
-  onSuccess?: (profile: ProviderProfile) => void;
+  onSuccess?: (profile: ProviderProfileWithCategory) => void;
 };
 
 export default function EditProviderInfoView({
@@ -20,6 +25,7 @@ export default function EditProviderInfoView({
 }: Props) {
   const { colors } = useColorScheme();
   const { show } = useAlertCtx();
+  const queryClient = useQueryClient();
   const { control, handleSubmit } = useForm({
     defaultValues: {
       description: providerProfile.description,
@@ -29,17 +35,22 @@ export default function EditProviderInfoView({
     },
   });
 
-  const { update, mutationState } = useMutate("provider_profile", {
-    select: "*, service_category:service_category!specialty(*)",
+  const providerMutation = useMutation({
+    mutationFn: (data: Partial<ProviderProfile>) =>
+      updateProviderProfile(providerProfile.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profilesKeys.all });
+    },
   });
 
   const onContinue = handleSubmit(async (data) => {
-    const result = await update(providerProfile.id, {
-      ...data,
-      experience_years: parseInt(data.experience_years),
-    });
-
-    if (!result || mutationState.status === "error") {
+    try {
+      const result = await providerMutation.mutateAsync({
+        ...data,
+        experience_years: parseInt(data.experience_years),
+      });
+      onSuccess?.(result);
+    } catch {
       return show({
         title: "Error al Guardar",
         message:
@@ -48,8 +59,6 @@ export default function EditProviderInfoView({
         iconColor: colors.redError,
       });
     }
-
-    onSuccess?.(result);
   });
 
   return (
@@ -61,7 +70,7 @@ export default function EditProviderInfoView({
       </View>
       <ProviderInfoForm
         control={control}
-        loading={mutationState.status === "loading"}
+        loading={providerMutation.isPending}
         onContinue={onContinue}
         submitBtnLabel="Guardar Cambios"
       />

@@ -1,8 +1,12 @@
 import { FlatList, View, StyleSheet } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 
+import {
+  listClientRequests,
+  serviceRequestsKeys,
+} from "@/api/serviceRequests";
 import { theme } from "@/theme/theme";
-import useList from "@/hooks/useList";
 import Text from "./ui/Text";
 import RequestCard from "./RequestCard";
 import Loader from "./ui/Loader";
@@ -13,24 +17,23 @@ import useColorScheme from "@/hooks/useColorScheme";
 
 export default function RequestsList() {
   const { user } = useAuthCtx();
-  const [serviceRequests, { status }] = useList("service_request", {
-    select: "*, service:service!service(*, provider:profiles!provider(*)), client_profile:profiles!client(*)",
-    or: `client.eq.${user.id}`,
-    order: { column: "updated_at", ascending: false },
+  const requestsQuery = useQuery({
+    queryKey: serviceRequestsKeys.byClient(user.id),
+    queryFn: () => listClientRequests(user.id),
   });
 
-  if (status === "loading")
+  if (requestsQuery.isPending)
     return (
       <View style={{ padding: 40 }}>
         <Loader />
       </View>
     );
 
-  if (status === "error") return <ErrorRequestComponent />;
+  if (requestsQuery.isError) return <ErrorRequestComponent />;
 
   return (
     <FlatList
-      data={serviceRequests}
+      data={requestsQuery.data}
       renderItem={({ item }) => <RequestCard request={item} />}
       keyExtractor={(item) => item.id}
       showsVerticalScrollIndicator={false}

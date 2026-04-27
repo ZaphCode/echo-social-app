@@ -1,10 +1,11 @@
 import { FlatList, StyleSheet, View } from "react-native";
-import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
+import { listServicesByCategory, servicesKeys } from "@/api/services";
+import { ServiceWithProvider } from "@/api/types";
 import { User } from "@/models/User";
 import { theme } from "@/theme/theme";
-import useList from "@/hooks/useList";
 import ServiceCard from "./ServiceCard";
 import Text from "./ui/Text";
 import Loader from "./ui/Loader";
@@ -16,20 +17,12 @@ type Props = {
 };
 
 export default function ServiceList({ authUser, category }: Props) {
-  const [services, { status }, updateOptions] = useList("service", {
-    select: "*, profiles:profiles!provider(*)",
-    filter: getFilter(category),
+  const servicesQuery = useQuery({
+    queryKey: servicesKeys.byCategory(category),
+    queryFn: () => listServicesByCategory(category),
   });
 
-  useEffect(() => {
-    if (status !== "loading")
-      updateOptions({
-        select: "*, profiles:profiles!provider(*)",
-        filter: getFilter(category),
-      });
-  }, [category]);
-
-  if (status === "loading") {
+  if (servicesQuery.isPending) {
     return (
       <View style={{ padding: theme.spacing.lg + 20 }}>
         <Loader />
@@ -37,16 +30,19 @@ export default function ServiceList({ authUser, category }: Props) {
     );
   }
 
-  if (status === "error") return <ErrorServicesComponent />;
+  if (servicesQuery.isError) return <ErrorServicesComponent />;
 
-  if (services.length === 0) return <EmptyServicesComponent />;
+  if ((servicesQuery.data?.length ?? 0) === 0) return <EmptyServicesComponent />;
 
   return (
     <FlatList
-      data={services}
+      data={servicesQuery.data}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
-        <ServiceCard authUser={authUser} service={item} />
+        <ServiceCard
+          authUser={authUser}
+          service={item as ServiceWithProvider}
+        />
       )}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingHorizontal: 0, gap: 18 }}
@@ -113,10 +109,6 @@ export function ErrorServicesComponent() {
       </Text>
     </View>
   );
-}
-
-function getFilter(category: string) {
-  return category === "all" ? {} : { category };
 }
 
 const styles = StyleSheet.create({

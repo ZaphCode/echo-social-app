@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import useList from "./useList";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { listReviewsByReviewerAndService, reviewsKeys } from "@/api/reviews";
 import { User } from "@/models/User";
 import { ServiceRequest } from "@/models/ServiceRequest";
 
@@ -7,22 +8,18 @@ export default function useCheckReviews(
   authUser: User,
   request: ServiceRequest
 ) {
-  const [hasReviewed, setHasReviewed] = useState(false);
-
-  const [reviews, { status }] = useList("review", {
-    filter: { reviewer: authUser.id, service: request.service },
+  const [optimisticHasReviewed, setOptimisticHasReviewed] = useState(false);
+  const reviewsQuery = useQuery({
+    queryKey: reviewsKeys.byReviewerAndService(authUser.id, request.service),
+    queryFn: () => listReviewsByReviewerAndService(authUser.id, request.service),
+    enabled: !!authUser.id && !!request.service,
   });
 
-  useEffect(() => {
-    console.log("Checking reviews:", status, reviews);
-
-    if (status === "success" && reviews.length > 0) {
-      setHasReviewed(true);
-    }
-  }, [status, reviews]);
+  const hasReviewed = optimisticHasReviewed || (reviewsQuery.data?.length ?? 0) > 0;
 
   const markAsReviewed = () => {
-    setHasReviewed(true);
+    setOptimisticHasReviewed(true);
+    reviewsQuery.refetch();
   };
 
   return { hasReviewed, markAsReviewed };

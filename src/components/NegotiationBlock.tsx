@@ -1,10 +1,10 @@
 import { View, StyleSheet, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
+import { ServiceRequest } from "@/models/ServiceRequest";
 import { theme } from "@/theme/theme";
 import { formatDate } from "@/utils/format";
 import { useAuthCtx } from "@/context/Auth";
-import { ServiceRequest } from "@/models/ServiceRequest";
 import { useNegotiationCtx } from "@/context/Negotiation";
 import { useAlertCtx } from "@/context/Alert";
 import * as NS from "@/utils/negotiation";
@@ -32,11 +32,15 @@ export default function NegotiationBlock({
   const statusModifier = useRequestStatus(authUser);
   const { colors } = useColorScheme();
 
-  useSubscription("service_request", request.id, async ({ action, record }) => {
-    if (action === "update") {
+  useSubscription<ServiceRequest>(
+    "service_request",
+    request.id,
+    async ({ action, record }) => {
+      if (action === "UPDATE") {
       setRequest(record);
     }
-  });
+    }
+  );
 
   const lastOfferUserId = request.last_offer_user;
 

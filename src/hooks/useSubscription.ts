@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { TablesMap } from "@/utils/collections";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 type SubscriptionCallback<T> = (payload: {
@@ -9,10 +8,10 @@ type SubscriptionCallback<T> = (payload: {
   old_record?: T;
 }) => Promise<void>;
 
-export default function useSubscription<K extends keyof TablesMap>(
-  collection: K,
+export default function useSubscription<T>(
+  collection: string,
   track: string,
-  callback: SubscriptionCallback<TablesMap[K]>
+  callback: SubscriptionCallback<T>
 ) {
   useEffect(() => {
     console.log("Subscribed to", collection);
@@ -35,8 +34,8 @@ export default function useSubscription<K extends keyof TablesMap>(
 
           callback({
             action,
-            record: (payload.new || {}) as TablesMap[K],
-            old_record: (payload.old || undefined) as TablesMap[K] | undefined,
+            record: (payload.new || {}) as T,
+            old_record: (payload.old || undefined) as T | undefined,
           });
         }
       )

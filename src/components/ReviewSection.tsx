@@ -1,7 +1,8 @@
 import { StyleSheet, View } from "react-native";
+import { useQuery } from "@tanstack/react-query";
 import Text from "./ui/Text";
 import { theme } from "@/theme/theme";
-import useList from "@/hooks/useList";
+import { listServiceReviews, reviewsKeys } from "@/api/reviews";
 import { useMemo } from "react";
 import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 import ReviewCard from "./ReviewCard";
@@ -13,19 +14,20 @@ import useColorScheme from "@/hooks/useColorScheme";
 type Props = { service: Service; authUser: User };
 
 export default function ReviewSection({ service, authUser }: Props) {
-  const [reviews, { status }] = useList("review", {
-    filter: { service: service.id },
-    select: "*, reviewer:profiles!reviewer(*), reviewed:profiles!reviewed(*)",
+  const reviewsQuery = useQuery({
+    queryKey: reviewsKeys.byService(service.id),
+    queryFn: () => listServiceReviews(service.id),
   });
   const { colors } = useColorScheme();
 
   const reviewAverage = useMemo(() => {
+    const reviews = reviewsQuery.data ?? [];
     if (reviews.length === 0) return 0;
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
     return totalRating / reviews.length;
-  }, [reviews]);
+  }, [reviewsQuery.data]);
 
-  if (status === "loading") {
+  if (reviewsQuery.isPending) {
     return (
       <View style={styles.container}>
         <Loader horizontal />
@@ -33,9 +35,11 @@ export default function ReviewSection({ service, authUser }: Props) {
     );
   }
 
-  if (status === "error") {
+  if (reviewsQuery.isError) {
     return <ErrorComponent />;
   }
+
+  const reviews = reviewsQuery.data ?? [];
 
   return (
     <View style={styles.container}>

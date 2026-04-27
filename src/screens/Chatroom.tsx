@@ -1,10 +1,12 @@
 import { StyleSheet, View } from "react-native";
 import { StaticScreenProps } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
 
+import { reviewsKeys } from "@/api/reviews";
+import { ServiceRequestWithRelations } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { SlideModal } from "@/components/ui/SlideModal";
-import { ServiceRequest } from "@/models/ServiceRequest";
 import { NegotiationProvider } from "@/context/Negotiation";
 import ChatHeader from "@/components/ChatHeader";
 import NegotiationBlock from "@/components/NegotiationBlock";
@@ -17,17 +19,16 @@ import ReviewForm from "@/components/ReviewForm";
 import useCheckReviews from "@/hooks/useCheckReviews";
 import { useAuthCtx } from "@/context/Auth";
 import useColorScheme from "@/hooks/useColorScheme";
-import { useQueryClient } from "@tanstack/react-query";
 
-type Props = StaticScreenProps<{ request: ServiceRequest }>;
+type Props = StaticScreenProps<{ request: ServiceRequestWithRelations }>;
 
 export default function Chatroom({ route }: Props) {
   const { colors } = useColorScheme();
   const { user: authUser } = useAuthCtx();
   const { request } = route.params;
-  const service = (request as any).service || {} as any;
-  const client = (request as any).client_profile || {} as any;
-  const provider = service?.provider || {} as any;
+  const service = request.service_detail || ({} as any);
+  const client = request.client_profile || ({} as any);
+  const provider = service?.provider_profile || ({} as any);
   const queryClient = useQueryClient();
 
   const [offerModalVisible, openOfferModal, closeOfferModal] = useModal();
@@ -68,7 +69,15 @@ export default function Chatroom({ route }: Props) {
           <ReviewForm
             onSuccess={() => {
               closeReviewModal();
-              queryClient.invalidateQueries({ queryKey: ["review"] });
+              queryClient.invalidateQueries({
+                queryKey: reviewsKeys.byService(service.id),
+              });
+              queryClient.invalidateQueries({
+                queryKey: reviewsKeys.byReviewerAndService(
+                  authUser.id,
+                  request.service
+                ),
+              });
               markAsReviewed();
             }}
           />

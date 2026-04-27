@@ -2,8 +2,8 @@ import { View, StyleSheet, Pressable } from "react-native";
 import { Feather, Foundation } from "@expo/vector-icons";
 import { useState } from "react";
 
+import { ProviderProfileWithCategory } from "@/api/types";
 import { theme } from "@/theme/theme";
-import { ProviderProfile } from "@/models/ProviderProfile";
 import { SlideModal } from "./ui/SlideModal";
 import Text from "@/components/ui/Text";
 import InfoRow from "./InfoRow";
@@ -12,7 +12,7 @@ import EditProviderInfoView from "./EditProviderInfoView";
 import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
-  providerProfile: ProviderProfile;
+  providerProfile: ProviderProfileWithCategory;
   editable?: boolean;
 }
 
@@ -35,7 +35,7 @@ export default function ProfessionalInfoSection({
   const [optimisticProfile, setOptimisticProfile] = useState(providerProfile);
 
   const { available_days, experience_years } = optimisticProfile;
-  const specialty = (optimisticProfile as any).service_category?.name;
+  const specialty = optimisticProfile.specialty_category?.name;
 
   const experience_years_value = `${experience_years} ${
     experience_years === 1 ? "año" : "años"

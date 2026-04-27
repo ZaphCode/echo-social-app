@@ -1,7 +1,7 @@
 import { View, Image, StyleSheet, Dimensions, Pressable } from "react-native";
 import React from "react";
 import Text from "./ui/Text";
-import { Service } from "@/models/Service";
+import { ServiceWithProvider } from "@/api/types";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import { getFileUrl } from "@/utils/format";
@@ -13,7 +13,7 @@ const DEVICE_WIDTH = Dimensions.get("window").width;
 
 type Props = {
   authUser: User;
-  service: Service;
+  service: ServiceWithProvider;
 };
 
 export default function ServiceCard({ service, authUser }: Props) {
@@ -85,7 +85,7 @@ export default function ServiceCard({ service, authUser }: Props) {
               <>
                 <Feather name="user" size={14} color={colors.lightGray} />
                 <Text style={styles.username}>
-                  {(service as any).profiles?.name || "Proveedor"}
+                  {service.provider_profile?.name || "Proveedor"}
                 </Text>
               </>
             )}

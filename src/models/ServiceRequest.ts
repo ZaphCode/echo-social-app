@@ -1,6 +1,3 @@
-import { Service } from "./Service";
-import { User } from "./User";
-
 export type ServiceRequest = {
   id: string;
   client: string; // FK: profiles.id
@@ -20,8 +17,4 @@ export type ServiceRequest = {
 
   requested: string;
   updated_at: string;
-
-  // Supabase joined data
-  client_profile?: User;
-  service_detail?: Service;
 };

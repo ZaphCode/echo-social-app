@@ -1,11 +1,12 @@
 import { View, StyleSheet, FlatList } from "react-native";
 import { StaticScreenProps } from "@react-navigation/native";
+import { useQuery } from "@tanstack/react-query";
 
+import { searchServices, servicesKeys } from "@/api/services";
 import { theme } from "@/theme/theme";
 import { useAuthCtx } from "@/context/Auth";
 import { useState } from "react";
 import Text from "@/components/ui/Text";
-import useList from "@/hooks/useList";
 import ServiceCard from "@/components/ServiceCard";
 import SearchBar from "@/components/forms/SearchBar";
 import Divider from "@/components/ui/Divider";
@@ -21,17 +22,14 @@ export default function SearchService({ route }: Props) {
   const initialSearch = route.params.search;
   const [search, setSearch] = useState(initialSearch);
 
-  const [services, { status }, refetch] = useList("service", {
-    select: "*, provider:profiles!provider(*), category:service_category!category(*)",
-    or: `name.ilike.%${search}%,description.ilike.%${search}%`,
+  const servicesQuery = useQuery({
+    queryKey: servicesKeys.search(search),
+    queryFn: () => searchServices(search),
+    enabled: !!search.trim(),
   });
 
-  async function handleSearch(newSearch: string) {
+  function handleSearch(newSearch: string) {
     setSearch(newSearch);
-    await refetch({
-      select: "*, provider:profiles!provider(*), category:service_category!category(*)",
-      or: `name.ilike.%${newSearch}%,description.ilike.%${newSearch}%`,
-    });
   }
 
   return (
@@ -50,13 +48,13 @@ export default function SearchService({ route }: Props) {
       </View>
       <SearchBar onSearch={handleSearch} />
       <Divider />
-      {status === "loading" ? (
+      {servicesQuery.isPending ? (
         <Loader />
-      ) : status === "error" ? (
+      ) : servicesQuery.isError ? (
         <ErrorSearchResults />
       ) : (
         <FlatList
-          data={services}
+          data={servicesQuery.data}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <ServiceCard authUser={user} service={item} />

@@ -1,7 +1,8 @@
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import Text from "./ui/Text";
-import useList from "@/hooks/useList";
+import { categoriesKeys, listServiceCategories } from "@/api/categories";
 import Loader from "./ui/Loader";
 import useColorScheme from "@/hooks/useColorScheme";
 
@@ -15,19 +16,21 @@ export default function CategoryList({
   setSelectedCategoryId,
 }: Props) {
   const { colors } = useColorScheme();
-  const [categories, { status }] = useList("service_category", {
-    notRefreshOnFocus: true,
+  const categoriesQuery = useQuery({
+    queryKey: categoriesKeys.all,
+    queryFn: listServiceCategories,
+    refetchOnWindowFocus: false,
   });
 
-  if (status === "loading") {
+  if (categoriesQuery.isPending) {
     return <Loader horizontal size={16} />;
   }
 
-  if (status === "error") return <CategoryListError />;
+  if (categoriesQuery.isError) return <CategoryListError />;
 
   return (
     <FlatList
-      data={[{ id: "all", name: "Todas" }, ...categories]}
+      data={[{ id: "all", name: "Todas" }, ...(categoriesQuery.data ?? [])]}
       horizontal
       showsHorizontalScrollIndicator={false}
       keyExtractor={(category) => category.id}

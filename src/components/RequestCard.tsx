@@ -1,6 +1,6 @@
 import { View, StyleSheet, Image, Pressable } from "react-native";
 import React from "react";
-import { ServiceRequest } from "@/models/ServiceRequest";
+import { ServiceRequestWithRelations } from "@/api/types";
 import Text from "./ui/Text";
 import { theme } from "@/theme/theme";
 import { Feather } from "@expo/vector-icons";
@@ -10,7 +10,7 @@ import { useAuthCtx } from "@/context/Auth";
 import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
-  request: ServiceRequest;
+  request: ServiceRequestWithRelations;
 };
 
 const STATUS_MAP = {
@@ -25,9 +25,9 @@ export default function RequestCard({ request }: Props) {
   const navigation = useNavigation();
   const { user } = useAuthCtx();
 
-  const service = (request as any).service;
-  const provider = service?.provider || {} as any;
-  const client = (request as any).client_profile || {} as any;
+  const service = request.service_detail;
+  const provider = service?.provider_profile || ({} as any);
+  const client = request.client_profile || ({} as any);
 
   const imageUrl = service?.photos?.[0]
     ? getFileUrl("service-photos", service.photos[0])

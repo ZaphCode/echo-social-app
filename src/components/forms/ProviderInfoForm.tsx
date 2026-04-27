@@ -1,12 +1,13 @@
 import { View, Text } from "react-native";
+import { useQuery } from "@tanstack/react-query";
 
+import { categoriesKeys, listServiceCategories } from "@/api/categories";
 import { theme } from "@/theme/theme";
 import { validYearsRules } from "@/utils/validations";
 import Field from "./Field";
 import Dropdown from "./Dropdown";
 import Button from "../ui/Button";
 import WeekDaysPicker from "./WeekdaysPicker";
-import useList from "@/hooks/useList";
 
 type Props = {
   control: any;
@@ -21,7 +22,10 @@ export default function ProviderInfoForm({
   submitBtnLabel,
   loading,
 }: Props) {
-  const [categories, { status }] = useList("service_category", {});
+  const categoriesQuery = useQuery({
+    queryKey: categoriesKeys.all,
+    queryFn: listServiceCategories,
+  });
 
   return (
     <View style={{ gap: theme.spacing.md }}>
@@ -32,9 +36,9 @@ export default function ProviderInfoForm({
         label="Descripción personal"
         placeholder="Escribe una breve descripción"
       />
-      {status === "loading" ? (
+      {categoriesQuery.isPending ? (
         <Text>Loading categories...</Text>
-      ) : status === "error" ? (
+      ) : categoriesQuery.isError ? (
         <Text>Error loading categories</Text>
       ) : (
         <Dropdown
@@ -42,7 +46,7 @@ export default function ProviderInfoForm({
           name="specialty"
           icon="tag"
           label="Especialidad"
-          options={categories}
+          options={categoriesQuery.data ?? []}
           getLabel={(c) => c.name}
           getValue={(c) => c.id}
         />
@@ -63,7 +67,7 @@ export default function ProviderInfoForm({
       />
       <Button
         title={submitBtnLabel}
-        loading={status === "loading" || loading}
+        loading={categoriesQuery.isPending || loading}
         onPress={onContinue}
         style={{ marginTop: 2 }}
       />

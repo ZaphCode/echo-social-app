@@ -8,10 +8,12 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { createMessage, messagesKeys } from "@/api/messages";
 import { theme } from "@/theme/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuthCtx } from "@/context/Auth";
-import useMutate from "@/hooks/useMutate";
 import { useNegotiationCtx } from "@/context/Negotiation";
 import { isCanceled, isFinished } from "@/utils/negotiation";
 import useColorScheme from "@/hooks/useColorScheme";
@@ -21,16 +23,24 @@ const DEVICE_HEIGHT = Dimensions.get("window").height;
 export default function ChatInput() {
   const { user } = useAuthCtx();
   const { colors } = useColorScheme();
+  const queryClient = useQueryClient();
 
   const [message, setMessage] = useState("");
   const { request } = useNegotiationCtx();
 
-  const { create, mutationState } = useMutate("message");
+  const messageMutation = useMutation({
+    mutationFn: createMessage,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: messagesKeys.byRequest(request.id),
+      });
+    },
+  });
 
   const handleSend = async () => {
-    if (message.trim() === "" || mutationState.status === "loading") return;
+    if (message.trim() === "" || messageMutation.isPending) return;
 
-    await create({
+    await messageMutation.mutateAsync({
       content: message,
       sender: user.id,
       request: request.id,
@@ -40,7 +50,7 @@ export default function ChatInput() {
   };
 
   const isDisabled =
-    mutationState.status === "loading" ||
+    messageMutation.isPending ||
     isFinished(request) ||
     isCanceled(request);
 

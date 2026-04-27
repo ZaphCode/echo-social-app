@@ -1,48 +1,61 @@
 import { View, FlatList, StyleSheet } from "react-native";
 import { theme } from "@/theme/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import {
+  listNotificationsByUser,
+  markNotificationAsRead,
+  notificationsKeys,
+} from "@/api/notifications";
+import { useAuthCtx } from "@/context/Auth";
 import { useEffect } from "react";
-import useList from "@/hooks/useList";
 import NotificationCard from "./NotificationCard";
 import Divider from "./ui/Divider";
 import Text from "./ui/Text";
 import Loader from "./ui/Loader";
-import useMutate from "@/hooks/useMutate";
 import useColorScheme from "@/hooks/useColorScheme";
 
 export default function NotificationList() {
-  const [notifications, { status }] = useList("notification", {
-    select: "*, profiles:profiles!user(*)",
-    order: { column: "created_at", ascending: false },
+  const { user } = useAuthCtx();
+  const queryClient = useQueryClient();
+  const notificationsQuery = useQuery({
+    queryKey: notificationsKeys.byUser(user.id),
+    queryFn: () => listNotificationsByUser(user.id),
   });
 
-  const { update } = useMutate("notification");
+  const readMutation = useMutation({
+    mutationFn: markNotificationAsRead,
+  });
+  const { mutateAsync: markAsRead } = readMutation;
 
   useEffect(() => {
-    if (status === "success" && notifications.length > 0) {
-      notifications.forEach((notification) => {
-        if (!notification.read) {
-          update(notification.id, { read: true }).then((result) => {
-            console.log(`Notification ${notification.id} marked as read`);
-          });
-        }
-      });
-    }
-  }, [notifications, status]);
+    const notifications = notificationsQuery.data ?? [];
+    const unreadIds = notifications
+      .filter((notification) => !notification.read)
+      .map((notification) => notification.id);
 
-  if (status === "loading")
+    if (notificationsQuery.isSuccess && unreadIds.length > 0) {
+      Promise.all(unreadIds.map((id) => markAsRead(id))).then(() =>
+        queryClient.invalidateQueries({
+          queryKey: notificationsKeys.byUser(user.id),
+        })
+      );
+    }
+  }, [markAsRead, notificationsQuery.data, notificationsQuery.isSuccess, queryClient, user.id]);
+
+  if (notificationsQuery.isPending)
     return (
       <View style={{ padding: 40 }}>
         <Loader />
       </View>
     );
 
-  if (status === "error") return <ErrorNotificationComponent />;
+  if (notificationsQuery.isError) return <ErrorNotificationComponent />;
 
   return (
     <FlatList
-      data={notifications}
+      data={notificationsQuery.data}
       renderItem={({ item }) => <NotificationCard notification={item} />}
       keyExtractor={(item) => item.id}
       showsVerticalScrollIndicator={false}

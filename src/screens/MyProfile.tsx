@@ -2,9 +2,9 @@ import { StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 
+import { ProviderProfileWithCategory } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { useAuthCtx } from "@/context/Auth";
-import { ProviderProfile } from "@/models/ProviderProfile";
 import { ProfileError } from "@/components/ProfileError";
 import Button from "@/components/ui/Button";
 import useLogout from "@/hooks/auth/useLogout";
@@ -23,9 +23,7 @@ export default function MyProfile() {
   const logout = useLogout();
   const navigation = useNavigation();
   const { colors } = useColorScheme();
-  const [profile, profileState] = useProfile(user, { 
-    select: user.role === "provider" ? "*, service_category:service_category!specialty(*)" : "*" 
-  });
+  const [profile, profileState] = useProfile(user);
 
   const containerStyle = {
     flex: 1,
@@ -91,7 +89,7 @@ export default function MyProfile() {
 
         {user.role === "provider" && (
           <ProfessionalInfoSection
-            providerProfile={profile as ProviderProfile}
+            providerProfile={profile as ProviderProfileWithCategory}
             editable
           />
         )}

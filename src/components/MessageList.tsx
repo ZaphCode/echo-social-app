@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
+import { useQuery } from "@tanstack/react-query";
 
+import { listMessagesByRequest, messagesKeys } from "@/api/messages";
 import { useAuthCtx } from "@/context/Auth";
 import { Message } from "@/models/Message";
 import Text from "./ui/Text";
-import useList from "@/hooks/useList";
 import useSubscription from "@/hooks/useSubscription";
 import MessageField from "./MessageField";
 import { theme } from "@/theme/theme";
@@ -20,32 +21,33 @@ export default function MessageList({ requestId }: Props) {
   const { user } = useAuthCtx();
   const flatListRef = useRef<FlatList<Message>>(null);
 
-  const [initialMessages, { status }] = useList("message", {
-    select: "*, profiles:profiles!sender(*)",
-    filter: { request: requestId },
-    order: { column: "created_at", ascending: true },
+  const messagesQuery = useQuery({
+    queryKey: messagesKeys.byRequest(requestId),
+    queryFn: () => listMessagesByRequest(requestId),
   });
 
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    if (status === "success") setMessages(initialMessages);
-  }, [status]);
+    if (messagesQuery.isSuccess) {
+      setMessages(messagesQuery.data);
+    }
+  }, [messagesQuery.data, messagesQuery.isSuccess]);
 
-  useSubscription("message", "*", async ({ action, record }) => {
+  useSubscription<Message>("message", "*", async ({ action, record }) => {
     if (action === "INSERT" && record.request === requestId) {
       setMessages((prevMessages) => [...prevMessages, record]);
     }
   });
 
-  if (status === "loading")
+  if (messagesQuery.isPending)
     return (
       <View style={{ padding: 40 }}>
         <Loader />
       </View>
     );
 
-  if (status == "error") return <ErrorMessages />;
+  if (messagesQuery.isError) return <ErrorMessages />;
 
   return (
     <FlatList

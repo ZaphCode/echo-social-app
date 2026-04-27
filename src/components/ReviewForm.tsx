@@ -1,13 +1,14 @@
 import { StyleSheet, View, Text as RNText } from "react-native";
 import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { createReview, reviewsKeys } from "@/api/reviews";
 import { theme } from "@/theme/theme";
 import { useAuthCtx } from "@/context/Auth";
 import { useNegotiationCtx } from "@/context/Negotiation";
 import { useAlertCtx } from "@/context/Alert";
 import Text from "./ui/Text";
 import Divider from "./ui/Divider";
-import useMutate from "@/hooks/useMutate";
 import Field from "./forms/Field";
 import Button from "./ui/Button";
 import StarRatingField from "./forms/StarRatingField";
@@ -22,10 +23,24 @@ export default function ReviewForm({ onSuccess }: Props) {
   const { colors } = useColorScheme();
   const { client, provider, service } = useNegotiationCtx();
   const { show } = useAlertCtx();
-
-  const { create } = useMutate("review");
+  const queryClient = useQueryClient();
 
   const theOther = authUser.id === client.id ? provider : client;
+  const reviewType = authUser.id === client.id ? "AS_CLIENT" : "AS_PROVIDER";
+  const reviewMutation = useMutation({
+    mutationFn: createReview,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: reviewsKeys.byService(service.id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: reviewsKeys.byReviewerAndService(authUser.id, service.id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: reviewsKeys.byReviewedUser(theOther.id),
+      });
+    },
+  });
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -35,15 +50,16 @@ export default function ReviewForm({ onSuccess }: Props) {
   });
 
   const onSubmit = handleSubmit(async (data) => {
-    const result = await create({
-      service: service.id,
-      reviewer: authUser.id,
-      reviewed: theOther.id,
-      rating: data.rating,
-      comment: data.comment,
-    });
-
-    if (!result) {
+    try {
+      await reviewMutation.mutateAsync({
+        service: service.id,
+        reviewer: authUser.id,
+        reviewed: theOther.id,
+        rating: data.rating,
+        comment: data.comment,
+        type: reviewType,
+      });
+    } catch {
       return show({
         title: "Error al enviar la valoración",
         message:
@@ -84,6 +100,7 @@ export default function ReviewForm({ onSuccess }: Props) {
         <Button
           title="Enviar Valoración"
           onPress={onSubmit}
+          loading={reviewMutation.isPending}
           style={{ marginTop: theme.spacing.lg + 6 }}
         />
       </View>

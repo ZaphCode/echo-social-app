@@ -1,9 +1,9 @@
 import { StyleSheet, ScrollView, View } from "react-native";
 import { StaticScreenProps } from "@react-navigation/native";
 
+import { ProviderProfileWithCategory } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { User } from "@/models/User";
-import { ProviderProfile } from "@/models/ProviderProfile";
 import { ProfileError } from "@/components/ProfileError";
 import useProfile from "@/hooks/useProfile";
 import ProfessionalInfoSection from "@/components/ProfessionalInfoSection";
@@ -18,12 +18,7 @@ type Props = StaticScreenProps<{ user: User }>;
 export default function UserProfile({ route }: Props) {
   const { user } = route.params;
   const { colors } = useColorScheme();
-  const [profile, profileState] = useProfile(user, {
-    select:
-      user.role === "provider"
-        ? "*, service_category:service_category!specialty(*)"
-        : "*",
-  });
+  const [profile, profileState] = useProfile(user);
 
   if (profileState.status === "loading") {
     return (
@@ -53,7 +48,7 @@ export default function UserProfile({ route }: Props) {
         <PersonalInfoSection user={user} profile={profile} />
         {user.role === "provider" && (
           <ProfessionalInfoSection
-            providerProfile={profile as ProviderProfile}
+            providerProfile={profile as ProviderProfileWithCategory}
           />
         )}
       </ScrollView>

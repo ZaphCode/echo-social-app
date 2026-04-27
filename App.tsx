@@ -20,7 +20,8 @@ export default function AppWrapped() {
   });
 
   if (!loaded && error) {
-    return console.log("Error loading fonts", error);
+    console.log("Error loading fonts", error);
+    return null;
   }
 
   return (

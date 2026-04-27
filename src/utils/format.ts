@@ -1,14 +1,10 @@
-import { supabase } from "@/lib/supabase";
-import { TablesMap } from "./collections";
+import { resolveStorageUrl } from "@/api/storage";
 
 export const getFileUrl = (
   bucket: string,
   filePath: string
 ): string => {
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from(bucket).getPublicUrl(filePath);
-  return publicUrl;
+  return resolveStorageUrl(bucket, filePath);
 };
 
 export const formatDate = (date: string): string => {

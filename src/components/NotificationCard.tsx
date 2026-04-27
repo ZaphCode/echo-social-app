@@ -2,13 +2,13 @@ import { View, StyleSheet, Text as RNText } from "react-native";
 import { theme } from "@/theme/theme";
 
 import Text from "./ui/Text";
-import { Notification } from "@/models/Notification";
+import { NotificationWithUser } from "@/api/types";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { formatDateLong } from "@/utils/format";
 import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
-  notification: Notification;
+  notification: NotificationWithUser;
 }
 
 export default function NotificationCard({ notification }: Props) {
@@ -36,7 +36,7 @@ export default function NotificationCard({ notification }: Props) {
           })}
         </RNText>
         <Text color={colors.lightGray} size={theme.fontSizes.sm}>
-          {formatDateLong(notification.created)}
+          {formatDateLong(notification.created_at)}
         </Text>
       </View>
       {!notification.read ? (
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   },
 });
 
-function getIconAndColor(type: Notification["type"], read?: boolean) {
+function getIconAndColor(type: NotificationWithUser["type"], read?: boolean) {
   const { colors } = useColorScheme();
   switch (type) {
     case "PROVIDER:NEW_REQUEST":

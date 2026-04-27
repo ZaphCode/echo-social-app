@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { createNotification } from "@/api/notifications";
+import {
+  createServiceRequest,
+  serviceRequestsKeys,
+  updateServiceRequest,
+} from "@/api/serviceRequests";
+import { ServiceRequestWithRelations } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
 import { ServiceRequest } from "@/models/ServiceRequest";
@@ -12,7 +20,6 @@ import Field from "./Field";
 import Text from "../ui/Text";
 import Button from "../ui/Button";
 import DateField from "./DateField";
-import useMutate from "@/hooks/useMutate";
 import { useAlertCtx } from "@/context/Alert";
 import useColorScheme from "@/hooks/useColorScheme";
 
@@ -20,7 +27,7 @@ const DEVICE_HEIGHT = Dimensions.get("window").height;
 
 type Props = {
   service: Service;
-  onSuccess: (request?: ServiceRequest) => void;
+  onSuccess: (request?: ServiceRequestWithRelations) => void;
   requestId?: string;
   defaultPrice?: string;
   defaultDate?: string;
@@ -39,6 +46,7 @@ export default function RequestForm({
   const keyboardVisible = useKeyboardVisible();
   const [offsetHeight, setOffsetHeight] = useState(0);
   const offeringMode = !!requestId;
+  const queryClient = useQueryClient();
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -48,45 +56,66 @@ export default function RequestForm({
     },
   });
 
-  const requestMutation = useMutate("service_request", {
-    select: "*, service:service!service(*, provider:profiles!provider(*)), client_profile:profiles!client(*)",
+  const createRequestMutation = useMutation({
+    mutationFn: createServiceRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: serviceRequestsKeys.all });
+    },
   });
 
-  const notificationMutation = useMutate("notification");
+  const updateRequestMutation = useMutation({
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: Parameters<typeof updateServiceRequest>[1];
+    }) => updateServiceRequest(id, patch),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: serviceRequestsKeys.all });
+    },
+  });
+
+  const notificationMutation = useMutation({
+    mutationFn: createNotification,
+  });
 
   const onSubmit = handleSubmit(async (data) => {
     if (offeringMode) {
-      await requestMutation.update(requestId, {
-        agreed_price: parseFloat(data.price),
-        agreed_date: data.date,
-        client_offer_status: "PENDING",
-        provider_offer_status: "PENDING",
-        last_offer_user: user.id,
-      });
-
-      if (requestMutation.mutationState.status === "error")
+      try {
+        await updateRequestMutation.mutateAsync({
+          id: requestId!,
+          patch: {
+            agreed_price: parseFloat(data.price),
+            agreed_date: data.date,
+            client_offer_status: "PENDING",
+            provider_offer_status: "PENDING",
+            last_offer_user: user.id,
+          },
+        });
+      } catch {
         return show({
           title: "Error al Ofertar",
           message: "No se pudo enviar tu oferta. Intente nuevamente.",
           icon: "alert-circle",
           iconColor: theme.colors.redError,
         });
+      }
 
       onSuccess();
     } else {
-      const newRequest = await requestMutation.create({
-        service: service.id,
-        client: user.id,
-        last_offer_user: user.id,
-        agreed_price: parseFloat(data.price),
-        agreed_date: data.date,
-        notes: data.notes,
-        agreement_state: "NEGOTIATION",
-        client_offer_status: "PENDING",
-        provider_offer_status: "PENDING",
-      });
+      let newRequest: ServiceRequestWithRelations;
 
-      if (requestMutation.mutationState.status === "error" || !newRequest) {
+      try {
+        newRequest = await createRequestMutation.mutateAsync({
+          serviceId: service.id,
+          clientId: user.id,
+          lastOfferUserId: user.id,
+          agreedPrice: parseFloat(data.price),
+          agreedDate: data.date,
+          notes: data.notes,
+        });
+      } catch {
         return show({
           title: "Error al Solicitar Servicio",
           message: "No se pudo enviar tu solicitud. Intente nuevamente.",
@@ -95,7 +124,7 @@ export default function RequestForm({
         });
       }
 
-      await notificationMutation.create({
+      await notificationMutation.mutateAsync({
         user: service.provider,
         message: `Nueva solicitud de servicio de *${user.name}* para *${service.name}*`,
         type: "PROVIDER:NEW_REQUEST",
@@ -138,7 +167,7 @@ export default function RequestForm({
         )}
         <View style={{ height: keyboardVisible ? offsetHeight : 0 }}></View>
         <Button
-          loading={requestMutation.mutationState.status === "loading"}
+          loading={createRequestMutation.isPending || updateRequestMutation.isPending}
           title="Enviar"
           onPress={onSubmit}
         />

@@ -1,5 +1,3 @@
-import { User } from "./User";
-
 export type Notification = {
   id: string;
   user: string; // FK: profiles.id
@@ -16,7 +14,4 @@ export type Notification = {
   // Optional FK fields
   request?: string; // FK: service_request.id
   service?: string; // FK: service.id
-
-  // Supabase joined data
-  profiles?: User;
 };

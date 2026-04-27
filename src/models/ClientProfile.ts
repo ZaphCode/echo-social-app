@@ -1,5 +1,3 @@
-import { User } from "./User";
-
 export type ClientProfile = {
   id: string;
   user: string; // FK: profiles.id
@@ -10,7 +8,4 @@ export type ClientProfile = {
   zip: string;
   updated_at: string;
   created_at: string;
-
-  // Supabase joined data (via select with joins)
-  profiles?: User;
 };

@@ -1,8 +1,15 @@
 import { KeyboardAvoidingView, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { StaticScreenProps, useNavigation } from "@react-navigation/native";
-import { useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { categoriesKeys, listServiceCategories } from "@/api/categories";
+import {
+  createService,
+  servicesKeys,
+  updateService,
+} from "@/api/services";
+import { ServiceWithProvider } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
 import { useAuthCtx } from "@/context/Auth";
@@ -10,25 +17,42 @@ import { useAlertCtx } from "@/context/Alert";
 import { validPriceRules, validServicesPhotoRules } from "@/utils/validations";
 import Text from "@/components/ui/Text";
 import Field from "@/components/forms/Field";
-import useList from "@/hooks/useList";
 import Dropdown from "@/components/forms/Dropdown";
 import Button from "@/components/ui/Button";
 import PhotoPicker from "@/components/forms/PhotoPicker";
-import useMutate from "@/hooks/useMutate";
 import useColorScheme from "@/hooks/useColorScheme";
-import { useQueryClient } from "@tanstack/react-query";
 
 type Props = StaticScreenProps<{ serviceToEdit?: Service }>;
 
 export default function ServiceEditor({ route }: Props) {
-  let service = route.params.serviceToEdit;
+  const service = route.params.serviceToEdit;
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
   const { colors } = useColorScheme();
-  const [categories, { status }] = useList("service_category", {});
-  const { create, update, mutationState } = useMutate("service");
   const queryClient = useQueryClient();
   const navigation = useNavigation();
+  const categoriesQuery = useQuery({
+    queryKey: categoriesKeys.all,
+    queryFn: listServiceCategories,
+  });
+  const createServiceMutation = useMutation({
+    mutationFn: createService,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: servicesKeys.all });
+    },
+  });
+  const updateServiceMutation = useMutation({
+    mutationFn: ({
+      serviceId,
+      payload,
+    }: {
+      serviceId: string;
+      payload: Parameters<typeof updateService>[1];
+    }) => updateService(serviceId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: servicesKeys.all });
+    },
+  });
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -40,51 +64,26 @@ export default function ServiceEditor({ route }: Props) {
     },
   });
 
-  useEffect(() => {
-    if (mutationState.status === "success") {
-      show({
-        title: service ? "Servicio Actualizado" : "Servicio Creado",
-        message: `El servicio ha sido ${
-          service ? "actualizado" : "creado"
-        } exitosamente.`,
-        icon: "check-circle",
-        iconColor: theme.colors.successGreen,
-      });
-      queryClient.invalidateQueries();
-      navigation.goBack();
-    }
-  }, [mutationState]);
-
   const onSubmit = handleSubmit(async (data) => {
-    const formData = new FormData();
+    const payload = {
+      providerId: service?.provider || user.id,
+      name: data.serviceName,
+      description: data.description,
+      category: data.category,
+      basePrice: parseFloat(data.basePrice),
+      photos: data.photos,
+    };
 
-    formData.append("name", data.serviceName);
-    formData.append("description", data.description);
-    formData.append("category", data.category);
-    formData.append("base_price", data.basePrice);
-
-    for (const img of data.photos) {
-      if (img.startsWith("file://")) {
-        formData.append("photos", {
-          uri: img,
-          type: "image/jpeg",
-          name: img.split("/").pop() || `photo_${Date.now()}.jpg`,
+    try {
+      if (service) {
+        await updateServiceMutation.mutateAsync({
+          serviceId: service.id,
+          payload,
         });
       } else {
-        formData.append("photos", img);
+        await createServiceMutation.mutateAsync(payload);
       }
-    }
-
-    let result;
-
-    if (service) {
-      result = await update(service.id, formData);
-    } else {
-      formData.append("provider", user.id);
-      result = await create(formData);
-    }
-
-    if (!result || mutationState.status === "error") {
+    } catch {
       show({
         title: "Error al Guardar",
         message:
@@ -92,7 +91,18 @@ export default function ServiceEditor({ route }: Props) {
         icon: "database-alert",
         iconColor: theme.colors.redError,
       });
+      return;
     }
+
+    show({
+      title: service ? "Servicio Actualizado" : "Servicio Creado",
+      message: `El servicio ha sido ${
+        service ? "actualizado" : "creado"
+      } exitosamente.`,
+      icon: "check-circle",
+      iconColor: theme.colors.successGreen,
+    });
+    navigation.goBack();
   });
 
   return (
@@ -124,9 +134,9 @@ export default function ServiceEditor({ route }: Props) {
           rules={validPriceRules}
         />
         {/* // TODO: IMPROVE THIS SHIT  */}
-        {status === "loading" ? (
+        {categoriesQuery.isPending ? (
           <Text>Loading categories...</Text>
-        ) : status === "error" ? (
+        ) : categoriesQuery.isError ? (
           <Text>Error loading categories</Text>
         ) : (
           <Dropdown
@@ -134,7 +144,7 @@ export default function ServiceEditor({ route }: Props) {
             name="category"
             icon="tag"
             label="Categoría"
-            options={categories}
+            options={categoriesQuery.data ?? []}
             getLabel={(c) => c.name}
             getValue={(c) => c.id}
             defaultValue={service?.category || ""}
@@ -150,7 +160,7 @@ export default function ServiceEditor({ route }: Props) {
       <Button
         title={service ? "Actualizar" : "Crear"}
         onPress={onSubmit}
-        loading={mutationState.status === "loading"}
+        loading={createServiceMutation.isPending || updateServiceMutation.isPending}
       />
     </KeyboardAvoidingView>
   );

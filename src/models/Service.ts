@@ -1,6 +1,3 @@
-import { Category } from "./Category";
-import { User } from "./User";
-
 export type Service = {
   id: string;
   provider: string; // FK: profiles.id
@@ -11,8 +8,4 @@ export type Service = {
   photos: string[];
   created_at: string;
   updated_at: string;
-
-  // Supabase joined data
-  profiles?: User; // provider profile joined via "provider" FK
-  service_category?: Category; // category joined via "category" FK
 };

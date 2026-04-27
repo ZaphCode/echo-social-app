@@ -1,38 +1,48 @@
 import { useMemo } from "react";
-import useList from "./useList";
+import { useQuery } from "@tanstack/react-query";
+import { listReviewsForUser, reviewsKeys } from "@/api/reviews";
+import {
+  listFinishedRequestsForUser,
+  serviceRequestsKeys,
+} from "@/api/serviceRequests";
 
 export default function useStats(userId: string) {
-  const [reviews, reviewsFetch] = useList("review", {
-    filter: { reviewed: userId },
+  const reviewsQuery = useQuery({
+    queryKey: reviewsKeys.byReviewedUser(userId),
+    queryFn: () => listReviewsForUser(userId),
+    enabled: !!userId,
   });
 
-  const [requests, requestsFetch] = useList("service_request", {
-    select: "*, service:service!service(*, provider:profiles!provider(*))",
-    or: `client.eq.${userId},service.provider.eq.${userId}`,
-    filter: { agreement_state: "FINISHED" },
+  const requestsQuery = useQuery({
+    queryKey: serviceRequestsKeys.finishedForUser(userId),
+    queryFn: () => listFinishedRequestsForUser(userId),
+    enabled: !!userId,
   });
 
   const requestsDone = useMemo(() => {
-    if (requestsFetch.status !== "success") return 0;
+    if (!requestsQuery.isSuccess) return 0;
 
-    return requests.length;
-  }, [requests, requestsFetch]);
+    return requestsQuery.data.length;
+  }, [requestsQuery.data, requestsQuery.isSuccess]);
 
   const reviewsCount = useMemo(() => {
-    if (reviewsFetch.status !== "success") return 0;
+    if (!reviewsQuery.isSuccess) return 0;
 
-    return reviews.length;
-  }, [reviews, reviewsFetch]);
+    return reviewsQuery.data.length;
+  }, [reviewsQuery.data, reviewsQuery.isSuccess]);
 
   const rating = useMemo(() => {
-    if (reviewsFetch.status !== "success") return 0;
+    if (!reviewsQuery.isSuccess) return 0;
 
-    if (reviews.length === 0) return 0;
+    if (reviewsQuery.data.length === 0) return 0;
 
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const totalRating = reviewsQuery.data.reduce(
+      (sum, review) => sum + review.rating,
+      0
+    );
 
-    return totalRating / reviews.length;
-  }, [reviews, reviewsFetch]);
+    return totalRating / reviewsQuery.data.length;
+  }, [reviewsQuery.data, reviewsQuery.isSuccess]);
 
   return { rating, reviewsCount, requestsDone };
 }

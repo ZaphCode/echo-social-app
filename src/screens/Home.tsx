@@ -1,6 +1,10 @@
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { categoriesKeys } from "@/api/categories";
+import { servicesKeys } from "@/api/services";
 import { theme } from "@/theme/theme";
 
 import { useAuthCtx } from "@/context/Auth";
@@ -15,6 +19,7 @@ import Title from "@/components/ui/Title";
 export default function Home() {
   const { user } = useAuthCtx();
   const { colors } = useColorScheme();
+  const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
 
   return (
@@ -22,7 +27,13 @@ export default function Home() {
       style={{ ...styles.container, backgroundColor: colors.background }}
     >
       <SafeAreaView style={{ gap: theme.spacing.md }}>
-        <Title title={`Hola, ${getFirstName(user.name)} 👋`} />
+        <Title
+          title={`Hola, ${getFirstName(user.name)} 👋`}
+          onRefresh={() => {
+            queryClient.invalidateQueries({ queryKey: categoriesKeys.all });
+            queryClient.invalidateQueries({ queryKey: servicesKeys.all });
+          }}
+        />
         <SearchBar />
         <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.lg}>
           Categorías

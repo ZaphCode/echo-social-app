@@ -2,44 +2,49 @@ import { StyleSheet, ScrollView, View, Pressable } from "react-native";
 import { StaticScreenProps, useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import {
+  listServiceRequestsForClient,
+  serviceRequestsKeys,
+} from "@/api/serviceRequests";
+import { ServiceRequestWithRelations, ServiceWithProvider } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { useAuthCtx } from "@/context/Auth";
-import { Service } from "@/models/Service";
-import { ServiceRequest } from "@/models/ServiceRequest";
 import { SlideModal } from "@/components/ui/SlideModal";
 import Text from "@/components/ui/Text";
 import ServicePhotoCarousel from "@/components/ServicePhotoCarousel";
 import Button from "@/components/ui/Button";
 import Divider from "@/components/ui/Divider";
-import useList from "@/hooks/useList";
 import RequestForm from "@/components/forms/RequestForm";
 import ReviewSection from "@/components/ReviewSection";
 import useModal from "@/hooks/useModal";
 import useColorScheme from "@/hooks/useColorScheme";
-import { useQueryClient } from "@tanstack/react-query";
 
-type Props = StaticScreenProps<{ service: Service }>;
+type Props = StaticScreenProps<{ service: ServiceWithProvider }>;
 
 export default function ServiceOverview({ route }: Props) {
   const { service } = route.params;
   const { user } = useAuthCtx();
   const queryClient = useQueryClient();
 
-  const [activeRequest, setActiveRequest] = useState<ServiceRequest | null>();
+  const [activeRequest, setActiveRequest] =
+    useState<ServiceRequestWithRelations | null>(null);
   const [requestVisible, openRequestModal, closeRequestModal] = useModal();
   const navigation = useNavigation();
 
-  const [serviceRequests, { status }] = useList("service_request", {
-    filter: { service: service.id, client: user.id },
-    select: "*, service:service!service(*, provider:profiles!provider(*)), client_profile:profiles!client(*)",
+  const requestsQuery = useQuery({
+    queryKey: serviceRequestsKeys.byServiceAndClient(service.id, user.id),
+    queryFn: () => listServiceRequestsForClient(service.id, user.id),
   });
 
   useEffect(() => {
-    if (status === "success" && serviceRequests.length > 0) {
-      setActiveRequest(serviceRequests[0]);
+    if (requestsQuery.isSuccess && requestsQuery.data.length > 0) {
+      setActiveRequest(requestsQuery.data[0]);
+    } else if (requestsQuery.isSuccess) {
+      setActiveRequest(null);
     }
-  }, [serviceRequests, status]);
+  }, [requestsQuery.data, requestsQuery.isSuccess]);
 
   const goToUserProfile = () => {
     if (user.id === service.provider) {
@@ -50,7 +55,12 @@ export default function ServiceOverview({ route }: Props) {
     }
     navigation.navigate("Main", {
       screen: "UserProfile",
-      params: { user: (service as any).profiles || { id: service.provider, name: "Proveedor" } },
+      params: {
+        user: service.provider_profile || {
+          id: service.provider,
+          name: "Proveedor",
+        },
+      },
     });
   };
 
@@ -80,7 +90,7 @@ export default function ServiceOverview({ route }: Props) {
               size={theme.fontSizes.md + 1}
               style={{ textDecorationLine: "underline" }}
             >
-              {(service as any).profiles?.name || "Proveedor"}
+              {service.provider_profile?.name || "Proveedor"}
             </Text>
           </Pressable>
           <Text
@@ -110,9 +120,16 @@ export default function ServiceOverview({ route }: Props) {
           service={service}
           defaultPrice={service.base_price.toString()}
           onSuccess={(newRequest) => {
-            setActiveRequest(newRequest);
+            if (newRequest) {
+              setActiveRequest(newRequest);
+            }
             closeRequestModal();
-            queryClient.invalidateQueries({ queryKey: ["service_requests"] });
+            queryClient.invalidateQueries({
+              queryKey: serviceRequestsKeys.byServiceAndClient(service.id, user.id),
+            });
+            queryClient.invalidateQueries({
+              queryKey: serviceRequestsKeys.byClient(user.id),
+            });
           }}
         />
       </SlideModal>

@@ -1,6 +1,9 @@
 import { StyleSheet } from "react-native";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { serviceRequestsKeys } from "@/api/serviceRequests";
 import { theme } from "@/theme/theme";
 import Text from "@/components/ui/Text";
 import RequestsList from "@/components/RequestsList";
@@ -10,11 +13,17 @@ import Title from "@/components/ui/Title";
 
 export default function Requests() {
   const { colors } = useColorScheme();
+  const queryClient = useQueryClient();
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <Title title="Solicitudes" />
+      <Title
+        title="Solicitudes"
+        onRefresh={() =>
+          queryClient.invalidateQueries({ queryKey: serviceRequestsKeys.all })
+        }
+      />
       <Divider />
       <RequestsList />
     </SafeAreaView>
