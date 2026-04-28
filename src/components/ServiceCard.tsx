@@ -1,13 +1,13 @@
-import { View, Image, StyleSheet, Dimensions, Pressable } from "react-native";
+import { View, StyleSheet, Dimensions, Pressable } from "react-native";
 import React from "react";
 import Text from "./ui/Text";
 import { ServiceWithProvider } from "@/api/types";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
-import { getFileUrl } from "@/utils/format";
 import { useNavigation } from "@react-navigation/native";
 import { User } from "@/models/User";
 import useColorScheme from "@/hooks/useColorScheme";
+import StorageImage from "./ui/StorageImage";
 
 const DEVICE_WIDTH = Dimensions.get("window").width;
 
@@ -40,13 +40,10 @@ export default function ServiceCard({ service, authUser }: Props) {
       onPress={handlePress}
       style={[styles.card, { backgroundColor: colors.darkerGray }]}
     >
-      <Image
-        source={{
-          uri:
-            service.photos?.[0]
-              ? getFileUrl("service-photos", service.photos[0])
-              : "https://via.placeholder.com/300",
-        }}
+      <StorageImage
+        bucket="service-photos"
+        path={service.photos?.[0]}
+        fallbackUri="https://via.placeholder.com/300"
         style={styles.image}
       />
       {isOwnerProvider && (

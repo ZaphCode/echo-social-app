@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   Pressable,
   ScrollView,
   Alert,
@@ -12,12 +11,12 @@ import { Controller, Control, RegisterOptions } from "react-hook-form";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
-import { getFileUrl } from "@/utils/format";
 import useColorScheme from "@/hooks/useColorScheme";
 import useImage from "@/hooks/useImage";
 import { SlideModal } from "../ui/SlideModal";
 import useModal from "@/hooks/useModal";
 import ImageOpts from "./ImageOpts";
+import StorageImage from "../ui/StorageImage";
 
 const MAX_IMAGES = 5;
 
@@ -30,11 +29,6 @@ interface Props {
 
 function PhotoPicker({ control, name, rules, service }: Props) {
   const { colors } = useColorScheme();
-  const getPreviewUrl = (img: string) => {
-    if (img.startsWith("file://") || img.startsWith("http")) return img;
-    if (service?.id) return getFileUrl("service-photos", img);
-    return img;
-  };
   const [visible, open, close] = useModal();
 
   const { pickImage } = useImage();
@@ -133,8 +127,9 @@ function PhotoPicker({ control, name, rules, service }: Props) {
             >
               {images.map((uri: string) => (
                 <View key={uri} style={styles.imageWrapper}>
-                  <Image
-                    source={{ uri: getPreviewUrl(uri) }}
+                  <StorageImage
+                    bucket="service-photos"
+                    path={uri}
                     style={styles.image}
                   />
                   <Pressable

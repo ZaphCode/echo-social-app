@@ -30,9 +30,16 @@ export default function ChatInput() {
 
   const messageMutation = useMutation({
     mutationFn: createMessage,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: messagesKeys.byRequest(request.id),
+    onSuccess: (newMessage) => {
+      queryClient.setQueryData(messagesKeys.byRequest(request.id), (current) => {
+        const messages = Array.isArray(current) ? current : [];
+        const alreadyExists = messages.some(
+          (message) => message.id === newMessage.id
+        );
+
+        if (alreadyExists) return messages;
+
+        return [...messages, newMessage];
       });
     },
   });

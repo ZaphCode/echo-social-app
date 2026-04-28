@@ -1,13 +1,13 @@
-import { View, StyleSheet, Image, Pressable } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
 import React from "react";
 import { ServiceRequestWithRelations } from "@/api/types";
 import Text from "./ui/Text";
 import { theme } from "@/theme/theme";
 import { Feather } from "@expo/vector-icons";
-import { getFileUrl } from "@/utils/format";
 import { useNavigation } from "@react-navigation/native";
 import { useAuthCtx } from "@/context/Auth";
 import useColorScheme from "@/hooks/useColorScheme";
+import StorageImage from "./ui/StorageImage";
 
 type Props = {
   request: ServiceRequestWithRelations;
@@ -29,10 +29,6 @@ export default function RequestCard({ request }: Props) {
   const provider = service?.provider_profile || ({} as any);
   const client = request.client_profile || ({} as any);
 
-  const imageUrl = service?.photos?.[0]
-    ? getFileUrl("service-photos", service.photos[0])
-    : "https://via.placeholder.com/100x100";
-
   const statusData = STATUS_MAP[request.agreement_state] || {
     label: "Pendiente",
     color: colors.lightGray,
@@ -50,7 +46,12 @@ export default function RequestCard({ request }: Props) {
       onPress={handlePress}
       style={{ ...styles.card, backgroundColor: colors.darkerGray }}
     >
-      <Image source={{ uri: imageUrl }} style={styles.image} />
+      <StorageImage
+        bucket="service-photos"
+        path={service?.photos?.[0]}
+        fallbackUri="https://via.placeholder.com/100x100"
+        style={styles.image}
+      />
       <View style={styles.info}>
         <View style={styles.rowSpace}>
           <Text numberOfLines={2} color={colors.text} style={styles.title}>

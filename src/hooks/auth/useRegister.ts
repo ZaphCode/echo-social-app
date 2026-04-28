@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@/models/User";
 import { logError } from "@/utils/testing";
+import { resolveStorageUrl } from "@/api/storage";
 import useLogin from "./useLogin";
 
 export default function useRegister() {
@@ -42,10 +43,7 @@ export default function useRegister() {
         .upload(fileName, blob, { contentType: "image/jpeg" });
 
       if (!uploadError) {
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("avatars").getPublicUrl(fileName);
-        updates.avatar = publicUrl;
+        updates.avatar = resolveStorageUrl("avatars", fileName);
       }
     }
 

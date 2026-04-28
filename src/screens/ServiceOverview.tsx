@@ -128,7 +128,7 @@ export default function ServiceOverview({ route }: Props) {
               queryKey: serviceRequestsKeys.byServiceAndClient(service.id, user.id),
             });
             queryClient.invalidateQueries({
-              queryKey: serviceRequestsKeys.byClient(user.id),
+              queryKey: serviceRequestsKeys.allForUser(user.id),
             });
           }}
         />

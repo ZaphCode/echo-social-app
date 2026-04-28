@@ -7,7 +7,9 @@ export default function useJobsDone(provider: User) {
   const [profile, { status }] = useProfile(provider);
 
   async function addJob() {
+    if (provider.role !== "provider") return;
     if (!profile || status !== "success") return;
+    if (!("jobs_done" in profile)) return;
 
     const providerProfile = profile as ProviderProfileWithCategory;
     const result = await incrementProviderJobsDone(

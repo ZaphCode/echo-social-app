@@ -1,9 +1,7 @@
 import { Platform, Pressable, StyleSheet, View } from "react-native";
-import { Image } from "expo-image";
 
 import { useNavigation } from "@react-navigation/native";
 import { Fontisto } from "@expo/vector-icons";
-import { getFileUrl } from "@/utils/format";
 import { SlideModal } from "./ui/SlideModal";
 import Text from "./ui/Text";
 import useModal from "@/hooks/useModal";
@@ -11,6 +9,7 @@ import RequestDetails from "./RequestDetails";
 import { useNegotiationCtx } from "@/context/Negotiation";
 import { theme } from "@/theme/theme";
 import useColorScheme from "@/hooks/useColorScheme";
+import StorageImage from "./ui/StorageImage";
 
 export default function ChatHeader() {
   const { colors } = useColorScheme();
@@ -24,12 +23,10 @@ export default function ChatHeader() {
         <Fontisto name="caret-left" size={24} color="white" />
       </Pressable>
 
-      <Image
-        source={{
-          uri:
-            (service.photos?.[0] ? getFileUrl("service-photos", service.photos[0]) : undefined) ||
-            "https://via.placeholder.com/300",
-        }}
+      <StorageImage
+        bucket="service-photos"
+        path={service.photos?.[0]}
+        fallbackUri="https://via.placeholder.com/300"
         style={styles.image}
       />
 

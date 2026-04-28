@@ -124,12 +124,16 @@ export default function RequestForm({
         });
       }
 
-      await notificationMutation.mutateAsync({
-        user: service.provider,
-        message: `Nueva solicitud de servicio de *${user.name}* para *${service.name}*`,
-        type: "PROVIDER:NEW_REQUEST",
-        read: false,
-      });
+      try {
+        await notificationMutation.mutateAsync({
+          user: service.provider,
+          message: `Nueva solicitud de servicio de *${user.name}* para *${service.name}*`,
+          type: "PROVIDER:NEW_REQUEST",
+          read: false,
+        });
+      } catch (err) {
+        console.warn("Failed to create notification:", err);
+      }
 
       console.log("New request created:", newRequest);
 

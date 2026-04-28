@@ -11,10 +11,10 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import Text from "@/components/ui/Text";
+import useAppTheme from "@/hooks/useAppTheme";
 import { theme } from "@/theme/theme";
 import { useNavigation } from "@react-navigation/native";
 import { NOTIFICATIONS_KEY } from "@/utils/constants";
-import useAppTheme from "@/hooks/useAppTheme";
 
 const THEME_OPTIONS = [
   { label: "Auto", value: "auto" as const },
@@ -38,9 +38,7 @@ export default function ProfileConfigSection() {
     (async () => {
       try {
         const value = await AsyncStorage.getItem(NOTIFICATIONS_KEY);
-        if (value !== null) {
-          setNotificationOn(value === "true");
-        }
+        if (value !== null) setNotificationOn(value === "true");
       } catch (e) {
         Alert.alert(
           "Error al cargar configuración",
@@ -118,7 +116,7 @@ export default function ProfileConfigSection() {
           </View>
         </View>
       </View>
-      <View style={[styles.segmentedControl, { backgroundColor: colors.surface }]}>
+      <View style={[styles.segmentedControl]}>
         {THEME_OPTIONS.map((option) => {
           const isSelected = preference === option.value;
 
@@ -131,7 +129,10 @@ export default function ProfileConfigSection() {
                   backgroundColor: colors.brandSurface,
                   borderColor: colors.brandSurface,
                 },
-                !isSelected && { borderColor: colors.border },
+                !isSelected && {
+                  borderColor: colors.border,
+                  backgroundColor: colors.surface,
+                },
               ]}
               onPress={() => setThemePreference(option.value)}
             >

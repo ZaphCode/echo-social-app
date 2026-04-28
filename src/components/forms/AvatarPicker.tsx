@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Image, Pressable, StyleSheet, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Pressable, StyleSheet, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import useColorScheme from "@/hooks/useColorScheme";
@@ -7,18 +7,29 @@ import useImage from "@/hooks/useImage";
 import useModal from "@/hooks/useModal";
 import { SlideModal } from "../ui/SlideModal";
 import ImageOpts from "./ImageOpts";
+import StorageImage from "../ui/StorageImage";
 
 interface Props {
   onChange: (uri: string) => void;
   image?: string;
+  bucket?: string;
   viewOnly?: boolean;
 }
 
-export default function AvatarPicker({ image, viewOnly, onChange }: Props) {
+export default function AvatarPicker({
+  image,
+  bucket,
+  viewOnly,
+  onChange,
+}: Props) {
   const [img, setImg] = useState(image);
   const { colors } = useColorScheme();
   const { pickImage } = useImage();
   const [visible, open, close] = useModal();
+
+  useEffect(() => {
+    setImg(image);
+  }, [image]);
 
   const onPress = async (option: "camera" | "library") => {
     try {
@@ -45,8 +56,9 @@ export default function AvatarPicker({ image, viewOnly, onChange }: Props) {
     <View style={styles.center}>
       <Pressable onPress={open} disabled={viewOnly}>
         {img ? (
-          <Image
-            source={{ uri: img }}
+          <StorageImage
+            bucket={bucket}
+            path={img}
             style={[
               styles.image,
               {

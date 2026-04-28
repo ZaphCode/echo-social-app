@@ -58,7 +58,8 @@
           "microphonePermission": "La aplicación accede a tu micrófono para permitirte grabar videos con sonido."
         }
       ],
-      "./plugins/withFmtConsteval"
+      "./plugins/withFmtConsteval",
+      "expo-maps"
     ]
   }
 }

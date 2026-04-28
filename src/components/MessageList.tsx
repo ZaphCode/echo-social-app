@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { listMessagesByRequest, messagesKeys } from "@/api/messages";
+import { MessageWithSender } from "@/api/types";
 import { useAuthCtx } from "@/context/Auth";
 import { Message } from "@/models/Message";
 import Text from "./ui/Text";
@@ -20,23 +21,19 @@ type Props = {
 export default function MessageList({ requestId }: Props) {
   const { user } = useAuthCtx();
   const flatListRef = useRef<FlatList<Message>>(null);
+  const queryClient = useQueryClient();
 
   const messagesQuery = useQuery({
     queryKey: messagesKeys.byRequest(requestId),
     queryFn: () => listMessagesByRequest(requestId),
   });
 
-  const [messages, setMessages] = useState<Message[]>([]);
-
-  useEffect(() => {
-    if (messagesQuery.isSuccess) {
-      setMessages(messagesQuery.data);
-    }
-  }, [messagesQuery.data, messagesQuery.isSuccess]);
-
   useSubscription<Message>("message", "*", async ({ action, record }) => {
     if (action === "INSERT" && record.request === requestId) {
-      setMessages((prevMessages) => [...prevMessages, record]);
+      queryClient.setQueryData<MessageWithSender[]>(
+        messagesKeys.byRequest(requestId),
+        (currentMessages) => mergeMessages(currentMessages, record)
+      );
     }
   });
 
@@ -52,7 +49,7 @@ export default function MessageList({ requestId }: Props) {
   return (
     <FlatList
       ref={flatListRef}
-      data={messages}
+      data={messagesQuery.data ?? []}
       keyExtractor={(item) => item.id}
       showsVerticalScrollIndicator={false}
       renderItem={({ item }) => (
@@ -67,6 +64,21 @@ export default function MessageList({ requestId }: Props) {
         flatListRef.current?.scrollToEnd({ animated: false });
       }}
     />
+  );
+}
+
+function mergeMessages(
+  currentMessages: MessageWithSender[] | undefined,
+  newMessage: Message
+) {
+  const messages = currentMessages ?? [];
+  const alreadyExists = messages.some((message) => message.id === newMessage.id);
+
+  if (alreadyExists) return messages;
+
+  return [...messages, newMessage as MessageWithSender].sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
 }
 

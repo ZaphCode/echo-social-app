@@ -3,7 +3,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 
 import {
-  listClientRequests,
+  listAllUserRequests,
   serviceRequestsKeys,
 } from "@/api/serviceRequests";
 import { theme } from "@/theme/theme";
@@ -18,8 +18,8 @@ import useColorScheme from "@/hooks/useColorScheme";
 export default function RequestsList() {
   const { user } = useAuthCtx();
   const requestsQuery = useQuery({
-    queryKey: serviceRequestsKeys.byClient(user.id),
-    queryFn: () => listClientRequests(user.id),
+    queryKey: serviceRequestsKeys.allForUser(user.id),
+    queryFn: () => listAllUserRequests(user.id),
   });
 
   if (requestsQuery.isPending)

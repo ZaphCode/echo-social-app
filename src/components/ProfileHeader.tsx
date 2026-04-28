@@ -11,7 +11,6 @@ import { uploadAvatarImage } from "@/api/storage";
 import Text from "@/components/ui/Text";
 import { theme } from "@/theme/theme";
 import AvatarPicker from "@/components/forms/AvatarPicker";
-import { getFileUrl } from "@/utils/format";
 import { User } from "@/models/User";
 import useColorScheme from "@/hooks/useColorScheme";
 
@@ -54,9 +53,10 @@ export default function ProfileHeader({ user, editable }: Props) {
   return (
     <View style={styles.header}>
       <AvatarPicker
-        image={avatar && getFileUrl("avatars", avatar)}
+        image={avatar || undefined}
         onChange={onAvatarChange}
         viewOnly={!editable}
+        bucket="avatars"
       />
       <Text fontFamily="bold" color={colors.text} style={styles.userName}>
         {user.name}

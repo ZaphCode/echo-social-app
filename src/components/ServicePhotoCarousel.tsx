@@ -1,5 +1,6 @@
-import { Image, ScrollView, StyleSheet, Dimensions } from "react-native";
-import { getFileUrl } from "@/utils/format";
+import { ScrollView, StyleSheet, Dimensions } from "react-native";
+
+import StorageImage from "./ui/StorageImage";
 
 const { width } = Dimensions.get("window");
 
@@ -10,8 +11,6 @@ type Props = {
 };
 
 export default function ServicePhotoCarousel({ photos, serviceId }: Props) {
-  const formatted = photos.map((p) => getFileUrl("service-photos", p));
-
   return (
     <ScrollView
       horizontal
@@ -19,8 +18,14 @@ export default function ServicePhotoCarousel({ photos, serviceId }: Props) {
       showsHorizontalScrollIndicator={false}
       style={styles.wrapper}
     >
-      {formatted.map((uri, index) => (
-        <Image key={index} source={{ uri }} style={styles.image} />
+      {photos.map((path, index) => (
+        <StorageImage
+          key={`${serviceId}-${index}`}
+          bucket="service-photos"
+          path={path}
+          fallbackUri="https://via.placeholder.com/300"
+          style={styles.image}
+        />
       ))}
     </ScrollView>
   );

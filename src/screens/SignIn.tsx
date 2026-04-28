@@ -16,11 +16,12 @@ import useLogin from "@/hooks/auth/useLogin";
 import useColorScheme from "@/hooks/useColorScheme";
 
 export default function SignIn() {
-  useRedirect();
   const { show } = useAlertCtx();
-
+  const { colors, activeMode } = useColorScheme();
   const { login, loading } = useLogin();
   const navigation = useNavigation();
+
+  useRedirect();
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -43,7 +44,6 @@ export default function SignIn() {
         iconColor: theme.colors.redError,
       });
   });
-  const { colors } = useColorScheme();
 
   return (
     <SafeAreaView
@@ -51,13 +51,21 @@ export default function SignIn() {
     >
       <View>
         <Image
-          source={require("@Assets/app-logo.png")}
+          source={
+            activeMode === "dark"
+              ? require("@Assets/app-logo-white.png")
+              : require("@Assets/app-logo-black.png")
+          }
           contentFit="contain"
           style={{ width: 130, height: 50, marginBottom: 20 }}
         />
       </View>
       <View style={{ gap: 5, alignItems: "center" }}>
-        <Text fontFamily="bold" color="white" size={theme.fontSizes.xl + 5}>
+        <Text
+          fontFamily="bold"
+          color={colors.text}
+          size={theme.fontSizes.xl + 5}
+        >
           Bienvenido de Vuelta
         </Text>
         <Text size={theme.fontSizes.lg}>Inicia sesión para continuar</Text>

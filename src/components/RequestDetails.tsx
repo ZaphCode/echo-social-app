@@ -1,14 +1,13 @@
 import { View, StyleSheet } from "react-native";
-import { Image } from "expo-image";
 
 import Text from "./ui/Text";
 import { theme } from "@/theme/theme";
 import { User } from "@/models/User";
 import { ServiceRequest } from "@/models/ServiceRequest";
-import { getFileUrl } from "@/utils/format";
 import Divider from "./ui/Divider";
 import InfoRow from "./InfoRow";
 import useColorScheme from "@/hooks/useColorScheme";
+import StorageImage from "./ui/StorageImage";
 
 type Props = {
   client: User;
@@ -69,10 +68,7 @@ function UserMiniCard({
   const { colors } = useColorScheme();
   return (
     <View style={styles.userCard}>
-      <Image
-        source={{ uri: avatar ? getFileUrl("avatars", avatar) : undefined }}
-        style={styles.avatar}
-      />
+      <StorageImage bucket="avatars" path={avatar} style={styles.avatar} />
       <Text color={colors.lightGray} size={12}>
         {label}
       </Text>

@@ -9,6 +9,7 @@ const serviceRequestSelect =
 export const serviceRequestsKeys = {
   all: ["serviceRequests"] as const,
   byClient: (clientId: string) => ["serviceRequests", "client", clientId] as const,
+  allForUser: (userId: string) => ["serviceRequests", "user", userId] as const,
   byServiceAndClient: (serviceId: string, clientId: string) =>
     ["serviceRequests", "service", serviceId, "client", clientId] as const,
   finishedForUser: (userId: string) =>
@@ -50,6 +51,38 @@ export async function listClientRequests(clientId: string) {
   throwIfError(error);
 
   return (data ?? []) as ServiceRequestWithRelations[];
+}
+
+export async function listAllUserRequests(userId: string) {
+  const { data: clientData, error: clientError } = await supabase
+    .from("service_request")
+    .select(serviceRequestSelect)
+    .eq("client", userId)
+    .order("updated_at", { ascending: false });
+
+  throwIfError(clientError);
+
+  const { data: providerData, error: providerError } = await supabase
+    .from("service_request")
+    .select(
+      "*, service_detail:service!inner(*, provider_profile:profiles!provider(*)), client_profile:profiles!client(*)"
+    )
+    .eq("service_detail.provider", userId)
+    .order("updated_at", { ascending: false });
+
+  throwIfError(providerError);
+
+  const merged = [...(clientData ?? []), ...(providerData ?? [])];
+  const uniqueIds = new Set<string>();
+  const unique = merged.filter((item) => {
+    if (uniqueIds.has(item.id)) return false;
+    uniqueIds.add(item.id);
+    return true;
+  });
+
+  return unique.sort(
+    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+  ) as ServiceRequestWithRelations[];
 }
 
 export async function listServiceRequestsForClient(

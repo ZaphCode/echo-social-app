@@ -1,10 +1,10 @@
 import { Platform } from "react-native";
 
-export const DEV_CLIENT_EMAIL = "b@b.com";
-export const DEV_CLIENT_PASSWORD = "password";
+export const DEV_CLIENT_EMAIL = "cliente@test.com";
+export const DEV_CLIENT_PASSWORD = "echo_de_one_123";
 
-export const DEV_PROVIDER_EMAIL = "facu@gmail.com";
-export const DEV_PROVIDER_PASSWORD = "password";
+export const DEV_PROVIDER_EMAIL = "proveedor@test.com";
+export const DEV_PROVIDER_PASSWORD = "echo_de_one_123";
 
 export const NOTIFICATIONS_KEY = "notificationsEnabled";
 
