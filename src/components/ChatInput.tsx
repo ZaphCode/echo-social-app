@@ -8,9 +8,11 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
-import { createMessage, messagesKeys } from "@/api/messages";
+import { insertPendingMessage } from "@/chat/messages";
+import { chatMessagesKeys } from "@/chat/sync";
+import { useChatSync } from "@/chat/ChatSyncProvider";
 import { theme } from "@/theme/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuthCtx } from "@/context/Auth";
@@ -24,42 +26,39 @@ export default function ChatInput() {
   const { user } = useAuthCtx();
   const { colors } = useColorScheme();
   const queryClient = useQueryClient();
+  const { flushPendingMessages } = useChatSync();
 
   const [message, setMessage] = useState("");
   const { request } = useNegotiationCtx();
 
-  const messageMutation = useMutation({
-    mutationFn: createMessage,
-    onSuccess: (newMessage) => {
-      queryClient.setQueryData(messagesKeys.byRequest(request.id), (current) => {
-        const messages = Array.isArray(current) ? current : [];
-        const alreadyExists = messages.some(
-          (message) => message.id === newMessage.id
-        );
-
-        if (alreadyExists) return messages;
-
-        return [...messages, newMessage];
-      });
-    },
-  });
-
   const handleSend = async () => {
-    if (message.trim() === "" || messageMutation.isPending) return;
+    const trimmedMessage = message.trim();
 
-    await messageMutation.mutateAsync({
-      content: message,
-      sender: user.id,
-      request: request.id,
+    if (trimmedMessage === "") return;
+
+    const timestamp = new Date().toISOString();
+    const randomSuffix = Math.random().toString(36).slice(2, 10);
+    const localId = `local:${timestamp}:${randomSuffix}`;
+    const clientId = `client:${user.id}:${timestamp}:${randomSuffix}`;
+
+    await insertPendingMessage({
+      localId,
+      clientId,
+      requestId: request.id,
+      senderId: user.id,
+      content: trimmedMessage,
+      createdAtClient: timestamp,
+    });
+    setMessage("");
+
+    await queryClient.invalidateQueries({
+      queryKey: chatMessagesKeys.byRequest(request.id),
     });
 
-    setMessage("");
+    await flushPendingMessages();
   };
 
-  const isDisabled =
-    messageMutation.isPending ||
-    isFinished(request) ||
-    isCanceled(request);
+  const isDisabled = isFinished(request) || isCanceled(request);
 
   return (
     <KeyboardAvoidingView
@@ -79,6 +78,7 @@ export default function ChatInput() {
           placeholderTextColor={colors.lightGray}
           onSubmitEditing={handleSend}
           returnKeyType="send"
+          editable={!isDisabled}
         />
         <TouchableOpacity
           onPress={handleSend}

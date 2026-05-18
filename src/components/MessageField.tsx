@@ -1,18 +1,39 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+
+import { ChatMessage } from "@/chat/types";
 import Text from "./ui/Text";
-import { Message as MessageType } from "@/models/Message";
 import { theme } from "@/theme/theme";
 import useColorScheme from "@/hooks/useColorScheme";
 
+type StatusDescriptor =
+  | {
+      kind: "loading";
+      color: string;
+    }
+  | {
+      kind: "icon";
+      icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
+      color: string;
+    };
+
 type Props = {
-  message: MessageType;
+  message: ChatMessage;
   currentUserId: string;
+  isOnline: boolean;
+  onRetry: (clientId: string) => Promise<void>;
 };
 
-export default function Message({ message, currentUserId }: Props) {
+export default function MessageField({
+  message,
+  currentUserId,
+  isOnline,
+  onRetry,
+}: Props) {
   const { colors } = useColorScheme();
-  const isSender = message.sender === currentUserId;
+  const isSender = message.sender_id === currentUserId;
+  const canRetry = isSender && message.sync_status === "failed";
 
   const styles = StyleSheet.create({
     container: {
@@ -41,11 +62,31 @@ export default function Message({ message, currentUserId }: Props) {
     textReceiver: {
       color: colors.lightGray,
     },
+    statusContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      alignSelf: isSender ? "flex-end" : "flex-start",
+      marginTop: 6,
+      gap: 4,
+    },
+    metaText: {
+      fontSize: 11,
+      color: isSender ? "rgba(255,255,255,0.72)" : colors.lightGray,
+    },
   });
 
+  const status = getMessageStatus({
+    syncStatus: message.sync_status,
+    isOnline,
+    colors,
+  });
+  const sentTime = formatMessageTime(message.created_at_client);
+
   return (
-    <View
+    <Pressable
       style={[styles.container, isSender ? styles.sender : styles.receiver]}
+      disabled={!canRetry}
+      onPress={() => onRetry(message.client_id)}
     >
       <Text
         style={[
@@ -55,6 +96,66 @@ export default function Message({ message, currentUserId }: Props) {
       >
         {message.content}
       </Text>
-    </View>
+      <View style={styles.statusContainer}>
+        <Text style={styles.metaText}>{sentTime}</Text>
+        {isSender && status ? (
+          status.kind === "loading" ? (
+            <ActivityIndicator size="small" color={status.color} />
+          ) : (
+            <MaterialCommunityIcons
+              name={status.icon}
+              size={12}
+              color={status.color}
+            />
+          )
+        ) : null}
+      </View>
+    </Pressable>
   );
+}
+
+function getMessageStatus({
+  syncStatus,
+  isOnline,
+  colors,
+}: {
+  syncStatus: ChatMessage["sync_status"];
+  isOnline: boolean;
+  colors: ReturnType<typeof useColorScheme>["colors"];
+}): StatusDescriptor {
+  if (syncStatus === "sending") {
+    return {
+      kind: "loading" as const,
+      color: colors.primaryBlue,
+    };
+  }
+
+  if (syncStatus === "failed") {
+    return {
+      kind: "icon" as const,
+      icon: "alert-circle-outline" as const,
+      color: colors.redError,
+    };
+  }
+
+  if (syncStatus === "pending") {
+    return {
+      kind: "icon" as const,
+      icon: isOnline ? "clock-time-three-outline" : "cloud-off-outline",
+      color: colors.lightGray,
+    };
+  }
+
+  return {
+    kind: "icon" as const,
+    icon: "check-all" as const,
+    color: colors.successGreen,
+  };
+}
+
+function formatMessageTime(dateString: string) {
+  return new Date(dateString).toLocaleTimeString("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }

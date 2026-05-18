@@ -1,3 +1,6 @@
+import { Suspense } from "react";
+import { SQLiteProvider } from "expo-sqlite";
+
 import { Navigation } from "./src/navigation/Navigation";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,6 +11,8 @@ import { useFonts } from "expo-font";
 import { AlertProvider } from "@/context/Alert";
 import { AlertModal } from "@/components/ui/AlertModal";
 import useAppTheme from "@/hooks/useAppTheme";
+import { initChatDatabase } from "@/chat/db";
+import { ChatSyncProvider } from "@/chat/ChatSyncProvider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,11 +31,21 @@ export default function AppWrapped() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AlertProvider>
-          <App />
-        </AlertProvider>
-      </AuthProvider>
+      <Suspense fallback={null}>
+        <SQLiteProvider
+          databaseName="echo-chat.db"
+          onInit={initChatDatabase}
+          useSuspense
+        >
+          <AuthProvider>
+            <ChatSyncProvider>
+              <AlertProvider>
+                <App />
+              </AlertProvider>
+            </ChatSyncProvider>
+          </AuthProvider>
+        </SQLiteProvider>
+      </Suspense>
     </QueryClientProvider>
   );
 }

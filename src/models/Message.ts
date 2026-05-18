@@ -5,4 +5,6 @@ export type Message = {
   content: string;
   created_at: string;
   updated_at: string;
+  client_id?: string | null;
+  created_at_client?: string | null;
 };

@@ -1,37 +1,65 @@
 import { supabase } from "@/lib/supabase";
 import { Message } from "@/models/Message";
 import { throwIfError } from "./common";
-import { MessageWithSender } from "./types";
 
-const messageSelect = "*, sender_profile:profiles!sender(*)";
+const messageSelect = "*";
 
-export const messagesKeys = {
-  all: ["messages"] as const,
-  byRequest: (requestId: string) => ["messages", "request", requestId] as const,
+export type UpsertRemoteMessageInput = Pick<
+  Message,
+  "content" | "sender" | "request"
+> & {
+  client_id: string;
+  created_at_client: string;
 };
 
-export type CreateMessageInput = Pick<Message, "content" | "sender" | "request">;
-
-export async function listMessagesByRequest(requestId: string) {
+export async function listRemoteMessagesByRequest(requestId: string) {
   const { data, error } = await supabase
     .from("message")
     .select(messageSelect)
     .eq("request", requestId)
-    .order("created_at", { ascending: true });
+    .order("created_at_client", { ascending: true });
 
   throwIfError(error);
 
-  return (data ?? []) as MessageWithSender[];
+  return (data ?? []) as Message[];
 }
 
-export async function createMessage(input: CreateMessageInput) {
+export async function upsertRemoteMessage(input: UpsertRemoteMessageInput) {
   const { data, error } = await supabase
     .from("message")
-    .insert(input)
-    .select(messageSelect)
+    .upsert(input, {
+      onConflict: "client_id",
+      ignoreDuplicates: false,
+    })
+    .select("*")
     .single();
 
   throwIfError(error);
 
-  return data as MessageWithSender;
+  return data as Message;
+}
+
+export function subscribeToRemoteMessages(
+  requestId: string,
+  callback: (message: Message) => Promise<void> | void
+) {
+  const channel = supabase
+    .channel(`message:request:${requestId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "message",
+        filter: `request=eq.${requestId}`,
+      },
+      (payload) => {
+        callback(payload.new as Message);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }

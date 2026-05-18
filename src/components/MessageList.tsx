@@ -1,13 +1,11 @@
 import { useRef } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { listMessagesByRequest, messagesKeys } from "@/api/messages";
-import { MessageWithSender } from "@/api/types";
+import { ChatMessage } from "@/chat/types";
+import { useChatSync } from "@/chat/ChatSyncProvider";
+import useChatMessages from "@/chat/useChatMessages";
 import { useAuthCtx } from "@/context/Auth";
-import { Message } from "@/models/Message";
 import Text from "./ui/Text";
-import useSubscription from "@/hooks/useSubscription";
 import MessageField from "./MessageField";
 import { theme } from "@/theme/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -20,22 +18,9 @@ type Props = {
 
 export default function MessageList({ requestId }: Props) {
   const { user } = useAuthCtx();
-  const flatListRef = useRef<FlatList<Message>>(null);
-  const queryClient = useQueryClient();
-
-  const messagesQuery = useQuery({
-    queryKey: messagesKeys.byRequest(requestId),
-    queryFn: () => listMessagesByRequest(requestId),
-  });
-
-  useSubscription<Message>("message", "*", async ({ action, record }) => {
-    if (action === "INSERT" && record.request === requestId) {
-      queryClient.setQueryData<MessageWithSender[]>(
-        messagesKeys.byRequest(requestId),
-        (currentMessages) => mergeMessages(currentMessages, record)
-      );
-    }
-  });
+  const { isOnline, retryMessage } = useChatSync();
+  const flatListRef = useRef<FlatList<ChatMessage>>(null);
+  const messagesQuery = useChatMessages(requestId);
 
   if (messagesQuery.isPending)
     return (
@@ -50,10 +35,15 @@ export default function MessageList({ requestId }: Props) {
     <FlatList
       ref={flatListRef}
       data={messagesQuery.data ?? []}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => item.local_id}
       showsVerticalScrollIndicator={false}
       renderItem={({ item }) => (
-        <MessageField message={item} currentUserId={user.id} />
+        <MessageField
+          message={item}
+          currentUserId={user.id}
+          isOnline={isOnline}
+          onRetry={retryMessage}
+        />
       )}
       ListEmptyComponent={EmptyMessages}
       keyboardShouldPersistTaps="handled"
@@ -64,21 +54,6 @@ export default function MessageList({ requestId }: Props) {
         flatListRef.current?.scrollToEnd({ animated: false });
       }}
     />
-  );
-}
-
-function mergeMessages(
-  currentMessages: MessageWithSender[] | undefined,
-  newMessage: Message
-) {
-  const messages = currentMessages ?? [];
-  const alreadyExists = messages.some((message) => message.id === newMessage.id);
-
-  if (alreadyExists) return messages;
-
-  return [...messages, newMessage as MessageWithSender].sort(
-    (a, b) =>
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
 }
 
