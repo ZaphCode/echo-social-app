@@ -17,6 +17,12 @@ type ChatMessageRow = {
   retry_count: number;
 };
 
+type ChatReadStateRow = {
+  request_id: string;
+  user_id: string;
+  read_at_client: string;
+};
+
 type PendingMessageInput = {
   localId: string;
   clientId: string;
@@ -247,4 +253,50 @@ export async function upsertRemoteMessageToLocal(remoteMessage: Message) {
       remoteMessage.updated_at,
     ]
   );
+}
+
+export async function markRequestMessagesRead({
+  requestId,
+  userId,
+  readAtClient,
+}: {
+  requestId: string;
+  userId: string;
+  readAtClient: string;
+}) {
+  const db = getChatDatabase();
+
+  await db.runAsync(
+    `
+      INSERT INTO chat_read_states (
+        request_id,
+        user_id,
+        read_at_client
+      ) VALUES (?, ?, ?)
+      ON CONFLICT(request_id, user_id) DO UPDATE SET
+        read_at_client = CASE
+          WHEN excluded.read_at_client > chat_read_states.read_at_client
+            THEN excluded.read_at_client
+          ELSE chat_read_states.read_at_client
+        END
+    `,
+    [requestId, userId, readAtClient]
+  );
+}
+
+export async function listReadStatesByUser(userId: string) {
+  const db = getChatDatabase();
+  const rows = await db.getAllAsync<ChatReadStateRow>(
+    `
+      SELECT *
+      FROM chat_read_states
+      WHERE user_id = ?
+    `,
+    userId
+  );
+
+  return rows.reduce<Record<string, string>>((acc, row) => {
+    acc[row.request_id] = row.read_at_client;
+    return acc;
+  }, {});
 }

@@ -8,6 +8,8 @@ const notificationSelect = "*, user_profile:profiles!user(*)";
 export const notificationsKeys = {
   all: ["notifications"] as const,
   byUser: (userId: string) => ["notifications", "user", userId] as const,
+  unreadCount: (userId: string) =>
+    ["notifications", "user", userId, "unreadCount"] as const,
 };
 
 export type CreateNotificationInput = Pick<
@@ -28,16 +30,24 @@ export async function listNotificationsByUser(userId: string) {
   return (data ?? []) as NotificationWithUser[];
 }
 
-export async function createNotification(input: CreateNotificationInput) {
-  const { data, error } = await supabase
+export async function countUnreadNotificationsByUser(userId: string) {
+  const { count, error } = await supabase
     .from("notification")
-    .insert(input)
-    .select(notificationSelect)
-    .single();
+    .select("id", { count: "exact", head: true })
+    .eq("user", userId)
+    .eq("read", false);
 
   throwIfError(error);
 
-  return data as NotificationWithUser;
+  return count ?? 0;
+}
+
+export async function createNotification(input: CreateNotificationInput) {
+  const { error } = await supabase
+    .from("notification")
+    .insert(input);
+
+  throwIfError(error);
 }
 
 export async function markNotificationAsRead(notificationId: string) {

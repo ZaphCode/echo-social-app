@@ -15,7 +15,13 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.echoapp",
-      "appleTeamId": "K3X2W74GBX"
+      "appleTeamId": "K3X2W74GBX",
+      "splash": {
+        "image": "./assets/app-logo-white.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#111315",
+        "imageWidth": 100
+      }
     },
     "android": {
       "usesCleartextTraffic": true,
@@ -24,9 +30,7 @@
         "backgroundColor": "#111315"
       },
       "package": "com.anonymous.echoapp",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "favicon": "./assets/favicon.png"

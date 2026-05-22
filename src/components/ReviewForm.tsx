@@ -2,6 +2,7 @@ import { StyleSheet, View, Text as RNText } from "react-native";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { createNotification, notificationsKeys } from "@/api/notifications";
 import { createReview, reviewsKeys } from "@/api/reviews";
 import { theme } from "@/theme/theme";
 import { useAuthCtx } from "@/context/Auth";
@@ -21,7 +22,7 @@ type Props = {
 export default function ReviewForm({ onSuccess }: Props) {
   const { user: authUser } = useAuthCtx();
   const { colors } = useColorScheme();
-  const { client, provider, service } = useNegotiationCtx();
+  const { request, client, provider, service } = useNegotiationCtx();
   const { show } = useAlertCtx();
   const queryClient = useQueryClient();
 
@@ -40,6 +41,9 @@ export default function ReviewForm({ onSuccess }: Props) {
         queryKey: reviewsKeys.byReviewedUser(theOther.id),
       });
     },
+  });
+  const notificationMutation = useMutation({
+    mutationFn: createNotification,
   });
 
   const { control, handleSubmit } = useForm({
@@ -67,6 +71,25 @@ export default function ReviewForm({ onSuccess }: Props) {
         icon: "alert",
         iconColor: theme.colors.redError,
       });
+    }
+
+    try {
+      await notificationMutation.mutateAsync({
+        user: theOther.id,
+        message: `*${authUser.name}* dejó una valoración para *${service.name}*`,
+        type: "SYSTEM:INFO",
+        read: false,
+        request: request.id,
+        service: service.id,
+      });
+      queryClient.invalidateQueries({
+        queryKey: notificationsKeys.byUser(theOther.id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: notificationsKeys.unreadCount(theOther.id),
+      });
+    } catch (err) {
+      console.log("Failed to create review notification:", err);
     }
 
     onSuccess?.();

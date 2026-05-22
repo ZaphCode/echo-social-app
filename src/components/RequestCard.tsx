@@ -11,6 +11,7 @@ import StorageImage from "./ui/StorageImage";
 
 type Props = {
   request: ServiceRequestWithRelations;
+  unreadCount?: number;
 };
 
 const STATUS_MAP = {
@@ -20,7 +21,7 @@ const STATUS_MAP = {
   FINISHED: { label: "Finalizado", color: theme.colors.completePurple },
 };
 
-export default function RequestCard({ request }: Props) {
+export default function RequestCard({ request, unreadCount = 0 }: Props) {
   const { colors } = useColorScheme();
   const navigation = useNavigation();
   const { user } = useAuthCtx();
@@ -62,11 +63,20 @@ export default function RequestCard({ request }: Props) {
           </Text>
         </View>
 
-        <View style={styles.row}>
-          <Feather name="user" size={14} color={colors.lightGray} />
-          <Text style={[styles.sub, { color: colors.lightGray }]}>
-            {user.id === client?.id ? provider.name : client.name}
-          </Text>
+        <View style={styles.rowSpace}>
+          <View style={styles.row}>
+            <Feather name="user" size={14} color={colors.lightGray} />
+            <Text style={[styles.sub, { color: colors.lightGray }]}>
+              {user.id === client?.id ? provider.name : client.name}
+            </Text>
+          </View>
+          {unreadCount > 0 ? (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>
+                {unreadCount > 99 ? "99+" : String(unreadCount)}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.rowSpace}>
@@ -110,7 +120,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginBottom: 6,
+    flex: 1,
   },
   rowSpace: {
     flexDirection: "row",
@@ -144,5 +154,19 @@ const styles = StyleSheet.create({
     color: theme.colors.successGreen,
     fontFamily: theme.fontFamily.bold,
     fontSize: theme.fontSizes.sm,
+  },
+  unreadBadge: {
+    minWidth: 24,
+    height: 24,
+    paddingHorizontal: 7,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.primaryBlue,
+  },
+  unreadBadgeText: {
+    color: "white",
+    fontFamily: theme.fontFamily.bold,
+    fontSize: 12,
   },
 });

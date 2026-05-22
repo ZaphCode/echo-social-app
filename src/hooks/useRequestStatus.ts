@@ -3,11 +3,47 @@ import { User } from "@/models/User";
 import * as NS from "@/utils/negotiation";
 import useJobsDone from "./useJobsDone";
 import { updateServiceRequest } from "@/api/serviceRequests";
+import { createNotification, notificationsKeys } from "@/api/notifications";
+import { useQueryClient } from "@tanstack/react-query";
 
-export default function useRequestStatus(authUser: User) {
-  const { request, client, provider } = useNegotiationCtx();
+type Options = {
+  shouldNotifyCounterparty?: boolean;
+};
+
+export default function useRequestStatus(
+  authUser: User,
+  options: Options = {},
+) {
+  const { request, client, provider, service } = useNegotiationCtx();
+  const queryClient = useQueryClient();
 
   const { addJob } = useJobsDone(provider);
+  const counterparty = authUser.id === client.id ? provider : client;
+
+  async function notifyCounterparty(action: "accepted" | "rejected") {
+    if (!options.shouldNotifyCounterparty) return;
+
+    const actionText = action === "accepted" ? "aceptó" : "rechazó";
+
+    try {
+      await createNotification({
+        user: counterparty.id,
+        message: `*${authUser.name}* ${actionText} la propuesta para *${service.name}*`,
+        type: "SYSTEM:INFO",
+        read: false,
+        request: request.id,
+        service: service.id,
+      });
+      queryClient.invalidateQueries({
+        queryKey: notificationsKeys.byUser(counterparty.id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: notificationsKeys.unreadCount(counterparty.id),
+      });
+    } catch (err) {
+      console.log(`Failed to create ${action} notification:`, err);
+    }
+  }
 
   async function setUserToAgreed() {
     if (authUser.id === client.id) {
@@ -33,6 +69,8 @@ export default function useRequestStatus(authUser: User) {
         });
       }
     }
+
+    await notifyCounterparty("accepted");
   }
 
   async function setUserToRejected() {
@@ -61,6 +99,8 @@ export default function useRequestStatus(authUser: User) {
         });
       }
     }
+
+    await notifyCounterparty("rejected");
   }
 
   async function setUserToCompleted() {

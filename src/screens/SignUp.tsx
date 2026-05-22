@@ -18,10 +18,9 @@ import useColorScheme from "@/hooks/useColorScheme";
 
 export default function SignUp() {
   useRedirect();
-  const { colors } = useColorScheme();
-
-  const navigation = useNavigation();
+  const { colors, activeMode } = useColorScheme();
   const { show } = useAlertCtx();
+  const navigation = useNavigation();
 
   const { control, handleSubmit, ...signInForm } = useForm({
     defaultValues: {
@@ -74,13 +73,21 @@ export default function SignUp() {
           {Object.keys(signInForm.formState.errors).length === 0 && (
             <View>
               <Image
-                source={require("@Assets/app-logo.png")}
+                source={
+                  activeMode === "dark"
+                    ? require("@Assets/app-logo-white.png")
+                    : require("@Assets/app-logo-black.png")
+                }
                 contentFit="contain"
                 style={{ width: 130, height: 50, marginBottom: 10 }}
               />
             </View>
           )}
-          <Text fontFamily="bold" color="white" size={theme.fontSizes.xl + 5}>
+          <Text
+            fontFamily="bold"
+            color={colors.text}
+            size={theme.fontSizes.xl + 5}
+          >
             Regístrate Ahora
           </Text>
           <RoleSelector

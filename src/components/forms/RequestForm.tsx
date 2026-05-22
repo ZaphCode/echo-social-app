@@ -3,7 +3,7 @@ import { Dimensions, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { createNotification } from "@/api/notifications";
+import { createNotification, notificationsKeys } from "@/api/notifications";
 import {
   createServiceRequest,
   serviceRequestsKeys,
@@ -31,6 +31,10 @@ type Props = {
   requestId?: string;
   defaultPrice?: string;
   defaultDate?: string;
+  offerNotification?: {
+    recipientId: string;
+    recipientType: "client" | "provider";
+  };
 };
 
 export default function RequestForm({
@@ -39,6 +43,7 @@ export default function RequestForm({
   onSuccess,
   defaultDate,
   defaultPrice,
+  offerNotification,
 }: Props) {
   const { colors } = useColorScheme();
   const { user } = useAuthCtx();
@@ -93,6 +98,32 @@ export default function RequestForm({
             last_offer_user: user.id,
           },
         });
+
+        if (offerNotification) {
+          try {
+            await notificationMutation.mutateAsync({
+              user: offerNotification.recipientId,
+              message: `*${user.name}* hizo una nueva propuesta para *${service.name}*`,
+              type:
+                offerNotification.recipientType === "client"
+                  ? "CLIENT:NEW_OFFER"
+                  : "PROVIDER:NEW_OFFER",
+              read: false,
+              request: requestId,
+              service: service.id,
+            });
+            queryClient.invalidateQueries({
+              queryKey: notificationsKeys.byUser(offerNotification.recipientId),
+            });
+            queryClient.invalidateQueries({
+              queryKey: notificationsKeys.unreadCount(
+                offerNotification.recipientId,
+              ),
+            });
+          } catch (err) {
+            console.log("Failed to create offer notification:", err);
+          }
+        }
       } catch {
         return show({
           title: "Error al Ofertar",
@@ -130,9 +161,17 @@ export default function RequestForm({
           message: `Nueva solicitud de servicio de *${user.name}* para *${service.name}*`,
           type: "PROVIDER:NEW_REQUEST",
           read: false,
+          request: newRequest.id,
+          service: service.id,
+        });
+        queryClient.invalidateQueries({
+          queryKey: notificationsKeys.byUser(service.provider),
+        });
+        queryClient.invalidateQueries({
+          queryKey: notificationsKeys.unreadCount(service.provider),
         });
       } catch (err) {
-        console.warn("Failed to create notification:", err);
+        console.log("Failed to create notification:", err);
       }
 
       console.log("New request created:", newRequest);
@@ -171,7 +210,9 @@ export default function RequestForm({
         )}
         <View style={{ height: keyboardVisible ? offsetHeight : 0 }}></View>
         <Button
-          loading={createRequestMutation.isPending || updateRequestMutation.isPending}
+          loading={
+            createRequestMutation.isPending || updateRequestMutation.isPending
+          }
           title="Enviar"
           onPress={onSubmit}
         />

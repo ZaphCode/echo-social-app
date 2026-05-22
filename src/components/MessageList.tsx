@@ -1,9 +1,12 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ChatMessage } from "@/chat/types";
 import { useChatSync } from "@/chat/ChatSyncProvider";
 import useChatMessages from "@/chat/useChatMessages";
+import { markRequestMessagesRead } from "@/chat/messages";
+import { chatMessagesKeys } from "@/chat/sync";
 import { useAuthCtx } from "@/context/Auth";
 import Text from "./ui/Text";
 import MessageField from "./MessageField";
@@ -18,9 +21,34 @@ type Props = {
 
 export default function MessageList({ requestId }: Props) {
   const { user } = useAuthCtx();
+  const queryClient = useQueryClient();
   const { isOnline, retryMessage } = useChatSync();
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
   const messagesQuery = useChatMessages(requestId);
+
+  useEffect(() => {
+    if (!messagesQuery.data) return;
+
+    const latestVisibleTimestamp = messagesQuery.data.reduce(
+      (latest, message) =>
+        Math.max(latest, new Date(message.created_at_client).getTime()),
+      Date.now()
+    );
+
+    markRequestMessagesRead({
+      requestId,
+      userId: user.id,
+      readAtClient: new Date(latestVisibleTimestamp).toISOString(),
+    })
+      .then(() => {
+        queryClient.invalidateQueries({
+          queryKey: chatMessagesKeys.unreadCountsForUser(user.id),
+        });
+      })
+      .catch(() => {
+        // Reading state is best-effort; the chat should still render normally.
+      });
+  }, [messagesQuery.data, queryClient, requestId, user.id]);
 
   if (messagesQuery.isPending)
     return (

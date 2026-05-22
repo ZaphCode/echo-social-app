@@ -13,6 +13,10 @@ import {
 export const chatMessagesKeys = {
   all: ["chatMessages"] as const,
   byRequest: (requestId: string) => ["chatMessages", "request", requestId] as const,
+  unreadCountsForUser: (userId: string) =>
+    ["chatMessages", "unreadCounts", userId] as const,
+  unreadCounts: (userId: string, requestIds?: string[]) =>
+    [...chatMessagesKeys.unreadCountsForUser(userId), requestIds?.join(",") ?? "all"] as const,
 };
 
 type FlushPendingMessagesOptions = {

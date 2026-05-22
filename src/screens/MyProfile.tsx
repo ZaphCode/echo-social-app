@@ -20,9 +20,9 @@ import useColorScheme from "@/hooks/useColorScheme";
 
 export default function MyProfile() {
   const { user } = useAuthCtx();
+  const { colors } = useColorScheme();
   const logout = useLogout();
   const navigation = useNavigation();
-  const { colors } = useColorScheme();
   const [profile, profileState] = useProfile(user);
 
   const containerStyle = {
@@ -32,7 +32,6 @@ export default function MyProfile() {
 
   const onLogout = async () => {
     await logout();
-    navigation.navigate("Auth", { screen: "SignIn" });
   };
 
   const goToServiceCreation = () => {
@@ -48,7 +47,10 @@ export default function MyProfile() {
 
   if (profileState.status === "loading") {
     return (
-      <SafeAreaView style={[containerStyle, { justifyContent: "center" }]}>
+      <SafeAreaView
+        edges={["top"]}
+        style={[containerStyle, { justifyContent: "center" }]}
+      >
         <Loader />
       </SafeAreaView>
     );
@@ -56,14 +58,14 @@ export default function MyProfile() {
 
   if (!profile || profileState.status === "error") {
     return (
-      <SafeAreaView style={containerStyle}>
+      <SafeAreaView edges={["top"]} style={containerStyle}>
         <ProfileError />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={containerStyle}>
+    <SafeAreaView edges={["top"]} style={containerStyle}>
       <ScrollView
         style={{ width: "100%" }}
         contentContainerStyle={{ alignItems: "center", paddingBottom: 20 }}

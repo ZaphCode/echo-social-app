@@ -19,6 +19,7 @@ import ReviewForm from "@/components/ReviewForm";
 import useCheckReviews from "@/hooks/useCheckReviews";
 import { useAuthCtx } from "@/context/Auth";
 import useColorScheme from "@/hooks/useColorScheme";
+import useChatPresence from "@/hooks/useChatPresence";
 
 type Props = StaticScreenProps<{ request: ServiceRequestWithRelations }>;
 
@@ -34,6 +35,14 @@ export default function Chatroom({ route }: Props) {
   const [offerModalVisible, openOfferModal, closeOfferModal] = useModal();
   const [reviewModalVisible, openReviewModal, closeReviewModal] = useModal();
   const { hasReviewed, markAsReviewed } = useCheckReviews(authUser, request);
+  const presentUserIds = useChatPresence(request.id, authUser.id);
+  const offerRecipient =
+    authUser.id === client.id
+      ? { recipientId: provider.id, recipientType: "provider" as const }
+      : { recipientId: client.id, recipientType: "client" as const };
+  const isOfferRecipientInChat = presentUserIds.includes(
+    offerRecipient.recipientId
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -50,6 +59,7 @@ export default function Chatroom({ route }: Props) {
             openOfferFn={openOfferModal}
             openReviewFn={openReviewModal}
             hasReviewed={hasReviewed}
+            shouldNotifyCounterparty={!isOfferRecipientInChat}
           />
         </View>
         <View style={styles.messageList}>
@@ -61,6 +71,9 @@ export default function Chatroom({ route }: Props) {
             <RequestForm
               service={service}
               requestId={request.id}
+              offerNotification={
+                isOfferRecipientInChat ? undefined : offerRecipient
+              }
               onSuccess={closeOfferModal}
             />
           </View>

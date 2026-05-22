@@ -16,7 +16,7 @@ export default function useHealthCheck() {
       .limit(1)
       .then(({ error }) => {
         if (error) {
-          console.warn("Supabase health check failed:", error.message);
+          console.log("Supabase health check failed:", error.message);
           // Optionally navigate to an error screen
           // navigation.navigate("ChangeApi");
         }

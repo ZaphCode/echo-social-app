@@ -27,6 +27,7 @@ export default function NotificationList() {
   const readMutation = useMutation({
     mutationFn: markNotificationAsRead,
   });
+
   const { mutateAsync: markAsRead } = readMutation;
 
   useEffect(() => {
@@ -36,13 +37,22 @@ export default function NotificationList() {
       .map((notification) => notification.id);
 
     if (notificationsQuery.isSuccess && unreadIds.length > 0) {
-      Promise.all(unreadIds.map((id) => markAsRead(id))).then(() =>
+      Promise.all(unreadIds.map((id) => markAsRead(id))).then(() => {
         queryClient.invalidateQueries({
           queryKey: notificationsKeys.byUser(user.id),
-        })
-      );
+        });
+        queryClient.invalidateQueries({
+          queryKey: notificationsKeys.unreadCount(user.id),
+        });
+      });
     }
-  }, [markAsRead, notificationsQuery.data, notificationsQuery.isSuccess, queryClient, user.id]);
+  }, [
+    markAsRead,
+    notificationsQuery.data,
+    notificationsQuery.isSuccess,
+    queryClient,
+    user.id,
+  ]);
 
   if (notificationsQuery.isPending)
     return (
@@ -60,7 +70,7 @@ export default function NotificationList() {
       keyExtractor={(item) => item.id}
       showsVerticalScrollIndicator={false}
       ListEmptyComponent={EmptyListComponent}
-      ItemSeparatorComponent={() => <Divider />}
+      ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
     />
   );
 }

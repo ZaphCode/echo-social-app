@@ -1,26 +1,39 @@
 import { FlatList, View, StyleSheet } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   listAllUserRequests,
   serviceRequestsKeys,
 } from "@/api/serviceRequests";
+import useUnreadMessageCounts from "@/chat/useUnreadMessageCounts";
+import { chatMessagesKeys } from "@/chat/sync";
 import { theme } from "@/theme/theme";
 import Text from "./ui/Text";
 import RequestCard from "./RequestCard";
 import Loader from "./ui/Loader";
-import { useNavigation } from "@react-navigation/native";
 import Button from "./ui/Button";
 import { useAuthCtx } from "@/context/Auth";
 import useColorScheme from "@/hooks/useColorScheme";
 
 export default function RequestsList() {
   const { user } = useAuthCtx();
+  const queryClient = useQueryClient();
   const requestsQuery = useQuery({
     queryKey: serviceRequestsKeys.allForUser(user.id),
     queryFn: () => listAllUserRequests(user.id),
   });
+  const unreadCountsQuery = useUnreadMessageCounts(requestsQuery.data, user.id);
+
+  useFocusEffect(
+    useCallback(() => {
+      queryClient.invalidateQueries({
+        queryKey: chatMessagesKeys.unreadCountsForUser(user.id),
+      });
+    }, [queryClient, user.id])
+  );
 
   if (requestsQuery.isPending)
     return (
@@ -34,7 +47,12 @@ export default function RequestsList() {
   return (
     <FlatList
       data={requestsQuery.data}
-      renderItem={({ item }) => <RequestCard request={item} />}
+      renderItem={({ item }) => (
+        <RequestCard
+          request={item}
+          unreadCount={unreadCountsQuery.data?.[item.id] ?? 0}
+        />
+      )}
       keyExtractor={(item) => item.id}
       showsVerticalScrollIndicator={false}
       ListEmptyComponent={EmptyRequestsComponent}

@@ -30,6 +30,16 @@ export async function initChatDatabase(db: SQLiteDatabase) {
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_messages_server_id
       ON chat_messages (server_id);
+
+    CREATE TABLE IF NOT EXISTS chat_read_states (
+      request_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      read_at_client TEXT NOT NULL,
+      PRIMARY KEY (request_id, user_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_chat_read_states_user
+      ON chat_read_states (user_id);
   `);
 }
 

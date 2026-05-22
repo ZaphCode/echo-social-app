@@ -57,7 +57,7 @@ export default function SignIn() {
               : require("@Assets/app-logo-black.png")
           }
           contentFit="contain"
-          style={{ width: 130, height: 50, marginBottom: 20 }}
+          style={{ width: 200, height: 110, marginBottom: 20 }}
         />
       </View>
       <View style={{ gap: 5, alignItems: "center" }}>

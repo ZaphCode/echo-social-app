@@ -1,12 +1,21 @@
 import { Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Foundation, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { IndexStack } from "./Index";
 import MyProfile from "@/screens/MyProfile";
 import Notifications from "@/screens/Notifications";
 import Requests from "@/screens/Requests";
 import useColorScheme from "@/hooks/useColorScheme";
+import { theme } from "@/theme/theme";
+import {
+  countUnreadNotificationsByUser,
+  notificationsKeys,
+} from "@/api/notifications";
+import { useAuthCtx } from "@/context/Auth";
+import useSubscription from "@/hooks/useSubscription";
+import { Notification } from "@/models/Notification";
 
 type TabsParamList = {
   Home: undefined;
@@ -19,6 +28,24 @@ const Tab = createBottomTabNavigator<TabsParamList>();
 
 export function Tabs() {
   const { colors } = useColorScheme();
+  const { user } = useAuthCtx();
+  const queryClient = useQueryClient();
+  const unreadNotificationsQuery = useQuery({
+    queryKey: notificationsKeys.unreadCount(user.id),
+    queryFn: () => countUnreadNotificationsByUser(user.id),
+  });
+  const unreadNotifications = unreadNotificationsQuery.data ?? 0;
+
+  useSubscription<Notification>("notification", user.id, async ({ record }) => {
+    if (record.user !== user.id) return;
+
+    await queryClient.invalidateQueries({
+      queryKey: notificationsKeys.byUser(user.id),
+    });
+    await queryClient.invalidateQueries({
+      queryKey: notificationsKeys.unreadCount(user.id),
+    });
+  });
 
   return (
     <Tab.Navigator
@@ -73,6 +100,17 @@ export function Tabs() {
         component={Notifications}
         options={{
           tabBarLabel: "Notificaciones",
+          tabBarBadge:
+            unreadNotifications > 0
+              ? unreadNotifications > 99
+                ? "99+"
+                : unreadNotifications
+              : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: colors.redError,
+            color: theme.colors.textOnBrand,
+            fontFamily: theme.fontFamily.bold,
+          },
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="bell"

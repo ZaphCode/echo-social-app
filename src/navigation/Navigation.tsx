@@ -9,25 +9,25 @@ import { MainStack } from "./stacks/Main";
 import ChangeApi from "@/screens/ChangeApi";
 import usePBCheck from "@/hooks/usePBCheck";
 import { theme } from "@/theme/theme";
+import { getRootStackAccess } from "./rootAccess";
 
 const RootStack = createNativeStackNavigator({
   screenOptions: {
     headerShown: false,
   },
-  initialRouteName: "Auth",
   screens: {
     Main: {
       screen: MainStack,
       if() {
         // usePBCheck();
-        return useAuthCtx().authenticated;
+        return getRootStackAccess(useAuthCtx().authenticated).canShowMain;
       },
     },
     Auth: {
       screen: AuthStack,
       if() {
         // usePBCheck();
-        return true;
+        return getRootStackAccess(useAuthCtx().authenticated).canShowAuth;
       },
     },
     ChangeApi: {

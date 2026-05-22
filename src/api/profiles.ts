@@ -85,7 +85,7 @@ export async function updateProfileAvatar(userId: string, avatarPath: string) {
   }
 
   if (authUser.id !== userId) {
-    console.warn(
+    console.log(
       `[updateProfileAvatar] Auth user mismatch. Expected ${userId}, using ${authUser.id} instead.`,
     );
   }

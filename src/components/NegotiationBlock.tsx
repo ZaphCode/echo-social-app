@@ -19,17 +19,21 @@ type Props = {
   openOfferFn: () => void;
   openReviewFn: () => void;
   hasReviewed: boolean;
+  shouldNotifyCounterparty: boolean;
 };
 
 export default function NegotiationBlock({
   openOfferFn,
   openReviewFn,
   hasReviewed,
+  shouldNotifyCounterparty,
 }: Props) {
   const { user: authUser } = useAuthCtx();
   const { show } = useAlertCtx();
   const { request, client, provider, setRequest } = useNegotiationCtx();
-  const statusModifier = useRequestStatus(authUser);
+  const statusModifier = useRequestStatus(authUser, {
+    shouldNotifyCounterparty,
+  });
   const { colors } = useColorScheme();
 
   useSubscription<ServiceRequest>(

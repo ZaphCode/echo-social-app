@@ -4,6 +4,11 @@ import { throwIfError } from "./common";
 
 const messageSelect = "*";
 
+export type IncomingMessageSummary = Pick<
+  Message,
+  "id" | "request" | "sender" | "created_at" | "created_at_client"
+>;
+
 export type UpsertRemoteMessageInput = Pick<
   Message,
   "content" | "sender" | "request"
@@ -22,6 +27,23 @@ export async function listRemoteMessagesByRequest(requestId: string) {
   throwIfError(error);
 
   return (data ?? []) as Message[];
+}
+
+export async function listIncomingMessagesByRequests(
+  requestIds: string[],
+  userId: string
+) {
+  if (requestIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("message")
+    .select("id, request, sender, created_at, created_at_client")
+    .in("request", requestIds)
+    .neq("sender", userId);
+
+  throwIfError(error);
+
+  return (data ?? []) as IncomingMessageSummary[];
 }
 
 export async function upsertRemoteMessage(input: UpsertRemoteMessageInput) {
