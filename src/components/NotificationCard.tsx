@@ -75,6 +75,11 @@ function getIconAndColor(type: NotificationWithUser["type"], read?: boolean) {
         icon: "account-plus",
         color: colors.primaryBlue,
       };
+    case "PROVIDER:NEW_APPLICATION":
+      return {
+        icon: "briefcase-check",
+        color: colors.primaryBlue,
+      };
     case "CLIENT:NEW_OFFER":
       return { icon: "handshake", color: "#e6b800" };
     case "PROVIDER:NEW_OFFER":

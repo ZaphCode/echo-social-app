@@ -46,6 +46,7 @@ export default function RequestsList() {
 
   return (
     <FlatList
+      style={styles.list}
       data={requestsQuery.data}
       renderItem={({ item }) => (
         <RequestCard
@@ -56,7 +57,7 @@ export default function RequestsList() {
       keyExtractor={(item) => item.id}
       showsVerticalScrollIndicator={false}
       ListEmptyComponent={EmptyRequestsComponent}
-      contentContainerStyle={{ flexGrow: 1 }}
+      contentContainerStyle={styles.contentContainer}
     />
   );
 }
@@ -65,7 +66,10 @@ function EmptyRequestsComponent() {
   const navigation = useNavigation();
   const { colors } = useColorScheme();
   const handleGoToServices = () => {
-    navigation.navigate("Main", { screen: "Tabs", params: { screen: "Home" } });
+    (navigation.navigate as any)("Main", {
+      screen: "Tabs",
+      params: { screen: "Home" },
+    });
   };
 
   return (
@@ -89,8 +93,8 @@ function EmptyRequestsComponent() {
         size={theme.fontSizes.md}
         style={{ textAlign: "center", opacity: 0.8, marginBottom: 24 }}
       >
-        Aún no tienes solicitudes de servicio. ¡Explora servicios y haz tu
-        primera solicitud!
+        Aún no tienes solicitudes o aplicaciones. Explora servicios y
+        contrataciones para iniciar una negociación.
       </Text>
       <Button
         title="Buscar servicios"
@@ -131,6 +135,13 @@ function ErrorRequestComponent() {
 }
 
 const styles = StyleSheet.create({
+  list: {
+    flex: 1,
+  },
+  contentContainer: {
+    flexGrow: 1,
+    paddingBottom: 0,
+  },
   centeredContainer: {
     alignItems: "center",
     justifyContent: "center",

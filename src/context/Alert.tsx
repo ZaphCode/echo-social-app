@@ -5,7 +5,7 @@ type AlertParams = {
   title: string;
   message: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  onConfirm?: () => void;
+  onConfirm?: () => void | Promise<void>;
   iconColor?: string;
 };
 

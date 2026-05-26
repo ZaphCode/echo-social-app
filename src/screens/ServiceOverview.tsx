@@ -48,12 +48,12 @@ export default function ServiceOverview({ route }: Props) {
 
   const goToUserProfile = () => {
     if (user.id === service.provider) {
-      return navigation.navigate("Main", {
+      return (navigation.navigate as any)("Main", {
         screen: "Tabs",
         params: { screen: "Profile" },
       });
     }
-    navigation.navigate("Main", {
+    (navigation.navigate as any)("Main", {
       screen: "UserProfile",
       params: {
         user: service.provider_profile || {
@@ -66,7 +66,7 @@ export default function ServiceOverview({ route }: Props) {
 
   const requestOrGotoMessage = async () => {
     if (!activeRequest) return openRequestModal();
-    return navigation.navigate("Main", {
+    return (navigation.navigate as any)("Main", {
       screen: "Chatroom",
       params: { request: activeRequest },
     });

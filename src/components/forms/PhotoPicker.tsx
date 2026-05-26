@@ -11,6 +11,7 @@ import { Controller, Control, RegisterOptions } from "react-hook-form";
 import { Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
+import { Contracting } from "@/models/Contracting";
 import useColorScheme from "@/hooks/useColorScheme";
 import useImage from "@/hooks/useImage";
 import { SlideModal } from "../ui/SlideModal";
@@ -24,10 +25,11 @@ interface Props {
   control: Control<any>;
   name: string;
   rules?: RegisterOptions;
-  service?: Service;
+  service?: Pick<Service, "photos"> | Pick<Contracting, "photos">;
+  label?: string;
 }
 
-function PhotoPicker({ control, name, rules, service }: Props) {
+function PhotoPicker({ control, name, rules, service, label }: Props) {
   const { colors } = useColorScheme();
   const [visible, open, close] = useModal();
 
@@ -119,7 +121,7 @@ function PhotoPicker({ control, name, rules, service }: Props) {
 
         return (
           <View style={styles.photosSection}>
-            <Text style={styles.label}>Fotos del servicio</Text>
+            <Text style={styles.label}>{label ?? "Fotos del servicio"}</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}

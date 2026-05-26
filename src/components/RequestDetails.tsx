@@ -8,6 +8,8 @@ import Divider from "./ui/Divider";
 import InfoRow from "./InfoRow";
 import useColorScheme from "@/hooks/useColorScheme";
 import StorageImage from "./ui/StorageImage";
+import useAppTheme from "@/hooks/useAppTheme";
+import { useNegotiationCtx } from "@/context/Negotiation";
 
 type Props = {
   client: User;
@@ -16,13 +18,16 @@ type Props = {
 };
 
 export default function RequestDetails({ client, provider, request }: Props) {
+  const { theme } = useAppTheme();
+  const { subject } = useNegotiationCtx();
+  const requesterLabel = subject.type === "contracting" ? "Publicador" : "Cliente";
   return (
     <View style={styles.container}>
       {/* Notas */}
       <Text
         fontFamily="bold"
         size={theme.fontSizes.xl}
-        color={"white"}
+        color={theme.colors.text}
         style={{ marginBottom: 7, textAlign: "center" }}
       >
         Detalles de la solicitud
@@ -30,7 +35,7 @@ export default function RequestDetails({ client, provider, request }: Props) {
       <View style={styles.usersRow}>
         <UserMiniCard
           id={client.id}
-          label="Cliente"
+          label={requesterLabel}
           name={client.name}
           avatar={client.avatar}
         />
@@ -65,14 +70,18 @@ function UserMiniCard({
   name: string;
   avatar?: string;
 }) {
-  const { colors } = useColorScheme();
+  const { theme } = useAppTheme();
   return (
     <View style={styles.userCard}>
       <StorageImage bucket="avatars" path={avatar} style={styles.avatar} />
-      <Text color={colors.lightGray} size={12}>
+      <Text color={theme.colors.lightGray} size={12}>
         {label}
       </Text>
-      <Text color="white" numberOfLines={1} style={{ fontWeight: "bold" }}>
+      <Text
+        color={theme.colors.text}
+        numberOfLines={1}
+        style={{ fontWeight: "bold" }}
+      >
         {name}
       </Text>
     </View>

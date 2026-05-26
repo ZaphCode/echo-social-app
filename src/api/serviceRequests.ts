@@ -4,7 +4,7 @@ import { throwIfError } from "./common";
 import { ServiceRequestWithRelations } from "./types";
 
 const serviceRequestSelect =
-  "*, service_detail:service!service(*, provider_profile:profiles!provider(*)), client_profile:profiles!client(*)";
+  "*, service_detail:service!service(*, provider_profile:profiles!provider(*)), contracting_detail:contracting!contracting(*, owner_profile:profiles!owner(*)), client_profile:profiles!client(*), provider_profile:profiles!provider(*)";
 
 export const serviceRequestsKeys = {
   all: ["serviceRequests"] as const,
@@ -12,14 +12,18 @@ export const serviceRequestsKeys = {
   allForUser: (userId: string) => ["serviceRequests", "user", userId] as const,
   byServiceAndClient: (serviceId: string, clientId: string) =>
     ["serviceRequests", "service", serviceId, "client", clientId] as const,
+  byContractingAndProvider: (contractingId: string, providerId: string) =>
+    ["serviceRequests", "contracting", contractingId, "provider", providerId] as const,
   finishedForUser: (userId: string) =>
     ["serviceRequests", "finished", userId] as const,
   detail: (requestId: string) => ["serviceRequests", "detail", requestId] as const,
 };
 
 export type CreateServiceRequestInput = {
-  serviceId: string;
+  serviceId?: string;
+  contractingId?: string;
   clientId: string;
+  providerId: string;
   lastOfferUserId: string;
   agreedPrice: number;
   agreedDate: string;
@@ -54,35 +58,15 @@ export async function listClientRequests(clientId: string) {
 }
 
 export async function listAllUserRequests(userId: string) {
-  const { data: clientData, error: clientError } = await supabase
+  const { data, error } = await supabase
     .from("service_request")
     .select(serviceRequestSelect)
-    .eq("client", userId)
+    .or(`client.eq.${userId},provider.eq.${userId}`)
     .order("updated_at", { ascending: false });
 
-  throwIfError(clientError);
+  throwIfError(error);
 
-  const { data: providerData, error: providerError } = await supabase
-    .from("service_request")
-    .select(
-      "*, service_detail:service!inner(*, provider_profile:profiles!provider(*)), client_profile:profiles!client(*)"
-    )
-    .eq("service_detail.provider", userId)
-    .order("updated_at", { ascending: false });
-
-  throwIfError(providerError);
-
-  const merged = [...(clientData ?? []), ...(providerData ?? [])];
-  const uniqueIds = new Set<string>();
-  const unique = merged.filter((item) => {
-    if (uniqueIds.has(item.id)) return false;
-    uniqueIds.add(item.id);
-    return true;
-  });
-
-  return unique.sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-  ) as ServiceRequestWithRelations[];
+  return (data ?? []) as ServiceRequestWithRelations[];
 }
 
 export async function listServiceRequestsForClient(
@@ -100,10 +84,39 @@ export async function listServiceRequestsForClient(
   return (data ?? []) as ServiceRequestWithRelations[];
 }
 
+export async function listContractingApplicationsForProvider(
+  contractingId: string,
+  providerId: string
+) {
+  const { data, error } = await supabase
+    .from("service_request")
+    .select(serviceRequestSelect)
+    .eq("contracting", contractingId)
+    .eq("provider", providerId);
+
+  throwIfError(error);
+
+  return (data ?? []) as ServiceRequestWithRelations[];
+}
+
+export async function getServiceRequestById(requestId: string) {
+  const { data, error } = await supabase
+    .from("service_request")
+    .select(serviceRequestSelect)
+    .eq("id", requestId)
+    .single();
+
+  throwIfError(error);
+
+  return data as ServiceRequestWithRelations;
+}
+
 export async function createServiceRequest(input: CreateServiceRequestInput) {
   const payload = {
-    service: input.serviceId,
+    service: input.serviceId ?? null,
+    contracting: input.contractingId ?? null,
     client: input.clientId,
+    provider: input.providerId,
     last_offer_user: input.lastOfferUserId,
     agreed_price: input.agreedPrice,
     agreed_date: input.agreedDate,
@@ -140,12 +153,26 @@ export async function updateServiceRequest(
   return data as ServiceRequestWithRelations;
 }
 
+export async function finalizeRequestCompletion(requestId: string) {
+  const { data, error } = await supabase.rpc("finalize_request_completion", {
+    request_id: requestId,
+  });
+
+  throwIfError(error);
+
+  return data as {
+    did_increment_jobs: boolean;
+    did_close_contracting: boolean;
+    contracting_id?: string | null;
+  };
+}
+
 export async function listFinishedRequestsForUser(userId: string) {
   const { data, error } = await supabase
     .from("service_request")
     .select(serviceRequestSelect)
     .eq("agreement_state", "FINISHED")
-    .or(`client.eq.${userId},service.provider.eq.${userId}`);
+    .or(`client.eq.${userId},provider.eq.${userId}`);
 
   throwIfError(error);
 

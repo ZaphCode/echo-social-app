@@ -1,27 +1,14 @@
-import useProfile from "./useProfile";
 import { User } from "@/models/User";
-import { ProviderProfileWithCategory } from "@/api/types";
-import { incrementProviderJobsDone } from "@/api/profiles";
+import { finalizeRequestCompletion } from "@/api/serviceRequests";
 
 export default function useJobsDone(provider: User) {
-  const [profile, { status }] = useProfile(provider);
-
-  async function addJob() {
+  async function addJob(requestId?: string) {
     if (provider.role !== "provider") return;
-    if (!profile || status !== "success") return;
-    if (!("jobs_done" in profile)) return;
+    if (!requestId) return;
 
-    const providerProfile = profile as ProviderProfileWithCategory;
-    const result = await incrementProviderJobsDone(
-      providerProfile.id,
-      providerProfile.jobs_done
-    ).catch(() => null);
+    const result = await finalizeRequestCompletion(requestId).catch(() => null);
 
     if (!result) return console.error("Failed to update jobs done count");
-
-    console.log(
-      `Jobs updated successfully: ${providerProfile.jobs_done} -> ${result.jobs_done}`
-    );
   }
 
   return { addJob };

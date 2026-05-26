@@ -101,6 +101,20 @@ export async function uploadServiceImages(
   );
 }
 
+export async function uploadContractingImages(ownerId: string, photos: string[]) {
+  return Promise.all(
+    photos.map(async (photo, index) => {
+      if (photo.startsWith("file://")) {
+        const { extension, contentType } = getFileMetadata(photo);
+        const filePath = `${ownerId}/contracting_${Date.now()}_${index}.${extension}`;
+        return uploadImage("service-photos", filePath, photo, contentType);
+      }
+
+      return normalizeStoragePath("service-photos", photo);
+    })
+  );
+}
+
 function getFileMetadata(uri: string) {
   const normalizedUri = uri.split("?")[0].toLowerCase();
 

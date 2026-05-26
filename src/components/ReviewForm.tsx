@@ -22,20 +22,36 @@ type Props = {
 export default function ReviewForm({ onSuccess }: Props) {
   const { user: authUser } = useAuthCtx();
   const { colors } = useColorScheme();
-  const { request, client, provider, service } = useNegotiationCtx();
+  const { request, client, provider, subject } = useNegotiationCtx();
   const { show } = useAlertCtx();
   const queryClient = useQueryClient();
 
-  const theOther = authUser.id === client.id ? provider : client;
-  const reviewType = authUser.id === client.id ? "AS_CLIENT" : "AS_PROVIDER";
+  const theOther =
+    subject.type === "contracting"
+      ? provider
+      : authUser.id === client.id
+        ? provider
+        : client;
+  const reviewType =
+    subject.type === "contracting"
+      ? "AS_CLIENT"
+      : authUser.id === client.id
+        ? "AS_CLIENT"
+        : "AS_PROVIDER";
   const reviewMutation = useMutation({
     mutationFn: createReview,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: reviewsKeys.byService(service.id),
+        queryKey:
+          subject.type === "service"
+            ? reviewsKeys.byService(subject.id)
+            : reviewsKeys.byReviewerAndContracting(authUser.id, subject.id),
       });
       queryClient.invalidateQueries({
-        queryKey: reviewsKeys.byReviewerAndService(authUser.id, service.id),
+        queryKey:
+          subject.type === "service"
+            ? reviewsKeys.byReviewerAndService(authUser.id, subject.id)
+            : reviewsKeys.byReviewerAndContracting(authUser.id, subject.id),
       });
       queryClient.invalidateQueries({
         queryKey: reviewsKeys.byReviewedUser(theOther.id),
@@ -56,7 +72,9 @@ export default function ReviewForm({ onSuccess }: Props) {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await reviewMutation.mutateAsync({
-        service: service.id,
+        service: subject.type === "service" ? subject.id : undefined,
+        contracting: subject.type === "contracting" ? subject.id : undefined,
+        request: request.id,
         reviewer: authUser.id,
         reviewed: theOther.id,
         rating: data.rating,
@@ -76,11 +94,12 @@ export default function ReviewForm({ onSuccess }: Props) {
     try {
       await notificationMutation.mutateAsync({
         user: theOther.id,
-        message: `*${authUser.name}* dejó una valoración para *${service.name}*`,
+        message: `*${authUser.name}* dejó una valoración para *${subject.name}*`,
         type: "SYSTEM:INFO",
         read: false,
         request: request.id,
-        service: service.id,
+        service: subject.type === "service" ? subject.id : undefined,
+        contracting: subject.type === "contracting" ? subject.id : undefined,
       });
       queryClient.invalidateQueries({
         queryKey: notificationsKeys.byUser(theOther.id),

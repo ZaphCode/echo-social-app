@@ -3,6 +3,7 @@ import { Tabs } from "./Tabs";
 import Chatroom from "@/screens/Chatroom";
 import { theme } from "@/theme/theme";
 import ServiceEditor from "@/screens/ServiceEditor";
+import ContractingEditor from "@/screens/ContractingEditor";
 import UserProfile from "@/screens/UserProfile";
 import Privacy from "@/screens/Privacy";
 
@@ -23,6 +24,22 @@ export const MainStack = createNativeStackNavigator({
       options: {
         headerShown: true,
         title: "Editor de Servicio",
+        headerTitleStyle: {
+          color: theme.colors.textOnBrand,
+          fontSize: theme.fontSizes.lg,
+          fontFamily: theme.fontFamily.bold,
+        },
+        headerTintColor: theme.colors.textOnBrand,
+        headerStyle: {
+          backgroundColor: theme.colors.brandSurface,
+        },
+      },
+    },
+    ContractingEditor: {
+      screen: ContractingEditor,
+      options: {
+        headerShown: true,
+        title: "Editor de Contratación",
         headerTitleStyle: {
           color: theme.colors.textOnBrand,
           fontSize: theme.fontSizes.lg,
