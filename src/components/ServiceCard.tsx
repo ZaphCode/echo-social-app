@@ -2,12 +2,15 @@ import { View, StyleSheet, Dimensions, Pressable } from "react-native";
 import React from "react";
 import Text from "./ui/Text";
 import { ServiceWithProvider } from "@/api/types";
-import { Feather } from "@expo/vector-icons";
+import { AntDesign, Feather } from "@expo/vector-icons";
 import { theme } from "@/theme/theme";
 import { useNavigation } from "@react-navigation/native";
 import { User } from "@/models/User";
 import useColorScheme from "@/hooks/useColorScheme";
 import StorageImage from "./ui/StorageImage";
+import { formatRelativeDate } from "@/utils/format";
+import { useQuery } from "@tanstack/react-query";
+import { getServiceReviewSummary, reviewsKeys } from "@/api/reviews";
 
 const DEVICE_WIDTH = Dimensions.get("window").width;
 
@@ -19,9 +22,15 @@ type Props = {
 export default function ServiceCard({ service, authUser }: Props) {
   const navigation = useNavigation();
   const isOwnerProvider = authUser.id === service.provider;
+  const reviewSummaryQuery = useQuery({
+    queryKey: reviewsKeys.serviceSummary(service.id),
+    queryFn: () => getServiceReviewSummary(service.id),
+    staleTime: 1000 * 60 * 5,
+  });
+  const reviewSummary = reviewSummaryQuery.data;
 
   const handlePress = () => {
-    navigation.navigate("Main", {
+    (navigation.navigate as any)("Main", {
       screen: "Tabs",
       params: {
         screen: "Home",
@@ -50,7 +59,7 @@ export default function ServiceCard({ service, authUser }: Props) {
         <Pressable
           style={styles.editButton}
           onPress={() =>
-            navigation.navigate("Main", {
+            (navigation.navigate as any)("Main", {
               screen: "ServiceEditor",
               params: { serviceToEdit: service },
             })
@@ -65,6 +74,26 @@ export default function ServiceCard({ service, authUser }: Props) {
         <Text color={colors.text} style={styles.title}>
           {service.name}
         </Text>
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <Feather name="clock" size={13} color={colors.lightGray} />
+            <Text color={colors.lightGray} size={theme.fontSizes.sm}>
+              {formatRelativeDate(service.created_at)}
+            </Text>
+          </View>
+          {reviewSummary && reviewSummary.count > 0 ? (
+            <View style={styles.metaItem}>
+              <AntDesign
+                name="star"
+                size={13}
+                color={theme.colors.primaryBlue}
+              />
+              <Text color={colors.lightGray} size={theme.fontSizes.sm}>
+                {`${reviewSummary.average.toFixed(1)} (${reviewSummary.count})`}
+              </Text>
+            </View>
+          ) : null}
+        </View>
         <View style={styles.footer}>
           <View style={styles.userRow}>
             {isOwnerProvider ? (
@@ -118,15 +147,29 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.md,
     marginBottom: 8,
   },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.spacing.sm,
+    marginBottom: 10,
+  },
+  metaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: theme.spacing.sm,
   },
   userRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    flex: 1,
   },
   username: {
     fontFamily: theme.fontFamily.regular,
@@ -135,6 +178,7 @@ const styles = StyleSheet.create({
   price: {
     color: theme.colors.primaryBlue,
     fontSize: theme.fontSizes.md,
+    fontFamily: theme.fontFamily.bold,
   },
   editButton: {
     position: "absolute",

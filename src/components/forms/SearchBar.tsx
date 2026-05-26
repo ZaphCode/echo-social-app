@@ -19,7 +19,7 @@ export default function SearchBar({ onSearch }: Props) {
   const onSubmit = handleSubmit(({ search }) => {
     if (onSearch) return onSearch(search);
 
-    navigation.navigate("Main", {
+    (navigation.navigate as any)("Main", {
       screen: "Tabs",
       params: {
         screen: "Home",

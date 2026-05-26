@@ -25,7 +25,7 @@ type Props = {
   onRetry: (clientId: string) => Promise<void>;
 };
 
-export default function MessageField({
+function MessageField({
   message,
   currentUserId,
   isOnline,
@@ -34,46 +34,6 @@ export default function MessageField({
   const { colors } = useColorScheme();
   const isSender = message.sender_id === currentUserId;
   const canRetry = isSender && message.sync_status === "failed";
-
-  const styles = StyleSheet.create({
-    container: {
-      maxWidth: "75%",
-      marginVertical: theme.spacing.xs,
-      padding: theme.spacing.sm,
-      borderRadius: 12,
-    },
-    sender: {
-      backgroundColor: colors.secondaryBlue,
-      alignSelf: "flex-end",
-      borderTopRightRadius: 0,
-    },
-    receiver: {
-      backgroundColor: colors.darkGray,
-      alignSelf: "flex-start",
-      borderTopLeftRadius: 0,
-    },
-    text: {
-      fontFamily: theme.fontFamily.regular,
-      fontSize: theme.fontSizes.md,
-    },
-    textSender: {
-      color: "white",
-    },
-    textReceiver: {
-      color: colors.lightGray,
-    },
-    statusContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      alignSelf: isSender ? "flex-end" : "flex-start",
-      marginTop: 6,
-      gap: 4,
-    },
-    metaText: {
-      fontSize: 11,
-      color: isSender ? "rgba(255,255,255,0.72)" : colors.lightGray,
-    },
-  });
 
   const status = getMessageStatus({
     syncStatus: message.sync_status,
@@ -84,20 +44,43 @@ export default function MessageField({
 
   return (
     <Pressable
-      style={[styles.container, isSender ? styles.sender : styles.receiver]}
+      style={[
+        styles.container,
+        isSender
+          ? [
+              styles.sender,
+              { backgroundColor: colors.secondaryBlue },
+            ]
+          : [
+              styles.receiver,
+              { backgroundColor: colors.darkGray },
+            ],
+      ]}
       disabled={!canRetry}
       onPress={() => onRetry(message.client_id)}
     >
       <Text
         style={[
           styles.text,
-          isSender ? styles.textSender : styles.textReceiver,
+          isSender ? styles.textSender : { color: colors.lightGray },
         ]}
       >
         {message.content}
       </Text>
-      <View style={styles.statusContainer}>
-        <Text style={styles.metaText}>{sentTime}</Text>
+      <View
+        style={[
+          styles.statusContainer,
+          isSender ? styles.senderStatus : styles.receiverStatus,
+        ]}
+      >
+        <Text
+          style={[
+            styles.metaText,
+            { color: isSender ? "rgba(255,255,255,0.72)" : colors.lightGray },
+          ]}
+        >
+          {sentTime}
+        </Text>
         {isSender && status ? (
           status.kind === "loading" ? (
             <ActivityIndicator size="small" color={status.color} />
@@ -113,6 +96,20 @@ export default function MessageField({
     </Pressable>
   );
 }
+
+export default React.memo(MessageField, (prev, next) => {
+  return (
+    prev.currentUserId === next.currentUserId &&
+    prev.isOnline === next.isOnline &&
+    prev.onRetry === next.onRetry &&
+    prev.message.local_id === next.message.local_id &&
+    prev.message.client_id === next.message.client_id &&
+    prev.message.server_id === next.message.server_id &&
+    prev.message.content === next.message.content &&
+    prev.message.created_at_client === next.message.created_at_client &&
+    prev.message.sync_status === next.message.sync_status
+  );
+});
 
 function getMessageStatus({
   syncStatus,
@@ -159,3 +156,42 @@ function formatMessageTime(dateString: string) {
     minute: "2-digit",
   });
 }
+
+const styles = StyleSheet.create({
+  container: {
+    maxWidth: "75%",
+    marginVertical: theme.spacing.xs,
+    padding: theme.spacing.sm,
+    borderRadius: 12,
+  },
+  sender: {
+    alignSelf: "flex-end",
+    borderTopRightRadius: 0,
+  },
+  receiver: {
+    alignSelf: "flex-start",
+    borderTopLeftRadius: 0,
+  },
+  text: {
+    fontFamily: theme.fontFamily.regular,
+    fontSize: theme.fontSizes.md,
+  },
+  textSender: {
+    color: "white",
+  },
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+    gap: 4,
+  },
+  senderStatus: {
+    alignSelf: "flex-end",
+  },
+  receiverStatus: {
+    alignSelf: "flex-start",
+  },
+  metaText: {
+    fontSize: 11,
+  },
+});

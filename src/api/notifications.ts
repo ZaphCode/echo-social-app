@@ -16,7 +16,7 @@ export type CreateNotificationInput = Pick<
   Notification,
   "user" | "message" | "type" | "read"
 > &
-  Partial<Pick<Notification, "request" | "service">>;
+  Partial<Pick<Notification, "request" | "service" | "contracting">>;
 
 export async function listNotificationsByUser(userId: string) {
   const { data, error } = await supabase

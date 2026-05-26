@@ -1,6 +1,8 @@
 export type Review = {
   id: string;
-  service: string; // FK: service.id
+  service?: string | null; // FK: service.id
+  contracting?: string | null; // FK: contracting.id
+  request?: string | null; // FK: service_request.id
   reviewer: string; // FK: profiles.id
   reviewed: string; // FK: profiles.id
   comment: string;

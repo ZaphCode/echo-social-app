@@ -13,19 +13,19 @@ import StorageImage from "./ui/StorageImage";
 
 export default function ChatHeader() {
   const { colors } = useColorScheme();
-  const { request, client, provider, service } = useNegotiationCtx();
+  const { request, client, provider, subject } = useNegotiationCtx();
   const navigation = useNavigation();
   const [modalVisible, openModal, closeModal] = useModal();
 
   return (
     <View style={styles.container}>
       <Pressable onPress={navigation.goBack}>
-        <Fontisto name="caret-left" size={24} color="white" />
+        <Fontisto name="caret-left" size={24} color={colors.text} />
       </Pressable>
 
       <StorageImage
         bucket="service-photos"
-        path={service.photos?.[0]}
+        path={subject.photos?.[0]}
         fallbackUri="https://via.placeholder.com/300"
         style={styles.image}
       />
@@ -38,9 +38,9 @@ export default function ChatHeader() {
           color={colors.text}
           numberOfLines={1}
         >
-          {service.name}
+          {subject.name}
         </Text>
-        <Text>{`$${service.base_price}`}</Text>
+        <Text>{`$${subject.base_price}`}</Text>
       </View>
       <Pressable
         onPress={openModal}
@@ -49,7 +49,7 @@ export default function ChatHeader() {
           backgroundColor: colors.darkGray,
         }}
       >
-        <Fontisto name="move-h" size={16} color="white" />
+        <Fontisto name="move-h" size={16} color={colors.text} />
       </Pressable>
       <SlideModal visible={modalVisible} onClose={closeModal}>
         <RequestDetails client={client} provider={provider} request={request} />

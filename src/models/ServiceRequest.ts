@@ -1,7 +1,9 @@
 export type ServiceRequest = {
   id: string;
   client: string; // FK: profiles.id
-  service: string; // FK: service.id
+  provider: string; // FK: profiles.id
+  service?: string | null; // FK: service.id
+  contracting?: string | null; // FK: contracting.id
   last_offer_user: string;
 
   agreed_price: number;
@@ -14,6 +16,7 @@ export type ServiceRequest = {
 
   finished?: string;
   canceled?: string;
+  job_counted_at?: string | null;
 
   requested: string;
   updated_at: string;

@@ -41,6 +41,13 @@ export default function MyProfile() {
     });
   };
 
+  const goToContractingCreation = () => {
+    navigation.navigate("Main", {
+      screen: "ContractingEditor",
+      params: {},
+    });
+  };
+
   useEffect(() => {
     if (profileState.status === "error") onLogout();
   }, [profileState.status]);
@@ -86,6 +93,16 @@ export default function MyProfile() {
             onPress={goToServiceCreation}
           />
         )}
+
+        <Button
+          title="Publicar contratación"
+          style={[
+            styles.newServiceButton,
+            { backgroundColor: colors.darkerGray },
+          ]}
+          labelColor={theme.colors.primaryBlue}
+          onPress={goToContractingCreation}
+        />
 
         <PersonalInfoSection user={user} profile={profile} editable />
 

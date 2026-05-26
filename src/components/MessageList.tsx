@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -24,21 +24,42 @@ export default function MessageList({ requestId }: Props) {
   const queryClient = useQueryClient();
   const { isOnline, retryMessage } = useChatSync();
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
+  const latestReadAtRef = useRef<string | null>(null);
   const messagesQuery = useChatMessages(requestId);
+  const messages = messagesQuery.data ?? [];
+
+  useEffect(() => {
+    latestReadAtRef.current = null;
+  }, [requestId]);
 
   useEffect(() => {
     if (!messagesQuery.data) return;
 
-    const latestVisibleTimestamp = messagesQuery.data.reduce(
-      (latest, message) =>
-        Math.max(latest, new Date(message.created_at_client).getTime()),
-      Date.now()
-    );
+    const latestVisibleTimestamp =
+      messagesQuery.data.length > 0
+        ? messagesQuery.data.reduce(
+            (latest, message) =>
+              Math.max(latest, new Date(message.created_at_client).getTime()),
+            0
+          )
+        : Date.now();
+    const latestVisibleTimestampIso = new Date(
+      latestVisibleTimestamp
+    ).toISOString();
+
+    if (
+      latestReadAtRef.current &&
+      latestReadAtRef.current >= latestVisibleTimestampIso
+    ) {
+      return;
+    }
+
+    latestReadAtRef.current = latestVisibleTimestampIso;
 
     markRequestMessagesRead({
       requestId,
       userId: user.id,
-      readAtClient: new Date(latestVisibleTimestamp).toISOString(),
+      readAtClient: latestVisibleTimestampIso,
     })
       .then(() => {
         queryClient.invalidateQueries({
@@ -49,6 +70,24 @@ export default function MessageList({ requestId }: Props) {
         // Reading state is best-effort; the chat should still render normally.
       });
   }, [messagesQuery.data, queryClient, requestId, user.id]);
+
+  const renderMessage = useCallback(
+    ({ item }: { item: ChatMessage }) => (
+      <MessageField
+        message={item}
+        currentUserId={user.id}
+        isOnline={isOnline}
+        onRetry={retryMessage}
+      />
+    ),
+    [isOnline, retryMessage, user.id]
+  );
+
+  const keyExtractor = useCallback((item: ChatMessage) => item.local_id, []);
+
+  const scrollToEnd = useCallback(() => {
+    flatListRef.current?.scrollToEnd({ animated: false });
+  }, []);
 
   if (messagesQuery.isPending)
     return (
@@ -62,26 +101,49 @@ export default function MessageList({ requestId }: Props) {
   return (
     <FlatList
       ref={flatListRef}
-      data={messagesQuery.data ?? []}
-      keyExtractor={(item) => item.local_id}
+      data={messages}
+      keyExtractor={keyExtractor}
       showsVerticalScrollIndicator={false}
-      renderItem={({ item }) => (
-        <MessageField
-          message={item}
-          currentUserId={user.id}
-          isOnline={isOnline}
-          onRetry={retryMessage}
-        />
-      )}
-      ListEmptyComponent={EmptyMessages}
+      renderItem={renderMessage}
+      extraData={isOnline}
+      ListHeaderComponent={
+        messagesQuery.isSyncingRemote ? <SyncingMessages /> : null
+      }
+      ListEmptyComponent={
+        messagesQuery.isSyncingRemote ? LoadingMessages : EmptyMessages
+      }
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
       automaticallyAdjustKeyboardInsets
       contentContainerStyle={{ flexGrow: 1 }}
-      onContentSizeChange={() => {
-        flatListRef.current?.scrollToEnd({ animated: false });
-      }}
+      initialNumToRender={16}
+      maxToRenderPerBatch={12}
+      updateCellsBatchingPeriod={60}
+      windowSize={9}
+      removeClippedSubviews
+      onContentSizeChange={scrollToEnd}
     />
+  );
+}
+
+function SyncingMessages() {
+  const { colors } = useColorScheme();
+
+  return (
+    <View style={styles.syncingContainer}>
+      <Loader />
+      <Text color={colors.lightGray} size={theme.fontSizes.sm}>
+        Sincronizando mensajes...
+      </Text>
+    </View>
+  );
+}
+
+function LoadingMessages() {
+  return (
+    <View style={{ padding: 40 }}>
+      <Loader />
+    </View>
   );
 }
 
@@ -158,5 +220,11 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 30,
     opacity: 0.85,
+  },
+  syncingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.xs,
   },
 });

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Modal, StyleSheet, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -11,6 +12,31 @@ export function AlertModal() {
   const { hide, visible, icon, message, title, iconColor, onConfirm } =
     useAlertCtx();
   const { colors } = useColorScheme();
+  const [confirming, setConfirming] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (visible) {
+      setConfirming(false);
+      setErrorMessage(null);
+    }
+  }, [visible]);
+
+  const handleConfirm = async () => {
+    if (!onConfirm || confirming) return;
+
+    setConfirming(true);
+    setErrorMessage(null);
+
+    try {
+      await onConfirm();
+      hide();
+    } catch (error) {
+      setErrorMessage(getConfirmErrorMessage(error));
+    } finally {
+      setConfirming(false);
+    }
+  };
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -37,6 +63,15 @@ export function AlertModal() {
           >
             {message}
           </Text>
+          {errorMessage ? (
+            <Text
+              color={colors.redError}
+              size={theme.fontSizes.sm}
+              style={styles.errorText}
+            >
+              {errorMessage}
+            </Text>
+          ) : null}
           {onConfirm ? (
             <View style={styles.buttonRow}>
               <Button
@@ -46,15 +81,14 @@ export function AlertModal() {
                 }}
                 title={"Cancelar"}
                 labelColor={colors.lightGray}
+                disabled={confirming}
                 onPress={hide}
               />
               <Button
                 style={{ width: "50%" }}
                 title={"Confirmar"}
-                onPress={() => {
-                  onConfirm();
-                  hide();
-                }}
+                loading={confirming}
+                onPress={handleConfirm}
               />
             </View>
           ) : (
@@ -64,6 +98,24 @@ export function AlertModal() {
       </View>
     </Modal>
   );
+}
+
+function getConfirmErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    const normalizedMessage = error.message.toLowerCase();
+
+    if (
+      normalizedMessage.includes("network") ||
+      normalizedMessage.includes("fetch") ||
+      normalizedMessage.includes("offline")
+    ) {
+      return "No pudimos completar la acción porque no hay conexión. Intenta nuevamente cuando vuelvas a estar en línea.";
+    }
+
+    return error.message;
+  }
+
+  return "No pudimos completar la acción. Revisa tu conexión e intenta de nuevo.";
 }
 
 const styles = StyleSheet.create({
@@ -93,5 +145,9 @@ const styles = StyleSheet.create({
     width: "100%",
     gap: 10,
     marginTop: 12,
+  },
+  errorText: {
+    textAlign: "center",
+    marginBottom: 4,
   },
 });

@@ -4,6 +4,7 @@ export type Notification = {
   message: string;
   type:
     | "PROVIDER:NEW_REQUEST"
+    | "PROVIDER:NEW_APPLICATION"
     | "CLIENT:NEW_OFFER"
     | "PROVIDER:NEW_OFFER"
     | "SYSTEM:INFO";
@@ -14,4 +15,5 @@ export type Notification = {
   // Optional FK fields
   request?: string; // FK: service_request.id
   service?: string; // FK: service.id
+  contracting?: string; // FK: contracting.id
 };

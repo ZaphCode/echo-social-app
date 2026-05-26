@@ -29,6 +29,26 @@ export async function listRemoteMessagesByRequest(requestId: string) {
   return (data ?? []) as Message[];
 }
 
+export async function listRemoteMessagesByRequestSince(
+  requestId: string,
+  since: string | null
+) {
+  if (!since) {
+    return listRemoteMessagesByRequest(requestId);
+  }
+
+  const { data, error } = await supabase
+    .from("message")
+    .select(messageSelect)
+    .eq("request", requestId)
+    .or(`created_at_client.gt.${since},created_at.gt.${since}`)
+    .order("created_at_client", { ascending: true });
+
+  throwIfError(error);
+
+  return (data ?? []) as Message[];
+}
+
 export async function listIncomingMessagesByRequests(
   requestIds: string[],
   userId: string

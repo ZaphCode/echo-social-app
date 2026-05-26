@@ -12,7 +12,7 @@ import useAppTheme from "@/hooks/useAppTheme";
 
 interface ButtonProps {
   title: string;
-  onPress: () => void;
+  onPress: () => void | Promise<void>;
   disabled?: boolean;
   loading?: boolean;
   labelColor?: string;

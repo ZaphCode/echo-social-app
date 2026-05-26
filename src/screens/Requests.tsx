@@ -16,6 +16,7 @@ export default function Requests() {
   const queryClient = useQueryClient();
   return (
     <SafeAreaView
+      edges={["top"]}
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       <Title
@@ -32,9 +33,9 @@ export default function Requests() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: theme.spacing.md,
+    flex: 1,
+    paddingHorizontal: theme.spacing.md,
     paddingTop: theme.spacing.tabPT,
-    height: "100%",
     gap: theme.spacing.sm,
   },
 });

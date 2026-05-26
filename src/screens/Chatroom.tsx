@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { reviewsKeys } from "@/api/reviews";
 import { ServiceRequestWithRelations } from "@/api/types";
+import { getRequestProvider, getRequestSubject } from "@/utils/negotiationSubject";
 import { theme } from "@/theme/theme";
 import { SlideModal } from "@/components/ui/SlideModal";
 import { NegotiationProvider } from "@/context/Negotiation";
@@ -27,14 +28,19 @@ export default function Chatroom({ route }: Props) {
   const { colors } = useColorScheme();
   const { user: authUser } = useAuthCtx();
   const { request } = route.params;
-  const service = request.service_detail || ({} as any);
+  const subject = getRequestSubject(request);
+  const service = request.service_detail;
   const client = request.client_profile || ({} as any);
-  const provider = service?.provider_profile || ({} as any);
+  const provider = getRequestProvider(request);
   const queryClient = useQueryClient();
 
   const [offerModalVisible, openOfferModal, closeOfferModal] = useModal();
   const [reviewModalVisible, openReviewModal, closeReviewModal] = useModal();
-  const { hasReviewed, markAsReviewed } = useCheckReviews(authUser, request);
+  const { hasReviewed, markAsReviewed } = useCheckReviews(
+    authUser,
+    request,
+    subject
+  );
   const presentUserIds = useChatPresence(request.id, authUser.id);
   const offerRecipient =
     authUser.id === client.id
@@ -49,6 +55,7 @@ export default function Chatroom({ route }: Props) {
       <NegotiationProvider
         initialRequest={request}
         service={service}
+        subject={subject}
         client={client}
         provider={provider}
       >
@@ -69,7 +76,8 @@ export default function Chatroom({ route }: Props) {
         <SlideModal visible={offerModalVisible} onClose={closeOfferModal}>
           <View style={{ padding: theme.spacing.md }}>
             <RequestForm
-              service={service}
+              service={service ?? undefined}
+              subject={subject}
               requestId={request.id}
               offerNotification={
                 isOfferRecipientInChat ? undefined : offerRecipient
@@ -83,13 +91,16 @@ export default function Chatroom({ route }: Props) {
             onSuccess={() => {
               closeReviewModal();
               queryClient.invalidateQueries({
-                queryKey: reviewsKeys.byService(service.id),
+                queryKey:
+                  subject.type === "service"
+                    ? reviewsKeys.byService(subject.id)
+                    : reviewsKeys.byReviewerAndContracting(authUser.id, subject.id),
               });
               queryClient.invalidateQueries({
-                queryKey: reviewsKeys.byReviewerAndService(
-                  authUser.id,
-                  request.service
-                ),
+                queryKey:
+                  subject.type === "service"
+                    ? reviewsKeys.byReviewerAndService(authUser.id, subject.id)
+                    : reviewsKeys.byReviewerAndContracting(authUser.id, subject.id),
               });
               markAsReviewed();
             }}

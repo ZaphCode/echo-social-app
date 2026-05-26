@@ -1,17 +1,27 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
-  listRemoteMessagesByRequest,
+  listRemoteMessagesByRequestSince,
   subscribeToRemoteMessages,
 } from "@/api/messages";
 import { useAuthCtx } from "@/context/Auth";
-import { listLocalMessagesByRequest, upsertRemoteMessageToLocal } from "./messages";
+import { useChatSync } from "./ChatSyncProvider";
+import {
+  getLatestLocalMessageTimestamp,
+  listLocalMessagesByRequest,
+  upsertRemoteMessageToLocal,
+} from "./messages";
 import { chatMessagesKeys } from "./sync";
 
 export default function useChatMessages(requestId: string) {
   const queryClient = useQueryClient();
   const { authenticated } = useAuthCtx();
+  const { isOnline } = useChatSync();
+  const [isSyncingRemote, setIsSyncingRemote] = useState(false);
+  const isMountedRef = useRef(true);
+  const isSyncingRef = useRef(false);
+  const shouldSyncAgainRef = useRef(false);
 
   const query = useQuery({
     queryKey: chatMessagesKeys.byRequest(requestId),
@@ -19,42 +29,86 @@ export default function useChatMessages(requestId: string) {
   });
 
   useEffect(() => {
-    let mounted = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-    async function bootstrapRemoteMessages() {
-      try {
-        const remoteMessages = await listRemoteMessagesByRequest(requestId);
+  const syncRemoteMessages = useCallback(async () => {
+    if (!authenticated || !isOnline) {
+      setIsSyncingRemote(false);
+      return;
+    }
+
+    if (isSyncingRef.current) {
+      shouldSyncAgainRef.current = true;
+      return;
+    }
+
+    isSyncingRef.current = true;
+    setIsSyncingRemote(true);
+
+    try {
+      do {
+        shouldSyncAgainRef.current = false;
+        const latestLocalTimestamp =
+          await getLatestLocalMessageTimestamp(requestId);
+        const remoteMessages = await listRemoteMessagesByRequestSince(
+          requestId,
+          latestLocalTimestamp
+        );
+        let didChangeLocalMessages = false;
 
         for (const remoteMessage of remoteMessages) {
-          await upsertRemoteMessageToLocal(remoteMessage);
+          const didChange = await upsertRemoteMessageToLocal(remoteMessage);
+          didChangeLocalMessages = didChangeLocalMessages || didChange;
         }
 
-        if (mounted) {
+        if (didChangeLocalMessages && isMountedRef.current) {
+          await queryClient.invalidateQueries({
+            queryKey: chatMessagesKeys.byRequest(requestId),
+          });
+        }
+      } while (shouldSyncAgainRef.current);
+    } catch {
+      // Keep rendering the local cache when offline or when the remote fetch fails.
+    } finally {
+      isSyncingRef.current = false;
+      if (isMountedRef.current) {
+        setIsSyncingRemote(false);
+      }
+    }
+  }, [authenticated, isOnline, queryClient, requestId]);
+
+  useEffect(() => {
+    if (!authenticated || !isOnline) {
+      setIsSyncingRemote(false);
+      return;
+    }
+
+    const reconnectSyncTimer = setTimeout(syncRemoteMessages, 450);
+
+    const unsubscribe = subscribeToRemoteMessages(requestId, async (message) => {
+      try {
+        const didChange = await upsertRemoteMessageToLocal(message);
+        if (didChange) {
           await queryClient.invalidateQueries({
             queryKey: chatMessagesKeys.byRequest(requestId),
           });
         }
       } catch {
-        // Keep rendering the local cache when offline or when the remote fetch fails.
+        syncRemoteMessages();
       }
-    }
-
-    if (authenticated) {
-      bootstrapRemoteMessages();
-    }
-
-    const unsubscribe = subscribeToRemoteMessages(requestId, async (message) => {
-      await upsertRemoteMessageToLocal(message);
-      await queryClient.invalidateQueries({
-        queryKey: chatMessagesKeys.byRequest(requestId),
-      });
     });
 
     return () => {
-      mounted = false;
+      clearTimeout(reconnectSyncTimer);
       unsubscribe();
     };
-  }, [authenticated, queryClient, requestId]);
+  }, [authenticated, isOnline, queryClient, requestId, syncRemoteMessages]);
 
-  return query;
+  return {
+    ...query,
+    isSyncingRemote,
+  };
 }

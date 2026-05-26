@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import { ServiceWithProvider } from "@/api/types";
+import { ContractingWithOwner, ServiceWithProvider } from "@/api/types";
+import ContractingOverview from "@/screens/ContractingOverview";
 import Home from "@/screens/Home";
 import SearchService from "@/screens/SearchService";
 import ServiceOverview from "@/screens/ServiceOverview";
@@ -10,6 +11,7 @@ type IndexStackParamList = {
   Inicio: undefined;
   SearchService: { search: string };
   ServiceOverview: { service: ServiceWithProvider };
+  ContractingOverview: { contracting: ContractingWithOwner };
 };
 
 const Stack = createNativeStackNavigator<IndexStackParamList>();
@@ -38,6 +40,18 @@ export function IndexStack() {
       <Stack.Screen
         name="ServiceOverview"
         component={ServiceOverview}
+        options={{
+          headerShown: true,
+          title: "",
+          headerTintColor: theme.colors.textOnBrand,
+          headerStyle: {
+            backgroundColor: theme.colors.brandSurface,
+          },
+        }}
+      />
+      <Stack.Screen
+        name="ContractingOverview"
+        component={ContractingOverview}
         options={{
           headerShown: true,
           title: "",

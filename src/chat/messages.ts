@@ -77,6 +77,20 @@ export async function listLocalMessagesByRequest(requestId: string) {
   return rows.map(mapRow).sort(sortBySentTimestamp);
 }
 
+export async function getLatestLocalMessageTimestamp(requestId: string) {
+  const db = getChatDatabase();
+  const row = await db.getFirstAsync<{ latest_created_at_client: string }>(
+    `
+      SELECT MAX(created_at_client) AS latest_created_at_client
+      FROM chat_messages
+      WHERE request_id = ?
+    `,
+    requestId
+  );
+
+  return row?.latest_created_at_client ?? null;
+}
+
 export async function insertPendingMessage(input: PendingMessageInput) {
   const db = getChatDatabase();
 
@@ -214,7 +228,7 @@ export async function upsertRemoteMessageToLocal(remoteMessage: Message) {
   const normalizedCreatedAtClient =
     remoteMessage.created_at_client ?? remoteMessage.created_at;
 
-  await db.runAsync(
+  const result = await db.runAsync(
     `
       INSERT INTO chat_messages (
         local_id,
@@ -240,6 +254,15 @@ export async function upsertRemoteMessageToLocal(remoteMessage: Message) {
         updated_at_server = excluded.updated_at_server,
         sync_status = 'sent',
         sync_error = NULL
+      WHERE chat_messages.server_id IS NOT excluded.server_id
+         OR chat_messages.request_id IS NOT excluded.request_id
+         OR chat_messages.sender_id IS NOT excluded.sender_id
+         OR chat_messages.content IS NOT excluded.content
+         OR chat_messages.created_at_client IS NOT excluded.created_at_client
+         OR chat_messages.created_at_server IS NOT excluded.created_at_server
+         OR chat_messages.updated_at_server IS NOT excluded.updated_at_server
+         OR chat_messages.sync_status IS NOT 'sent'
+         OR chat_messages.sync_error IS NOT NULL
     `,
     [
       `remote:${remoteMessage.id}`,
@@ -253,6 +276,8 @@ export async function upsertRemoteMessageToLocal(remoteMessage: Message) {
       remoteMessage.updated_at,
     ]
   );
+
+  return result.changes > 0;
 }
 
 export async function markRequestMessagesRead({

@@ -1,18 +1,30 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { listReviewsByReviewerAndService, reviewsKeys } from "@/api/reviews";
+import {
+  listReviewsByReviewerAndContracting,
+  listReviewsByReviewerAndService,
+  reviewsKeys,
+} from "@/api/reviews";
 import { User } from "@/models/User";
 import { ServiceRequest } from "@/models/ServiceRequest";
+import { NegotiationSubject } from "@/utils/negotiationSubject";
 
 export default function useCheckReviews(
   authUser: User,
-  request: ServiceRequest
+  request: ServiceRequest,
+  subject: NegotiationSubject
 ) {
   const [optimisticHasReviewed, setOptimisticHasReviewed] = useState(false);
   const reviewsQuery = useQuery({
-    queryKey: reviewsKeys.byReviewerAndService(authUser.id, request.service),
-    queryFn: () => listReviewsByReviewerAndService(authUser.id, request.service),
-    enabled: !!authUser.id && !!request.service,
+    queryKey:
+      subject.type === "service"
+        ? reviewsKeys.byReviewerAndService(authUser.id, subject.id)
+        : reviewsKeys.byReviewerAndContracting(authUser.id, subject.id),
+    queryFn: () =>
+      subject.type === "service"
+        ? listReviewsByReviewerAndService(authUser.id, subject.id)
+        : listReviewsByReviewerAndContracting(authUser.id, subject.id),
+    enabled: !!authUser.id && !!subject.id,
   });
 
   const hasReviewed = optimisticHasReviewed || (reviewsQuery.data?.length ?? 0) > 0;

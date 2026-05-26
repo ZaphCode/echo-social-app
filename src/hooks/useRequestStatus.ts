@@ -2,9 +2,10 @@ import { useNegotiationCtx } from "@/context/Negotiation";
 import { User } from "@/models/User";
 import * as NS from "@/utils/negotiation";
 import useJobsDone from "./useJobsDone";
-import { updateServiceRequest } from "@/api/serviceRequests";
+import { serviceRequestsKeys, updateServiceRequest } from "@/api/serviceRequests";
 import { createNotification, notificationsKeys } from "@/api/notifications";
 import { useQueryClient } from "@tanstack/react-query";
+import { contractingsKeys } from "@/api/contractings";
 
 type Options = {
   shouldNotifyCounterparty?: boolean;
@@ -14,7 +15,7 @@ export default function useRequestStatus(
   authUser: User,
   options: Options = {},
 ) {
-  const { request, client, provider, service } = useNegotiationCtx();
+  const { request, client, provider, subject } = useNegotiationCtx();
   const queryClient = useQueryClient();
 
   const { addJob } = useJobsDone(provider);
@@ -28,11 +29,12 @@ export default function useRequestStatus(
     try {
       await createNotification({
         user: counterparty.id,
-        message: `*${authUser.name}* ${actionText} la propuesta para *${service.name}*`,
+        message: `*${authUser.name}* ${actionText} la propuesta para *${subject.name}*`,
         type: "SYSTEM:INFO",
         read: false,
         request: request.id,
-        service: service.id,
+        service: subject.type === "service" ? subject.id : undefined,
+        contracting: subject.type === "contracting" ? subject.id : undefined,
       });
       queryClient.invalidateQueries({
         queryKey: notificationsKeys.byUser(counterparty.id),
@@ -111,7 +113,18 @@ export default function useRequestStatus(
           agreement_state: "FINISHED",
           finished: new Date().toISOString(),
         });
-        await addJob();
+        await addJob(request.id);
+        await queryClient.invalidateQueries({
+          queryKey: serviceRequestsKeys.allForUser(client.id),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: serviceRequestsKeys.allForUser(provider.id),
+        });
+        if (subject.type === "contracting") {
+          await queryClient.invalidateQueries({
+            queryKey: contractingsKeys.all,
+          });
+        }
       } else {
         await updateServiceRequest(request.id, {
           client_offer_status: "COMPLETED",
@@ -124,7 +137,18 @@ export default function useRequestStatus(
           agreement_state: "FINISHED",
           finished: new Date().toISOString(),
         });
-        await addJob();
+        await addJob(request.id);
+        await queryClient.invalidateQueries({
+          queryKey: serviceRequestsKeys.allForUser(client.id),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: serviceRequestsKeys.allForUser(provider.id),
+        });
+        if (subject.type === "contracting") {
+          await queryClient.invalidateQueries({
+            queryKey: contractingsKeys.all,
+          });
+        }
       } else {
         await updateServiceRequest(request.id, {
           provider_offer_status: "COMPLETED",

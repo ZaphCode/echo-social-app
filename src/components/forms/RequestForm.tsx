@@ -9,13 +9,17 @@ import {
   serviceRequestsKeys,
   updateServiceRequest,
 } from "@/api/serviceRequests";
-import { ServiceRequestWithRelations } from "@/api/types";
+import { ContractingWithOwner, ServiceRequestWithRelations } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
-import { ServiceRequest } from "@/models/ServiceRequest";
 import { Service } from "@/models/Service";
 import { useAuthCtx } from "@/context/Auth";
 import { validPriceRules } from "@/utils/validations";
+import {
+  mapContractingSubject,
+  mapServiceSubject,
+  NegotiationSubject,
+} from "@/utils/negotiationSubject";
 import Field from "./Field";
 import Text from "../ui/Text";
 import Button from "../ui/Button";
@@ -26,7 +30,9 @@ import useColorScheme from "@/hooks/useColorScheme";
 const DEVICE_HEIGHT = Dimensions.get("window").height;
 
 type Props = {
-  service: Service;
+  service?: Service;
+  contracting?: ContractingWithOwner;
+  subject?: NegotiationSubject;
   onSuccess: (request?: ServiceRequestWithRelations) => void;
   requestId?: string;
   defaultPrice?: string;
@@ -39,6 +45,8 @@ type Props = {
 
 export default function RequestForm({
   service,
+  contracting,
+  subject: subjectProp,
   requestId,
   onSuccess,
   defaultDate,
@@ -52,6 +60,12 @@ export default function RequestForm({
   const [offsetHeight, setOffsetHeight] = useState(0);
   const offeringMode = !!requestId;
   const queryClient = useQueryClient();
+  const subject =
+    subjectProp ??
+    (contracting
+      ? mapContractingSubject(contracting)
+      : mapServiceSubject(service as Service & { provider_profile: any }));
+  const isContracting = subject.type === "contracting";
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -103,14 +117,15 @@ export default function RequestForm({
           try {
             await notificationMutation.mutateAsync({
               user: offerNotification.recipientId,
-              message: `*${user.name}* hizo una nueva propuesta para *${service.name}*`,
+              message: `*${user.name}* hizo una nueva propuesta para *${subject.name}*`,
               type:
                 offerNotification.recipientType === "client"
                   ? "CLIENT:NEW_OFFER"
                   : "PROVIDER:NEW_OFFER",
               read: false,
               request: requestId,
-              service: service.id,
+              service: isContracting ? undefined : subject.id,
+              contracting: isContracting ? subject.id : undefined,
             });
             queryClient.invalidateQueries({
               queryKey: notificationsKeys.byUser(offerNotification.recipientId),
@@ -139,8 +154,10 @@ export default function RequestForm({
 
       try {
         newRequest = await createRequestMutation.mutateAsync({
-          serviceId: service.id,
-          clientId: user.id,
+          serviceId: service?.id,
+          contractingId: contracting?.id,
+          clientId: contracting?.owner ?? user.id,
+          providerId: contracting ? user.id : service!.provider,
           lastOfferUserId: user.id,
           agreedPrice: parseFloat(data.price),
           agreedDate: data.date,
@@ -157,18 +174,21 @@ export default function RequestForm({
 
       try {
         await notificationMutation.mutateAsync({
-          user: service.provider,
-          message: `Nueva solicitud de servicio de *${user.name}* para *${service.name}*`,
-          type: "PROVIDER:NEW_REQUEST",
+          user: contracting?.owner ?? service!.provider,
+          message: contracting
+            ? `Nueva aplicación de *${user.name}* para *${subject.name}*`
+            : `Nueva solicitud de servicio de *${user.name}* para *${subject.name}*`,
+          type: contracting ? "PROVIDER:NEW_APPLICATION" : "PROVIDER:NEW_REQUEST",
           read: false,
           request: newRequest.id,
-          service: service.id,
+          service: contracting ? undefined : subject.id,
+          contracting: contracting ? subject.id : undefined,
         });
         queryClient.invalidateQueries({
-          queryKey: notificationsKeys.byUser(service.provider),
+          queryKey: notificationsKeys.byUser(contracting?.owner ?? service!.provider),
         });
         queryClient.invalidateQueries({
-          queryKey: notificationsKeys.unreadCount(service.provider),
+          queryKey: notificationsKeys.unreadCount(contracting?.owner ?? service!.provider),
         });
       } catch (err) {
         console.log("Failed to create notification:", err);
@@ -183,12 +203,16 @@ export default function RequestForm({
   return (
     <View style={styles.container}>
       <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.xl}>
-        {offeringMode ? "Realiza una oferta" : `Solicitud de Servicio`}
+        {offeringMode
+          ? "Realiza una oferta"
+          : isContracting
+            ? "Aplicar a Contratación"
+            : "Solicitud de Servicio"}
       </Text>
       <View style={{ width: "90%", gap: theme.spacing.md }}>
         <Field
           label={offeringMode ? "Precio" : "Oferta inicial"}
-          placeholder={`${service.base_price}`}
+          placeholder={`${subject.base_price}`}
           keyboardType="numeric"
           name="price"
           icon="dollar-sign"
