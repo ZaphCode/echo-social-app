@@ -7,7 +7,6 @@ import {
   profilesKeys,
   updateProfileAvatar,
 } from "@/api/profiles";
-import { uploadAvatarImage } from "@/api/storage";
 import Text from "@/components/ui/Text";
 import { theme } from "@/theme/theme";
 import AvatarPicker from "@/components/forms/AvatarPicker";
@@ -25,8 +24,7 @@ export default function ProfileHeader({ user, editable }: Props) {
   const [avatar, setAvatar] = useState(user.avatar);
   const avatarMutation = useMutation({
     mutationFn: async (imgSrc: string) => {
-      const avatarPath = await uploadAvatarImage(user.id, imgSrc);
-      return updateProfileAvatar(user.id, avatarPath);
+      return updateProfileAvatar(user.id, imgSrc);
     },
     onSuccess: (updatedUser) => {
       setAvatar(updatedUser.avatar);

@@ -21,13 +21,23 @@ const mutationQueueListeners = new Set<() => void>();
 
 export type OfflineMutation = {
   id: string;
-  entity_type: "service_request" | "notification";
+  entity_type:
+    | "service_request"
+    | "notification"
+    | "profile"
+    | "service"
+    | "contracting";
   entity_id: string;
   action:
     | "service_request_create"
     | "service_request_update"
     | "notification_create"
-    | "notification_mark_read";
+    | "notification_mark_read"
+    | "client_profile_update"
+    | "provider_profile_update"
+    | "profile_avatar_update"
+    | "service_update"
+    | "contracting_update";
   payload_json: string;
   base_updated_at: string | null;
   status: "pending" | "syncing" | "failed" | "conflict" | "sent";
@@ -215,6 +225,79 @@ export async function getCachedProfileDetails(userId: string) {
   return row ? parsePayload<ProfileDetails>(row) : null;
 }
 
+export async function getCachedProfileDetailsByProfileId(profileId: string) {
+  const db = getChatDatabase();
+  const rows = await db.getAllAsync<PayloadRow>(
+    `
+      SELECT payload_json
+      FROM local_profile_details
+    `
+  );
+
+  for (const row of rows) {
+    const profile = parsePayload<ProfileDetails>(row);
+    if (profile.id === profileId) return profile;
+  }
+
+  return null;
+}
+
+export async function updateCachedProfileDetails(
+  userId: string,
+  patch: Record<string, unknown>,
+  options: { dirtyStatus?: string } = {}
+) {
+  const profile = await getCachedProfileDetails(userId);
+  if (!profile) return null;
+
+  const updatedAt = nowIso();
+  const updated = {
+    ...profile,
+    ...patch,
+    updated_at: updatedAt,
+    user_profile: {
+      ...profile.user_profile,
+      updated_at: updatedAt,
+    },
+  } as ProfileDetails;
+
+  if ("specialty" in patch && "specialty_category" in updated) {
+    const specialty = String(patch.specialty ?? "");
+    updated.specialty_category =
+      updated.specialty_category?.id === specialty
+        ? updated.specialty_category
+        : { id: specialty, name: updated.specialty_category?.name ?? "" };
+  }
+
+  await cacheProfileDetails(updated);
+  return updated;
+}
+
+export async function updateCachedProfileAvatar(userId: string, avatar: string) {
+  const user = await getCachedProfile(userId);
+  if (!user) return null;
+
+  const updatedAt = nowIso();
+  const updatedUser: User = {
+    ...user,
+    avatar,
+    updated_at: updatedAt,
+  };
+
+  await cacheAuthUser(updatedUser);
+
+  const details = await getCachedProfileDetails(userId);
+  if (details) {
+    await cacheProfileDetails({
+      ...details,
+      updated_at: updatedAt,
+      user_profile: updatedUser,
+    } as ProfileDetails);
+  }
+
+  return updatedUser;
+}
+
 export async function cacheCategories(categories: Category[]) {
   const db = getChatDatabase();
   const cachedAt = nowIso();
@@ -348,6 +431,28 @@ export async function getCachedService(serviceId: string) {
   return row ? parsePayload<ServiceWithProvider>(row) : null;
 }
 
+export async function updateCachedService(
+  serviceId: string,
+  patch: Record<string, unknown>,
+  actorUserId: string
+) {
+  const service = await getCachedService(serviceId);
+  if (!service) return null;
+
+  if (service.provider !== actorUserId) {
+    throw new Error("No puedes editar un servicio de otro usuario.");
+  }
+
+  const updated: ServiceWithProvider = {
+    ...service,
+    ...patch,
+    updated_at: nowIso(),
+  };
+
+  await cacheServices([updated], { visited: true });
+  return updated;
+}
+
 export async function cacheContractings(contractings: ContractingWithOwner[]) {
   const db = getChatDatabase();
   const cachedAt = nowIso();
@@ -424,6 +529,28 @@ export async function getCachedContracting(contractingId: string) {
   );
 
   return row ? parsePayload<ContractingWithOwner>(row) : null;
+}
+
+export async function updateCachedContracting(
+  contractingId: string,
+  patch: Record<string, unknown>,
+  actorUserId: string
+) {
+  const contracting = await getCachedContracting(contractingId);
+  if (!contracting) return null;
+
+  if (contracting.owner !== actorUserId) {
+    throw new Error("No puedes editar una contratación de otro usuario.");
+  }
+
+  const updated: ContractingWithOwner = {
+    ...contracting,
+    ...patch,
+    updated_at: nowIso(),
+  };
+
+  await cacheContractings([updated]);
+  return updated;
 }
 
 export async function cacheServiceRequests(
@@ -775,6 +902,42 @@ export async function enqueueOfflineMutation(input: {
   const db = getChatDatabase();
   const timestamp = nowIso();
   const id = createLocalUuid();
+  const shouldCoalesce =
+    input.action === "client_profile_update" ||
+    input.action === "provider_profile_update" ||
+    input.action === "profile_avatar_update" ||
+    input.action === "service_update" ||
+    input.action === "contracting_update";
+  let baseUpdatedAt = input.baseUpdatedAt ?? null;
+
+  if (shouldCoalesce) {
+    const existing = await db.getFirstAsync<Pick<OfflineMutation, "base_updated_at">>(
+      `
+        SELECT base_updated_at
+        FROM offline_mutation_queue
+        WHERE entity_type = ?
+          AND entity_id = ?
+          AND action = ?
+          AND status IN ('pending', 'failed')
+        ORDER BY created_at ASC
+        LIMIT 1
+      `,
+      [input.entityType, input.entityId, input.action]
+    );
+
+    baseUpdatedAt = existing?.base_updated_at ?? baseUpdatedAt;
+
+    await db.runAsync(
+      `
+        DELETE FROM offline_mutation_queue
+        WHERE entity_type = ?
+          AND entity_id = ?
+          AND action = ?
+          AND status IN ('pending', 'failed')
+      `,
+      [input.entityType, input.entityId, input.action]
+    );
+  }
 
   await db.runAsync(
     `
@@ -798,7 +961,7 @@ export async function enqueueOfflineMutation(input: {
       input.entityId,
       input.action,
       stringifyPayload(input.payload),
-      input.baseUpdatedAt ?? null,
+      baseUpdatedAt,
       timestamp,
       timestamp,
     ]

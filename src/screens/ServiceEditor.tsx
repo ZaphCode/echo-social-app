@@ -14,6 +14,7 @@ import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
 import { useAuthCtx } from "@/context/Auth";
 import { useAlertCtx } from "@/context/Alert";
+import { useOffline } from "@/context/Offline";
 import { validPriceRules, validServicesPhotoRules } from "@/utils/validations";
 import Text from "@/components/ui/Text";
 import Field from "@/components/forms/Field";
@@ -28,6 +29,7 @@ export default function ServiceEditor({ route }: Props) {
   const service = route.params.serviceToEdit;
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
+  const { isOnline } = useOffline();
   const { colors } = useColorScheme();
   const queryClient = useQueryClient();
   const navigation = useNavigation();
@@ -96,9 +98,12 @@ export default function ServiceEditor({ route }: Props) {
 
     show({
       title: service ? "Servicio Actualizado" : "Servicio Creado",
-      message: `El servicio ha sido ${
-        service ? "actualizado" : "creado"
-      } exitosamente.`,
+      message:
+        service && !isOnline
+          ? "El servicio se guardó localmente y se sincronizará al reconectar."
+          : `El servicio ha sido ${
+              service ? "actualizado" : "creado"
+            } exitosamente.`,
       icon: "check-circle",
       iconColor: theme.colors.successGreen,
     });

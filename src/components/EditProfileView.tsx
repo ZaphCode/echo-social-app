@@ -12,22 +12,26 @@ import { ProviderProfile } from "@/models/ProviderProfile";
 import { theme } from "@/theme/theme";
 import { User } from "@/models/User";
 import { useAlertCtx } from "@/context/Alert";
+import { useOffline } from "@/context/Offline";
 import Text from "./ui/Text";
 import ProfileForm from "./forms/ProfileForm";
 import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   userRole: User["role"];
+  userId: string;
   profile: ClientProfile | ProviderProfile;
   onSuccess?: (profile: ClientProfile | ProviderProfile) => void;
 };
 
 export default function EditProfileView({
   profile,
+  userId,
   userRole,
   onSuccess,
 }: Props) {
   const { show } = useAlertCtx();
+  const { isOnline } = useOffline();
   const { colors } = useColorScheme();
   const queryClient = useQueryClient();
   const { control, handleSubmit } = useForm({
@@ -43,8 +47,12 @@ export default function EditProfileView({
   const profileMutation = useMutation({
     mutationFn: (data: typeof profile) =>
       userRole === "client"
-        ? updateClientProfile(profile.id, data as Partial<ClientProfile>)
-        : updateProviderProfile(profile.id, data as Partial<ProviderProfile>),
+        ? updateClientProfile(profile.id, data as Partial<ClientProfile>, userId)
+        : updateProviderProfile(
+            profile.id,
+            data as Partial<ProviderProfile>,
+            userId
+          ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profilesKeys.all });
     },
@@ -53,6 +61,14 @@ export default function EditProfileView({
   const onSubmit = handleSubmit(async (data) => {
     try {
       const result = await profileMutation.mutateAsync({ ...data } as typeof profile);
+      show({
+        title: "Perfil Actualizado",
+        message: isOnline
+          ? "Tus datos se actualizaron exitosamente."
+          : "Tus datos se guardaron localmente y se sincronizarán al reconectar.",
+        icon: "check-circle",
+        iconColor: theme.colors.successGreen,
+      });
       onSuccess?.(result);
     } catch {
       return show({

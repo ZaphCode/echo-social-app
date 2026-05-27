@@ -8,7 +8,10 @@ import { useNavigation } from "@react-navigation/native";
 import { useAuthCtx } from "@/context/Auth";
 import useColorScheme from "@/hooks/useColorScheme";
 import StorageImage from "./ui/StorageImage";
-import { getRequestProvider, getRequestSubject } from "@/utils/negotiationSubject";
+import {
+  getRequestProvider,
+  getRequestSubject,
+} from "@/utils/negotiationSubject";
 
 type Props = {
   request: ServiceRequestWithRelations;
@@ -83,70 +86,76 @@ export default function RequestCard({ request, unreadCount = 0 }: Props) {
         {
           backgroundColor: colors.darkGray,
           borderColor: colors.darkerGray,
-          borderLeftColor: statusData.color,
         },
       ]}
     >
-      <StorageImage
-        bucket="service-photos"
-        path={subject.photos?.[0]}
-        fallbackUri="https://via.placeholder.com/100x100"
-        style={styles.image}
+      <View
+        style={[styles.statusAccent, { backgroundColor: statusData.color }]}
       />
-      <View style={styles.info}>
-        <View style={styles.topSection}>
-          <Text numberOfLines={2} color={colors.text} style={styles.title}>
-            {subject.name}
-          </Text>
+      <View style={styles.content}>
+        <StorageImage
+          bucket="service-photos"
+          path={subject.photos?.[0]}
+          fallbackUri="https://via.placeholder.com/100x100"
+          style={styles.image}
+        />
+        <View style={styles.info}>
+          <View style={styles.topSection}>
+            <Text numberOfLines={2} color={colors.text} style={styles.title}>
+              {subject.name}
+            </Text>
 
-          <View style={styles.metaRow}>
-            <View style={styles.userRow}>
-              <Feather name="user" size={13} color={colors.lightGray} />
-              <Text
-                numberOfLines={1}
-                style={[styles.sub, { color: colors.lightGray }]}
-              >
-                {otherUserName}
-              </Text>
-            </View>
-            <View style={styles.statusAndUnread}>
-              <View
-                style={[
-                  styles.statusBadge,
-                  {
-                    backgroundColor: statusData.backgroundColor,
-                    borderColor: statusData.borderColor,
-                  },
-                ]}
-              >
-                <Text style={[styles.status, { color: statusData.color }]}>
-                  {statusData.label}
+            <View style={styles.metaRow}>
+              <View style={styles.userRow}>
+                <Feather name="user" size={13} color={colors.lightGray} />
+                <Text
+                  numberOfLines={1}
+                  style={[styles.sub, { color: colors.lightGray }]}
+                >
+                  {otherUserName}
                 </Text>
               </View>
-              {unreadCount > 0 ? (
-                <View style={styles.unreadBadge}>
-                  <Text style={styles.unreadBadgeText}>
-                    {unreadCount > 99 ? "99+" : String(unreadCount)}
+              <View style={styles.statusAndUnread}>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    {
+                      backgroundColor: statusData.backgroundColor,
+                      borderColor: statusData.borderColor,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.status, { color: statusData.color }]}>
+                    {statusData.label}
                   </Text>
                 </View>
-              ) : null}
+                {unreadCount > 0 ? (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadBadgeText}>
+                      {unreadCount > 99 ? "99+" : String(unreadCount)}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={[styles.bottomSection, { borderTopColor: colors.border }]}>
-          <View style={styles.priceRow}>
-            <Text style={[styles.label, { color: colors.lightGray }]}>
-              Propuesta:
-            </Text>
-          </View>
-          <View style={styles.priceGroup}>
-            <Text style={styles.price}>
-              {formatPrice(request.agreed_price)}
-            </Text>
-            <Text style={[styles.currency, { color: colors.lightGray }]}>
-              USD
-            </Text>
+          <View
+            style={[styles.bottomSection, { borderTopColor: colors.border }]}
+          >
+            <View style={styles.priceRow}>
+              <Text style={[styles.label, { color: colors.lightGray }]}>
+                Propuesta:
+              </Text>
+            </View>
+            <View style={styles.priceGroup}>
+              <Text style={styles.price}>
+                {formatPrice(request.agreed_price)}
+              </Text>
+              <Text style={[styles.currency, { color: colors.lightGray }]}>
+                USD
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -157,10 +166,20 @@ export default function RequestCard({ request, unreadCount = 0 }: Props) {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderLeftWidth: 5,
     borderRadius: 16,
-    padding: 14,
     marginBottom: theme.spacing.md,
+    overflow: "hidden",
+    position: "relative",
+  },
+  statusAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 5,
+  },
+  content: {
+    padding: 14,
     flexDirection: "row",
     gap: 12,
   },
@@ -185,7 +204,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    fontSize: theme.fontSizes.md + 2,
+    fontSize: theme.fontSizes.md,
     fontFamily: theme.fontFamily.bold,
     lineHeight: 23,
   },
@@ -219,7 +238,7 @@ const styles = StyleSheet.create({
     fontFamily: theme.fontFamily.bold,
   },
   sub: {
-    fontSize: theme.fontSizes.sm,
+    fontSize: theme.fontSizes.sm - 1,
     fontFamily: theme.fontFamily.regular,
     flex: 1,
   },

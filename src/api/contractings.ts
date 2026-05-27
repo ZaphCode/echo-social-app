@@ -1,12 +1,15 @@
 import { supabase } from "@/lib/supabase";
 import { Contracting } from "@/models/Contracting";
-import { throwIfError } from "./common";
+import { isAuthError, throwIfError } from "./common";
 import { uploadContractingImages } from "./storage";
 import { ContractingWithOwner } from "./types";
 import { getOfflineNetworkState, isLikelyNetworkError } from "@/offline/network";
 import {
   cacheContractings,
+  enqueueOfflineMutation,
+  getCachedContracting,
   listCachedContractingsByCategory,
+  updateCachedContracting,
 } from "@/offline/store";
 
 const contractingCardSelect = "*, owner_profile:profiles!owner(*)";
@@ -85,31 +88,98 @@ export async function createContracting(input: SaveContractingInput) {
 
   throwIfError(error);
 
-  return data as ContractingWithOwner;
+  const contracting = data as ContractingWithOwner;
+  await cacheContractings([contracting]);
+
+  return contracting;
 }
 
 export async function updateContracting(
   contractingId: string,
   input: SaveContractingInput
 ) {
-  const photos = await uploadContractingImages(input.ownerId, input.photos);
-
   const payload: Partial<Contracting> = {
     name: input.name,
     description: input.description,
     category: input.category,
     base_price: input.basePrice,
-    photos,
+    photos: input.photos,
   };
 
-  const { data, error } = await supabase
-    .from("contracting")
-    .update(payload)
-    .eq("id", contractingId)
-    .select(contractingCardSelect)
-    .single();
+  const cached = await getCachedContracting(contractingId);
 
-  throwIfError(error);
+  if (!getOfflineNetworkState()) {
+    return updateContractingLocally(contractingId, input, payload, cached);
+  }
 
-  return data as ContractingWithOwner;
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.user.id !== input.ownerId) {
+      return updateContractingLocally(contractingId, input, payload, cached);
+    }
+
+    const photos = await uploadContractingImages(input.ownerId, input.photos);
+    const remotePayload = { ...payload, photos };
+    const { data, error } = await supabase
+      .from("contracting")
+      .update(remotePayload)
+      .eq("id", contractingId)
+      .select(contractingCardSelect)
+      .single();
+
+    throwIfError(error);
+
+    const contracting = data as ContractingWithOwner;
+    await cacheContractings([contracting]);
+
+    return contracting;
+  } catch (error) {
+    if (isLikelyNetworkError(error) || isAuthError(error)) {
+      return updateContractingLocally(contractingId, input, payload, cached);
+    }
+
+    throw error;
+  }
+}
+
+async function updateContractingLocally(
+  contractingId: string,
+  input: SaveContractingInput,
+  payload: Partial<Contracting>,
+  cached?: ContractingWithOwner | null
+) {
+  const current = cached ?? await getCachedContracting(contractingId);
+  if (!current) {
+    throw new Error("No se encontró la contratación local para editar offline.");
+  }
+
+  if (current.owner !== input.ownerId) {
+    throw new Error("No puedes editar una contratación de otro usuario.");
+  }
+
+  const updated = await updateCachedContracting(
+    contractingId,
+    payload,
+    input.ownerId
+  );
+  if (!updated) {
+    throw new Error("No se pudo guardar la contratación localmente.");
+  }
+
+  await enqueueOfflineMutation({
+    entityType: "contracting",
+    entityId: contractingId,
+    action: "contracting_update",
+    payload: {
+      contractingId,
+      actorUserId: input.ownerId,
+      input,
+    },
+    baseUpdatedAt: current.updated_at,
+  });
+
+  return updated;
 }

@@ -10,21 +10,25 @@ import { ProviderProfileWithCategory } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import { useAlertCtx } from "@/context/Alert";
+import { useOffline } from "@/context/Offline";
 import Text from "./ui/Text";
 import ProviderInfoForm from "./forms/ProviderInfoForm";
 import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   providerProfile: ProviderProfile;
+  userId: string;
   onSuccess?: (profile: ProviderProfileWithCategory) => void;
 };
 
 export default function EditProviderInfoView({
   providerProfile,
+  userId,
   onSuccess,
 }: Props) {
   const { colors } = useColorScheme();
   const { show } = useAlertCtx();
+  const { isOnline } = useOffline();
   const queryClient = useQueryClient();
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -37,7 +41,7 @@ export default function EditProviderInfoView({
 
   const providerMutation = useMutation({
     mutationFn: (data: Partial<ProviderProfile>) =>
-      updateProviderProfile(providerProfile.id, data),
+      updateProviderProfile(providerProfile.id, data, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profilesKeys.all });
     },
@@ -48,6 +52,14 @@ export default function EditProviderInfoView({
       const result = await providerMutation.mutateAsync({
         ...data,
         experience_years: parseInt(data.experience_years),
+      });
+      show({
+        title: "Perfil Actualizado",
+        message: isOnline
+          ? "Tu perfil profesional se actualizó exitosamente."
+          : "Tu perfil profesional se guardó localmente y se sincronizará al reconectar.",
+        icon: "check-circle",
+        iconColor: theme.colors.successGreen,
       });
       onSuccess?.(result);
     } catch {
