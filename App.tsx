@@ -9,10 +9,12 @@ import * as SplashScreen from "expo-splash-screen";
 import { AuthProvider } from "./src/context/Auth";
 import { useFonts } from "expo-font";
 import { AlertProvider } from "@/context/Alert";
+import { OfflineProvider } from "@/context/Offline";
 import { AlertModal } from "@/components/ui/AlertModal";
 import useAppTheme from "@/hooks/useAppTheme";
 import { initChatDatabase } from "@/chat/db";
 import { ChatSyncProvider } from "@/chat/ChatSyncProvider";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,21 +33,25 @@ export default function AppWrapped() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Suspense fallback={null}>
-        <SQLiteProvider
-          databaseName="echo-chat.db"
-          onInit={initChatDatabase}
-          useSuspense
-        >
-          <AuthProvider>
-            <ChatSyncProvider>
-              <AlertProvider>
-                <App />
-              </AlertProvider>
-            </ChatSyncProvider>
-          </AuthProvider>
-        </SQLiteProvider>
-      </Suspense>
+      <KeyboardProvider>
+        <Suspense fallback={null}>
+          <SQLiteProvider
+            databaseName="echo-chat.db"
+            onInit={initChatDatabase}
+            useSuspense
+          >
+            <AuthProvider>
+              <OfflineProvider>
+                <ChatSyncProvider>
+                  <AlertProvider>
+                    <App />
+                  </AlertProvider>
+                </ChatSyncProvider>
+              </OfflineProvider>
+            </AuthProvider>
+          </SQLiteProvider>
+        </Suspense>
+      </KeyboardProvider>
     </QueryClientProvider>
   );
 }

@@ -9,7 +9,7 @@ import {
   notificationsKeys,
 } from "@/api/notifications";
 import { useAuthCtx } from "@/context/Auth";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import NotificationCard from "./NotificationCard";
 import Divider from "./ui/Divider";
 import Text from "./ui/Text";
@@ -29,9 +29,15 @@ export default function NotificationList() {
   });
 
   const { mutateAsync: markAsRead } = readMutation;
+  const notifications = useMemo(
+    () =>
+      notificationsQuery.data?.filter(
+        (notification) => notification.user === user.id
+      ) ?? [],
+    [notificationsQuery.data, user.id]
+  );
 
   useEffect(() => {
-    const notifications = notificationsQuery.data ?? [];
     const unreadIds = notifications
       .filter((notification) => !notification.read)
       .map((notification) => notification.id);
@@ -48,7 +54,7 @@ export default function NotificationList() {
     }
   }, [
     markAsRead,
-    notificationsQuery.data,
+    notifications,
     notificationsQuery.isSuccess,
     queryClient,
     user.id,
@@ -65,7 +71,7 @@ export default function NotificationList() {
 
   return (
     <FlatList
-      data={notificationsQuery.data}
+      data={notifications}
       renderItem={({ item }) => <NotificationCard notification={item} />}
       keyExtractor={(item) => item.id}
       showsVerticalScrollIndicator={false}

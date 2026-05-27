@@ -6,6 +6,13 @@ import {
   ServiceWithProvider,
   ServiceWithProviderAndCategory,
 } from "./types";
+import { getOfflineNetworkState, isLikelyNetworkError } from "@/offline/network";
+import {
+  cacheServices,
+  listCachedServicesByCategory,
+  markServiceVisited,
+  searchCachedServices,
+} from "@/offline/store";
 
 const serviceCardSelect = "*, provider_profile:profiles!provider(*)";
 const serviceSearchSelect =
@@ -29,31 +36,65 @@ export type SaveServiceInput = {
 };
 
 export async function listServicesByCategory(categoryId: string) {
-  let query = supabase.from("service").select(serviceCardSelect);
-
-  if (categoryId !== "all") {
-    query = query.eq("category", categoryId);
+  if (!getOfflineNetworkState()) {
+    return listCachedServicesByCategory(categoryId);
   }
 
-  const { data, error } = await query;
+  try {
+    let query = supabase.from("service").select(serviceCardSelect);
 
-  throwIfError(error);
+    if (categoryId !== "all") {
+      query = query.eq("category", categoryId);
+    }
 
-  return (data ?? []) as ServiceWithProvider[];
+    const { data, error } = await query;
+
+    throwIfError(error);
+
+    const services = (data ?? []) as ServiceWithProvider[];
+    await cacheServices(services);
+
+    return services;
+  } catch (error) {
+    if (isLikelyNetworkError(error)) {
+      return listCachedServicesByCategory(categoryId);
+    }
+
+    throw error;
+  }
 }
 
 export async function searchServices(search: string) {
+  if (!getOfflineNetworkState()) {
+    return searchCachedServices(search);
+  }
+
   const normalizedSearch = search.trim();
-  const { data, error } = await supabase
-    .from("service")
-    .select(serviceSearchSelect)
-    .or(
-      `name.ilike.%${normalizedSearch}%,description.ilike.%${normalizedSearch}%`
-    );
+  try {
+    const { data, error } = await supabase
+      .from("service")
+      .select(serviceSearchSelect)
+      .or(
+        `name.ilike.%${normalizedSearch}%,description.ilike.%${normalizedSearch}%`
+      );
 
-  throwIfError(error);
+    throwIfError(error);
 
-  return (data ?? []) as ServiceWithProviderAndCategory[];
+    const services = (data ?? []) as ServiceWithProviderAndCategory[];
+    await cacheServices(services);
+
+    return services;
+  } catch (error) {
+    if (isLikelyNetworkError(error)) {
+      return searchCachedServices(search);
+    }
+
+    throw error;
+  }
+}
+
+export async function cacheVisitedService(service: ServiceWithProvider) {
+  await markServiceVisited(service);
 }
 
 export async function createService(input: SaveServiceInput) {

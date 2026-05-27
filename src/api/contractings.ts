@@ -3,6 +3,11 @@ import { Contracting } from "@/models/Contracting";
 import { throwIfError } from "./common";
 import { uploadContractingImages } from "./storage";
 import { ContractingWithOwner } from "./types";
+import { getOfflineNetworkState, isLikelyNetworkError } from "@/offline/network";
+import {
+  cacheContractings,
+  listCachedContractingsByCategory,
+} from "@/offline/store";
 
 const contractingCardSelect = "*, owner_profile:profiles!owner(*)";
 
@@ -27,22 +32,37 @@ export async function listContractingsByCategory(
   categoryId: string,
   userId: string
 ) {
-  let query = supabase
-    .from("contracting")
-    .select(contractingCardSelect)
-    .or(`is_closed.eq.false,owner.eq.${userId}`)
-    .order("is_closed", { ascending: true })
-    .order("created_at", { ascending: false });
-
-  if (categoryId !== "all") {
-    query = query.eq("category", categoryId);
+  if (!getOfflineNetworkState()) {
+    return listCachedContractingsByCategory(categoryId, userId);
   }
 
-  const { data, error } = await query;
+  try {
+    let query = supabase
+      .from("contracting")
+      .select(contractingCardSelect)
+      .or(`is_closed.eq.false,owner.eq.${userId}`)
+      .order("is_closed", { ascending: true })
+      .order("created_at", { ascending: false });
 
-  throwIfError(error);
+    if (categoryId !== "all") {
+      query = query.eq("category", categoryId);
+    }
 
-  return (data ?? []) as ContractingWithOwner[];
+    const { data, error } = await query;
+
+    throwIfError(error);
+
+    const contractings = (data ?? []) as ContractingWithOwner[];
+    await cacheContractings(contractings);
+
+    return contractings;
+  } catch (error) {
+    if (isLikelyNetworkError(error)) {
+      return listCachedContractingsByCategory(categoryId, userId);
+    }
+
+    throw error;
+  }
 }
 
 export async function createContracting(input: SaveContractingInput) {

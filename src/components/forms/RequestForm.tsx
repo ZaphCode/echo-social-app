@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { createNotification, notificationsKeys } from "@/api/notifications";
 import {
@@ -11,7 +11,6 @@ import {
 } from "@/api/serviceRequests";
 import { ContractingWithOwner, ServiceRequestWithRelations } from "@/api/types";
 import { theme } from "@/theme/theme";
-import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
 import { Service } from "@/models/Service";
 import { useAuthCtx } from "@/context/Auth";
 import { validPriceRules } from "@/utils/validations";
@@ -26,8 +25,6 @@ import Button from "../ui/Button";
 import DateField from "./DateField";
 import { useAlertCtx } from "@/context/Alert";
 import useColorScheme from "@/hooks/useColorScheme";
-
-const DEVICE_HEIGHT = Dimensions.get("window").height;
 
 type Props = {
   service?: Service;
@@ -56,8 +53,6 @@ export default function RequestForm({
   const { colors } = useColorScheme();
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
-  const keyboardVisible = useKeyboardVisible();
-  const [offsetHeight, setOffsetHeight] = useState(0);
   const offeringMode = !!requestId;
   const queryClient = useQueryClient();
   const subject =
@@ -89,7 +84,7 @@ export default function RequestForm({
     }: {
       id: string;
       patch: Parameters<typeof updateServiceRequest>[1];
-    }) => updateServiceRequest(id, patch),
+    }) => updateServiceRequest(id, patch, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: serviceRequestsKeys.all });
     },
@@ -201,7 +196,12 @@ export default function RequestForm({
   });
 
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView
+      bottomOffset={theme.spacing.md}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
       <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.xl}>
         {offeringMode
           ? "Realiza una oferta"
@@ -209,14 +209,13 @@ export default function RequestForm({
             ? "Aplicar a Contratación"
             : "Solicitud de Servicio"}
       </Text>
-      <View style={{ width: "90%", gap: theme.spacing.md }}>
+      <View style={styles.fields}>
         <Field
           label={offeringMode ? "Precio" : "Oferta inicial"}
           placeholder={`${subject.base_price}`}
           keyboardType="numeric"
           name="price"
           icon="dollar-sign"
-          onFocus={() => setOffsetHeight(10)}
           control={control}
           rules={validPriceRules}
         />
@@ -227,12 +226,10 @@ export default function RequestForm({
             placeholder="Especifique algo..."
             icon="edit"
             name="notes"
-            onFocus={() => setOffsetHeight(DEVICE_HEIGHT * 0.25)}
             control={control}
             rules={{ required: false, validate: () => true }}
           />
         )}
-        <View style={{ height: keyboardVisible ? offsetHeight : 0 }}></View>
         <Button
           loading={
             createRequestMutation.isPending || updateRequestMutation.isPending
@@ -241,7 +238,7 @@ export default function RequestForm({
           onPress={onSubmit}
         />
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -253,5 +250,9 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     gap: theme.spacing.md,
     paddingBottom: theme.spacing.lg,
+  },
+  fields: {
+    width: "90%",
+    gap: theme.spacing.md,
   },
 });

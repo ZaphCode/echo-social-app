@@ -11,11 +11,9 @@ type SubscriptionCallback<T> = (payload: {
 export default function useSubscription<T>(
   collection: string,
   track: string,
-  callback: SubscriptionCallback<T>
+  callback: SubscriptionCallback<T>,
 ) {
   useEffect(() => {
-    console.log("Subscribed to", collection);
-
     const channel = supabase
       .channel(`${collection}_${track}`)
       .on(
@@ -26,23 +24,23 @@ export default function useSubscription<T>(
           table: collection,
         },
         (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
-          const action = payload.eventType === "INSERT"
-            ? "INSERT"
-            : payload.eventType === "UPDATE"
-            ? "UPDATE"
-            : "DELETE";
+          const action =
+            payload.eventType === "INSERT"
+              ? "INSERT"
+              : payload.eventType === "UPDATE"
+                ? "UPDATE"
+                : "DELETE";
 
           callback({
             action,
             record: (payload.new || {}) as T,
             old_record: (payload.old || undefined) as T | undefined,
           });
-        }
+        },
       )
       .subscribe();
 
     return () => {
-      console.log("Unsubscribed from", collection);
       supabase.removeChannel(channel);
     };
   }, [collection, track]);

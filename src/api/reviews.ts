@@ -2,6 +2,13 @@ import { supabase } from "@/lib/supabase";
 import { Review } from "@/models/Review";
 import { throwIfError } from "./common";
 import { ReviewWithProfiles } from "./types";
+import { getOfflineNetworkState, isLikelyNetworkError } from "@/offline/network";
+import {
+  cacheReviews,
+  listCachedReviewsByReviewerAndContracting,
+  listCachedReviewsByReviewerAndService,
+  listCachedServiceReviews,
+} from "@/offline/store";
 
 const reviewSelect =
   "*, reviewer_profile:profiles!reviewer(*), reviewed_profile:profiles!reviewed(*)";
@@ -25,66 +32,120 @@ export type CreateReviewInput = Pick<
   Partial<Pick<Review, "service" | "contracting" | "request">>;
 
 export async function listServiceReviews(serviceId: string) {
-  const { data, error } = await supabase
-    .from("review")
-    .select(reviewSelect)
-    .eq("service", serviceId);
+  if (!getOfflineNetworkState()) {
+    return listCachedServiceReviews(serviceId);
+  }
 
-  throwIfError(error);
+  try {
+    const { data, error } = await supabase
+      .from("review")
+      .select(reviewSelect)
+      .eq("service", serviceId);
 
-  return (data ?? []) as ReviewWithProfiles[];
+    throwIfError(error);
+
+    const reviews = (data ?? []) as ReviewWithProfiles[];
+    await cacheReviews(reviews);
+
+    return reviews;
+  } catch (error) {
+    if (isLikelyNetworkError(error)) {
+      return listCachedServiceReviews(serviceId);
+    }
+
+    throw error;
+  }
 }
 
 export async function getServiceReviewSummary(serviceId: string) {
-  const { data, error } = await supabase
-    .from("review")
-    .select("rating")
-    .eq("service", serviceId);
-
-  throwIfError(error);
-
-  const reviews = (data ?? []) as Pick<Review, "rating">[];
-
-  if (reviews.length === 0) {
-    return { average: 0, count: 0 };
+  if (!getOfflineNetworkState()) {
+    const cached = await listCachedServiceReviews(serviceId);
+    return summarizeRatings(cached);
   }
 
-  const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+  try {
+    const { data, error } = await supabase
+      .from("review")
+      .select("rating")
+      .eq("service", serviceId);
 
-  return {
-    average: totalRating / reviews.length,
-    count: reviews.length,
-  };
+    throwIfError(error);
+
+    return summarizeRatings((data ?? []) as Pick<Review, "rating">[]);
+  } catch (error) {
+    if (isLikelyNetworkError(error)) {
+      const cached = await listCachedServiceReviews(serviceId);
+      return summarizeRatings(cached);
+    }
+
+    throw error;
+  }
 }
 
 export async function listReviewsByReviewerAndService(
   reviewerId: string,
   serviceId: string
 ) {
-  const { data, error } = await supabase
-    .from("review")
-    .select(reviewSelect)
-    .eq("reviewer", reviewerId)
-    .eq("service", serviceId);
+  if (!getOfflineNetworkState()) {
+    return listCachedReviewsByReviewerAndService(reviewerId, serviceId);
+  }
 
-  throwIfError(error);
+  try {
+    const { data, error } = await supabase
+      .from("review")
+      .select(reviewSelect)
+      .eq("reviewer", reviewerId)
+      .eq("service", serviceId);
 
-  return (data ?? []) as ReviewWithProfiles[];
+    throwIfError(error);
+
+    const reviews = (data ?? []) as ReviewWithProfiles[];
+    await cacheReviews(reviews);
+
+    return reviews;
+  } catch (error) {
+    if (isLikelyNetworkError(error)) {
+      return listCachedReviewsByReviewerAndService(reviewerId, serviceId);
+    }
+
+    throw error;
+  }
 }
 
 export async function listReviewsByReviewerAndContracting(
   reviewerId: string,
   contractingId: string
 ) {
-  const { data, error } = await supabase
-    .from("review")
-    .select(reviewSelect)
-    .eq("reviewer", reviewerId)
-    .eq("contracting", contractingId);
+  if (!getOfflineNetworkState()) {
+    return listCachedReviewsByReviewerAndContracting(
+      reviewerId,
+      contractingId
+    );
+  }
 
-  throwIfError(error);
+  try {
+    const { data, error } = await supabase
+      .from("review")
+      .select(reviewSelect)
+      .eq("reviewer", reviewerId)
+      .eq("contracting", contractingId);
 
-  return (data ?? []) as ReviewWithProfiles[];
+    throwIfError(error);
+
+    const reviews = (data ?? []) as ReviewWithProfiles[];
+    await cacheReviews(reviews);
+
+    return reviews;
+  } catch (error) {
+    if (isLikelyNetworkError(error)) {
+      return listCachedReviewsByReviewerAndContracting(
+        reviewerId,
+        contractingId
+      );
+    }
+
+    throw error;
+  }
 }
 
 export async function listReviewsForUser(userId: string) {
@@ -108,4 +169,17 @@ export async function createReview(input: CreateReviewInput) {
   throwIfError(error);
 
   return data as ReviewWithProfiles;
+}
+
+function summarizeRatings(reviews: Pick<Review, "rating">[]) {
+  if (reviews.length === 0) {
+    return { average: 0, count: 0 };
+  }
+
+  const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+
+  return {
+    average: totalRating / reviews.length,
+    count: reviews.length,
+  };
 }

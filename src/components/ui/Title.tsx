@@ -4,6 +4,7 @@ import useColorScheme from "@/hooks/useColorScheme";
 
 import { theme } from "@/theme/theme";
 import Text from "./Text";
+import { useOffline } from "@/context/Offline";
 
 type Props = {
   title: string;
@@ -12,14 +13,23 @@ type Props = {
 
 export default function Title({ title, onRefresh }: Props) {
   const { colors } = useColorScheme();
+  const { isOnline } = useOffline();
+  const iconName = isOnline ? "reload" : "cloud-off-outline";
 
   return (
     <View style={styles.container}>
       <Text fontFamily="bold" color={colors.text} size={theme.fontSizes.xxl}>
         {title}
       </Text>
-      <TouchableOpacity onPress={onRefresh}>
-        <MaterialCommunityIcons name="reload" size={30} color={colors.text} />
+      <TouchableOpacity
+        onPress={isOnline ? onRefresh : undefined}
+        disabled={!isOnline || !onRefresh}
+      >
+        <MaterialCommunityIcons
+          name={iconName}
+          size={30}
+          color={isOnline ? colors.text : colors.lightGray}
+        />
       </TouchableOpacity>
     </View>
   );

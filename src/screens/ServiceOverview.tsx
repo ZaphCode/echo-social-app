@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { cacheVisitedService } from "@/api/services";
 import {
   listServiceRequestsForClient,
   serviceRequestsKeys,
@@ -37,6 +38,10 @@ export default function ServiceOverview({ route }: Props) {
     queryKey: serviceRequestsKeys.byServiceAndClient(service.id, user.id),
     queryFn: () => listServiceRequestsForClient(service.id, user.id),
   });
+
+  useEffect(() => {
+    cacheVisitedService(service);
+  }, [service]);
 
   useEffect(() => {
     if (requestsQuery.isSuccess && requestsQuery.data.length > 0) {

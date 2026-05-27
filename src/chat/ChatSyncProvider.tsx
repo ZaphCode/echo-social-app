@@ -8,9 +8,9 @@ import {
 } from "react";
 import { AppState } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNetworkState } from "expo-network";
 
 import { useAuthCtx } from "@/context/Auth";
+import { useOffline } from "@/context/Offline";
 import { flushPendingMessages, retryMessageByClientId } from "./sync";
 
 type ChatSyncContextType = {
@@ -31,13 +31,9 @@ export function ChatSyncProvider({
   children: React.ReactNode;
 }) {
   const queryClient = useQueryClient();
-  const networkState = useNetworkState();
   const { authenticated } = useAuthCtx();
+  const { isOnline } = useOffline();
   const isFlushingRef = useRef(false);
-
-  const isOnline =
-    Boolean(networkState.isConnected) &&
-    networkState.isInternetReachable !== false;
 
   const runFlush = useCallback(async () => {
     if (!authenticated || !isOnline || isFlushingRef.current) return;
