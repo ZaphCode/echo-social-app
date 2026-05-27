@@ -1,6 +1,6 @@
 import { View, StyleSheet, Pressable } from "react-native";
 import { Feather, Foundation } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ProviderProfileWithCategory } from "@/api/types";
 import { theme } from "@/theme/theme";
@@ -13,8 +13,11 @@ import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
   providerProfile: ProviderProfileWithCategory;
+  userId?: string;
   editable?: boolean;
 }
+
+const OFFLINE_PLACEHOLDER = "Disponible cuando vuelvas a conectarte";
 
 const weekDays = [
   { key: "SUN", label: "Dom" },
@@ -28,6 +31,7 @@ const weekDays = [
 
 export default function ProfessionalInfoSection({
   providerProfile,
+  userId,
   editable,
 }: Props) {
   const { colors } = useColorScheme();
@@ -36,10 +40,16 @@ export default function ProfessionalInfoSection({
 
   const { available_days, experience_years } = optimisticProfile;
   const specialty = optimisticProfile.specialty_category?.name;
+  const hasExperience = experience_years > 0;
+  const experienceYearsValue =
+    hasExperience || editable
+      ? `${experience_years} ${experience_years === 1 ? "año" : "años"}`
+      : OFFLINE_PLACEHOLDER;
+  const hasAvailableDays = available_days?.length > 0;
 
-  const experience_years_value = `${experience_years} ${
-    experience_years === 1 ? "año" : "años"
-  }`;
+  useEffect(() => {
+    setOptimisticProfile(providerProfile);
+  }, [providerProfile]);
 
   return (
     <View style={{ ...styles.block, backgroundColor: colors.darkerGray }}>
@@ -67,12 +77,16 @@ export default function ProfessionalInfoSection({
           </Pressable>
         )}
       </View>
-      {specialty && (
-        <InfoRow label="Especialidad" value={specialty} icon="briefcase" />
+      {(specialty || !editable) && (
+        <InfoRow
+          label="Especialidad"
+          value={specialty || OFFLINE_PLACEHOLDER}
+          icon="briefcase"
+        />
       )}
       <InfoRow
         label="Experiencia"
-        value={experience_years_value}
+        value={experienceYearsValue}
         icon="calendar"
       />
       <View style={{ marginTop: 12, marginBottom: 12 }}>
@@ -80,41 +94,48 @@ export default function ProfessionalInfoSection({
           <Feather name={"check-square"} size={20} color={colors.text} />
           <Text style={styles.label}>Días disponibles</Text>
         </View>
-        <View style={styles.daysRow}>
-          {weekDays.map((d) => {
-            const selected = available_days?.includes(d.key);
-            return (
-              <View key={d.key} style={styles.dayCol}>
-                {selected ? (
-                  <Feather
-                    name="check"
-                    size={16}
-                    color={colors.secondaryBlue}
-                    style={{ marginBottom: 2 }}
-                  />
-                ) : (
-                  <View style={{ height: 16, marginBottom: 2 }} />
-                )}
-                <Text
-                  style={[
-                    { ...styles.dayText, color: colors.text },
-                    selected && {
-                      color: colors.secondaryBlue,
-                      fontFamily: theme.fontFamily.bold,
-                    },
-                  ]}
-                >
-                  {d.label}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+        {hasAvailableDays || editable ? (
+          <View style={styles.daysRow}>
+            {weekDays.map((d) => {
+              const selected = available_days?.includes(d.key);
+              return (
+                <View key={d.key} style={styles.dayCol}>
+                  {selected ? (
+                    <Feather
+                      name="check"
+                      size={16}
+                      color={colors.secondaryBlue}
+                      style={{ marginBottom: 2 }}
+                    />
+                  ) : (
+                    <View style={{ height: 16, marginBottom: 2 }} />
+                  )}
+                  <Text
+                    style={[
+                      { ...styles.dayText, color: colors.text },
+                      selected && {
+                        color: colors.secondaryBlue,
+                        fontFamily: theme.fontFamily.bold,
+                      },
+                    ]}
+                  >
+                    {d.label}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          <Text color={colors.lightGray} style={styles.unavailableText}>
+            {OFFLINE_PLACEHOLDER}
+          </Text>
+        )}
       </View>
       {editable && (
         <SlideModal visible={modalVisible} onClose={closeModal}>
           <EditProviderInfoView
             providerProfile={optimisticProfile}
+            userId={userId ?? providerProfile.user}
             onSuccess={(data) => {
               setOptimisticProfile(data);
               closeModal();
@@ -166,6 +187,11 @@ const styles = StyleSheet.create({
   },
   label: { fontSize: theme.fontSizes.md },
   value: { fontSize: theme.fontSizes.md, marginLeft: 28, marginTop: 5 },
+  unavailableText: {
+    fontSize: theme.fontSizes.md,
+    marginLeft: 28,
+    marginTop: 2,
+  },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

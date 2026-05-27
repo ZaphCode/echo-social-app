@@ -21,6 +21,7 @@ import useCheckReviews from "@/hooks/useCheckReviews";
 import { useAuthCtx } from "@/context/Auth";
 import useColorScheme from "@/hooks/useColorScheme";
 import useChatPresence from "@/hooks/useChatPresence";
+import Text from "@/components/ui/Text";
 
 type Props = StaticScreenProps<{ request: ServiceRequestWithRelations }>;
 
@@ -28,6 +29,35 @@ export default function Chatroom({ route }: Props) {
   const { colors } = useColorScheme();
   const { user: authUser } = useAuthCtx();
   const { request } = route.params;
+  const canAccessRequest =
+    request.client === authUser.id || request.provider === authUser.id;
+
+  if (!canAccessRequest) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={styles.unauthorizedContainer}>
+          <Text color={colors.redError} fontFamily="bold">
+            Esta solicitud no pertenece a la cuenta autenticada.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <ChatroomContent request={request} authUser={authUser} colors={colors} />
+  );
+}
+
+function ChatroomContent({
+  request,
+  authUser,
+  colors,
+}: {
+  request: ServiceRequestWithRelations;
+  authUser: ReturnType<typeof useAuthCtx>["user"];
+  colors: ReturnType<typeof useColorScheme>["colors"];
+}) {
   const subject = getRequestSubject(request);
   const service = request.service_detail;
   const client = request.client_profile || ({} as any);
@@ -115,5 +145,11 @@ const styles = StyleSheet.create({
   messageList: {
     flex: 1,
     paddingHorizontal: theme.spacing.md,
+  },
+  unauthorizedContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: theme.spacing.lg,
   },
 });

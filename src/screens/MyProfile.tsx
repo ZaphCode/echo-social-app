@@ -109,6 +109,7 @@ export default function MyProfile() {
         {user.role === "provider" && (
           <ProfessionalInfoSection
             providerProfile={profile as ProviderProfileWithCategory}
+            userId={user.id}
             editable
           />
         )}

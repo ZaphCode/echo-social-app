@@ -10,7 +10,7 @@ import InfoRow from "@/components/InfoRow";
 import Text from "@/components/ui/Text";
 import EditProfileView from "@/components/EditProfileView";
 import useModal from "@/hooks/useModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useColorScheme from "@/hooks/useColorScheme";
 
 interface Props {
@@ -18,6 +18,8 @@ interface Props {
   profile: ClientProfile | ProviderProfile;
   editable?: boolean;
 }
+
+const OFFLINE_PLACEHOLDER = "Disponible cuando vuelvas a conectarte";
 
 export default function PersonalInfoSection({
   user,
@@ -28,6 +30,19 @@ export default function PersonalInfoSection({
   const [optimisticProfile, setOptimisticProfile] = useState(profile);
   const { colors } = useColorScheme();
   const { address, phone, city, state, zip } = optimisticProfile;
+
+  useEffect(() => {
+    setOptimisticProfile(profile);
+  }, [profile]);
+
+  const phoneValue = phone.trim() || (
+    editable ? "" : OFFLINE_PLACEHOLDER
+  );
+  const addressParts = [address, city, state].map((item) => item.trim()).filter(Boolean);
+  const zipLabel = zip.trim() ? `CP ${zip.trim()}` : "";
+  const addressValue = [...addressParts, zipLabel].filter(Boolean).join(", ") || (
+    editable ? "" : OFFLINE_PLACEHOLDER
+  );
 
   return (
     <View
@@ -57,16 +72,17 @@ export default function PersonalInfoSection({
         )}
       </View>
       <InfoRow icon="mail" label="Email" value={user.email} />
-      <InfoRow icon="phone" label="Teléfono" value={phone} />
+      <InfoRow icon="phone" label="Teléfono" value={phoneValue} />
       <InfoRow
         icon="map-pin"
         label="Dirección"
-        value={`${address}, ${city}, ${state}, CP ${zip}`}
+        value={addressValue}
       />
       {editable && (
         <SlideModal visible={modalVisible} onClose={closeModal}>
           <EditProfileView
             profile={optimisticProfile}
+            userId={user.id}
             userRole={user.role}
             onSuccess={(newData) => {
               setOptimisticProfile(newData);

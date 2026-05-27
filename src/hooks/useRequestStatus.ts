@@ -15,11 +15,13 @@ export default function useRequestStatus(
   authUser: User,
   options: Options = {},
 ) {
-  const { request, client, provider, subject } = useNegotiationCtx();
+  const { request, client, provider, subject, setRequest } = useNegotiationCtx();
   const queryClient = useQueryClient();
 
   const { addJob } = useJobsDone(provider);
   const counterparty = authUser.id === client.id ? provider : client;
+  const updateCurrentRequest = (patch: Parameters<typeof updateServiceRequest>[1]) =>
+    updateServiceRequest(request.id, patch, authUser.id);
 
   async function notifyCounterparty(action: "accepted" | "rejected") {
     if (!options.shouldNotifyCounterparty) return;
@@ -50,25 +52,29 @@ export default function useRequestStatus(
   async function setUserToAgreed() {
     if (authUser.id === client.id) {
       if (NS.providerAgreed(request)) {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           client_offer_status: "ACCEPTED",
           agreement_state: "ACCEPTED",
         });
+        setRequest(updatedRequest);
       } else {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           client_offer_status: "ACCEPTED",
         });
+        setRequest(updatedRequest);
       }
     } else {
       if (NS.clientAgreed(request)) {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           provider_offer_status: "ACCEPTED",
           agreement_state: "ACCEPTED",
         });
+        setRequest(updatedRequest);
       } else {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           provider_offer_status: "ACCEPTED",
         });
+        setRequest(updatedRequest);
       }
     }
 
@@ -78,27 +84,31 @@ export default function useRequestStatus(
   async function setUserToRejected() {
     if (authUser.id === client.id) {
       if (NS.providerRejected(request)) {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           client_offer_status: "REJECTED",
           agreement_state: "CANCELED",
           canceled: new Date().toISOString(),
         });
+        setRequest(updatedRequest);
       } else {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           client_offer_status: "REJECTED",
         });
+        setRequest(updatedRequest);
       }
     } else {
       if (NS.clientRejected(request)) {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           provider_offer_status: "REJECTED",
           agreement_state: "CANCELED",
           canceled: new Date().toISOString(),
         });
+        setRequest(updatedRequest);
       } else {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           provider_offer_status: "REJECTED",
         });
+        setRequest(updatedRequest);
       }
     }
 
@@ -108,11 +118,12 @@ export default function useRequestStatus(
   async function setUserToCompleted() {
     if (authUser.id === client.id) {
       if (NS.providerMarkedCompleted(request)) {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           client_offer_status: "COMPLETED",
           agreement_state: "FINISHED",
           finished: new Date().toISOString(),
         });
+        setRequest(updatedRequest);
         await addJob(request.id);
         await queryClient.invalidateQueries({
           queryKey: serviceRequestsKeys.allForUser(client.id),
@@ -126,17 +137,19 @@ export default function useRequestStatus(
           });
         }
       } else {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           client_offer_status: "COMPLETED",
         });
+        setRequest(updatedRequest);
       }
     } else {
       if (NS.clientMarkedCompleted(request)) {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           provider_offer_status: "COMPLETED",
           agreement_state: "FINISHED",
           finished: new Date().toISOString(),
         });
+        setRequest(updatedRequest);
         await addJob(request.id);
         await queryClient.invalidateQueries({
           queryKey: serviceRequestsKeys.allForUser(client.id),
@@ -150,9 +163,10 @@ export default function useRequestStatus(
           });
         }
       } else {
-        await updateServiceRequest(request.id, {
+        const updatedRequest = await updateCurrentRequest({
           provider_offer_status: "COMPLETED",
         });
+        setRequest(updatedRequest);
       }
     }
   }

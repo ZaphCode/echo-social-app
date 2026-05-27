@@ -13,6 +13,7 @@ import { Contracting } from "@/models/Contracting";
 import { theme } from "@/theme/theme";
 import { useAlertCtx } from "@/context/Alert";
 import { useAuthCtx } from "@/context/Auth";
+import { useOffline } from "@/context/Offline";
 import { validPriceRules, validServicesPhotoRules } from "@/utils/validations";
 import Button from "@/components/ui/Button";
 import Dropdown from "@/components/forms/Dropdown";
@@ -27,6 +28,7 @@ export default function ContractingEditor({ route }: Props) {
   const contracting = route.params.contractingToEdit;
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
+  const { isOnline } = useOffline();
   const { colors } = useColorScheme();
   const queryClient = useQueryClient();
   const navigation = useNavigation();
@@ -95,9 +97,12 @@ export default function ContractingEditor({ route }: Props) {
 
     show({
       title: contracting ? "Contratación Actualizada" : "Contratación Creada",
-      message: `La contratación ha sido ${
-        contracting ? "actualizada" : "creada"
-      } exitosamente.`,
+      message:
+        contracting && !isOnline
+          ? "La contratación se guardó localmente y se sincronizará al reconectar."
+          : `La contratación ha sido ${
+              contracting ? "actualizada" : "creada"
+            } exitosamente.`,
       icon: "check-circle",
       iconColor: theme.colors.successGreen,
     });

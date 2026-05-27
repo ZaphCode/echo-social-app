@@ -25,7 +25,11 @@ export default function RequestsList() {
     queryKey: serviceRequestsKeys.allForUser(user.id),
     queryFn: () => listAllUserRequests(user.id),
   });
-  const unreadCountsQuery = useUnreadMessageCounts(requestsQuery.data, user.id);
+  const requests =
+    requestsQuery.data?.filter(
+      (request) => request.client === user.id || request.provider === user.id
+    ) ?? [];
+  const unreadCountsQuery = useUnreadMessageCounts(requests, user.id);
 
   useFocusEffect(
     useCallback(() => {
@@ -47,7 +51,7 @@ export default function RequestsList() {
   return (
     <FlatList
       style={styles.list}
-      data={requestsQuery.data}
+      data={requests}
       renderItem={({ item }) => (
         <RequestCard
           request={item}

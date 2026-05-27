@@ -11,7 +11,7 @@ function isRemoteUrl(value: string) {
   return /^https?:\/\//i.test(value);
 }
 
-function isLocalUri(value: string) {
+export function isLocalUri(value: string) {
   return /^(file|content|ph|assets-library):\/\//i.test(value);
 }
 
@@ -90,7 +90,7 @@ export async function uploadServiceImages(
 ) {
   return Promise.all(
     photos.map(async (photo, index) => {
-      if (photo.startsWith("file://")) {
+      if (isLocalUri(photo)) {
         const { extension, contentType } = getFileMetadata(photo);
         const filePath = `${providerId}/service_${Date.now()}_${index}.${extension}`;
         return uploadImage("service-photos", filePath, photo, contentType);
@@ -104,7 +104,7 @@ export async function uploadServiceImages(
 export async function uploadContractingImages(ownerId: string, photos: string[]) {
   return Promise.all(
     photos.map(async (photo, index) => {
-      if (photo.startsWith("file://")) {
+      if (isLocalUri(photo)) {
         const { extension, contentType } = getFileMetadata(photo);
         const filePath = `${ownerId}/contracting_${Date.now()}_${index}.${extension}`;
         return uploadImage("service-photos", filePath, photo, contentType);

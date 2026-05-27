@@ -36,10 +36,7 @@ export default function SignIn() {
     if (error)
       show({
         title: "Error al iniciar sesión",
-        message:
-          error === "invalid-credentials"
-            ? "Credenciales incorrectas. Por favor, verifica tu correo y contraseña."
-            : "Ocurrió un error al iniciar sesión. Por favor, inténtalo de nuevo más tarde.",
+        message: getLoginErrorMessage(error),
         icon: "account-remove",
         iconColor: theme.colors.redError,
       });
@@ -130,3 +127,15 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
+
+function getLoginErrorMessage(error: string) {
+  if (error === "invalid-credentials") {
+    return "Credenciales incorrectas. Por favor, verifica tu correo y contraseña.";
+  }
+
+  if (error === "offline-login-unavailable") {
+    return "No se pudo iniciar sesión sin conexión. Debes haber iniciado sesión online antes en este dispositivo y usar la misma contraseña.";
+  }
+
+  return "Ocurrió un error al iniciar sesión. Por favor, inténtalo de nuevo más tarde.";
+}

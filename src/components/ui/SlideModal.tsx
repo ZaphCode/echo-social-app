@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
@@ -42,33 +44,45 @@ export function SlideModal({ visible, onClose, children }: Props) {
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.backdrop} />
-      </TouchableWithoutFeedback>
+      <View style={styles.root}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={styles.backdrop} />
+        </TouchableWithoutFeedback>
 
-      <Animated.View
-        style={[
-          styles.modalContent,
-          {
-            backgroundColor: colors.darkerGray,
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
-      >
-        {children}
-      </Animated.View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardAvoidingView}
+        >
+          <Animated.View
+            style={[
+              styles.modalContent,
+              {
+                backgroundColor: colors.darkerGray,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            {children}
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  root: {
     flex: 1,
+    justifyContent: "flex-end",
+  },
+  keyboardAvoidingView: {
+    justifyContent: "flex-end",
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    position: "absolute",
-    bottom: 0,
     width: "100%",
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,

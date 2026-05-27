@@ -1,5 +1,10 @@
-import { useState } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import {
+  Keyboard,
+  ScrollView,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -11,7 +16,6 @@ import {
 } from "@/api/serviceRequests";
 import { ContractingWithOwner, ServiceRequestWithRelations } from "@/api/types";
 import { theme } from "@/theme/theme";
-import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
 import { Service } from "@/models/Service";
 import { useAuthCtx } from "@/context/Auth";
 import { validPriceRules } from "@/utils/validations";
@@ -26,8 +30,6 @@ import Button from "../ui/Button";
 import DateField from "./DateField";
 import { useAlertCtx } from "@/context/Alert";
 import useColorScheme from "@/hooks/useColorScheme";
-
-const DEVICE_HEIGHT = Dimensions.get("window").height;
 
 type Props = {
   service?: Service;
@@ -56,8 +58,6 @@ export default function RequestForm({
   const { colors } = useColorScheme();
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
-  const keyboardVisible = useKeyboardVisible();
-  const [offsetHeight, setOffsetHeight] = useState(0);
   const offeringMode = !!requestId;
   const queryClient = useQueryClient();
   const subject =
@@ -89,7 +89,7 @@ export default function RequestForm({
     }: {
       id: string;
       patch: Parameters<typeof updateServiceRequest>[1];
-    }) => updateServiceRequest(id, patch),
+    }) => updateServiceRequest(id, patch, user.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: serviceRequestsKeys.all });
     },
@@ -201,47 +201,50 @@ export default function RequestForm({
   });
 
   return (
-    <View style={styles.container}>
-      <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.xl}>
-        {offeringMode
-          ? "Realiza una oferta"
-          : isContracting
-            ? "Aplicar a Contratación"
-            : "Solicitud de Servicio"}
-      </Text>
-      <View style={{ width: "90%", gap: theme.spacing.md }}>
-        <Field
-          label={offeringMode ? "Precio" : "Oferta inicial"}
-          placeholder={`${subject.base_price}`}
-          keyboardType="numeric"
-          name="price"
-          icon="dollar-sign"
-          onFocus={() => setOffsetHeight(10)}
-          control={control}
-          rules={validPriceRules}
-        />
-        <DateField control={control} name="date" label="Fecha" />
-        {!offeringMode && (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.xl}>
+          {offeringMode
+            ? "Realiza una oferta"
+            : isContracting
+              ? "Aplicar a Contratación"
+              : "Solicitud de Servicio"}
+        </Text>
+        <View style={styles.fields}>
           <Field
-            label="Notas (opcional)"
-            placeholder="Especifique algo..."
-            icon="edit"
-            name="notes"
-            onFocus={() => setOffsetHeight(DEVICE_HEIGHT * 0.25)}
+            label={offeringMode ? "Precio" : "Oferta inicial"}
+            placeholder={`${subject.base_price}`}
+            keyboardType="numeric"
+            name="price"
+            icon="dollar-sign"
             control={control}
-            rules={{ required: false, validate: () => true }}
+            rules={validPriceRules}
           />
-        )}
-        <View style={{ height: keyboardVisible ? offsetHeight : 0 }}></View>
-        <Button
-          loading={
-            createRequestMutation.isPending || updateRequestMutation.isPending
-          }
-          title="Enviar"
-          onPress={onSubmit}
-        />
-      </View>
-    </View>
+          <DateField control={control} name="date" label="Fecha" />
+          {!offeringMode && (
+            <Field
+              label="Notas (opcional)"
+              placeholder="Especifique algo..."
+              icon="edit"
+              name="notes"
+              control={control}
+              rules={{ required: false, validate: () => true }}
+            />
+          )}
+          <Button
+            loading={
+              createRequestMutation.isPending || updateRequestMutation.isPending
+            }
+            title="Enviar"
+            onPress={onSubmit}
+          />
+        </View>
+      </ScrollView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -253,5 +256,9 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     gap: theme.spacing.md,
     paddingBottom: theme.spacing.lg,
+  },
+  fields: {
+    width: "90%",
+    gap: theme.spacing.md,
   },
 });

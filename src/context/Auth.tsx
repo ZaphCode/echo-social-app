@@ -1,6 +1,12 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { User } from "@/models/User";
+import {
+  cacheAuthUser,
+  getCachedAuthUserById,
+} from "@/offline/store";
+import { verifyOfflineCredential } from "@/offline/auth";
+import { getProfileByUser } from "@/api/profiles";
 
 const initialUser: User = {
   id: "",
@@ -17,7 +23,9 @@ const initialUser: User = {
 type AuthContextType = {
   user: User;
   authenticated: boolean;
-  login: (user: User) => void;
+  authMode: "online" | "offline";
+  login: (user: User, mode?: "online" | "offline") => void;
+  offlineLogin: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
 };
 
@@ -27,6 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [authData, setAuthData] = useState({
     user: initialUser,
     authenticated: false,
+    authMode: "offline" as "online" | "offline",
   });
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +45,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (session?.user) {
         const profile = await fetchProfile(session.user.id);
         if (profile) {
-          setAuthData({ user: profile, authenticated: true });
+          await cacheAuthUser(profile, true);
+          await cacheProfileDetailsBestEffort(profile);
+          setAuthData({
+            user: profile,
+            authenticated: true,
+            authMode: "online",
+          });
+        } else {
+          const cachedProfile = await getCachedAuthUserById(session.user.id);
+          if (cachedProfile) {
+            setAuthData({
+              user: cachedProfile,
+              authenticated: true,
+              authMode: "offline",
+            });
+          }
         }
       }
       setLoading(false);
@@ -49,23 +73,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (session?.user) {
         const profile = await fetchProfile(session.user.id);
         if (profile) {
-          setAuthData({ user: profile, authenticated: true });
+          await cacheAuthUser(profile, true);
+          await cacheProfileDetailsBestEffort(profile);
+          setAuthData({
+            user: profile,
+            authenticated: true,
+            authMode: "online",
+          });
         }
       } else {
-        setAuthData({ user: initialUser, authenticated: false });
+        setAuthData({
+          user: initialUser,
+          authenticated: false,
+          authMode: "offline",
+        });
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = (user: User) => setAuthData({ user, authenticated: true });
-  const logout = () => setAuthData({ user: initialUser, authenticated: false });
+  const login = (user: User, mode: "online" | "offline" = "online") => {
+    cacheAuthUser(user, mode === "online");
+    setAuthData({ user, authenticated: true, authMode: mode });
+  };
+
+  const offlineLogin = async (email: string, password: string) => {
+    const cachedUser = await verifyOfflineCredential(email, password);
+    if (!cachedUser) return false;
+
+    login(cachedUser, "offline");
+    return true;
+  };
+
+  const logout = () =>
+    setAuthData({
+      user: initialUser,
+      authenticated: false,
+      authMode: "offline",
+    });
 
   if (loading) return null; // Or a splash screen
 
   return (
-    <AuthContext.Provider value={{ ...authData, login, logout }}>
+    <AuthContext.Provider value={{ ...authData, login, offlineLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -92,6 +143,14 @@ async function fetchProfile(userId: string): Promise<User | null> {
     updated_at: data.updated_at,
     location: data.location || undefined,
   };
+}
+
+async function cacheProfileDetailsBestEffort(user: User) {
+  try {
+    await getProfileByUser(user);
+  } catch (error) {
+    console.log("Profile details cache failed:", error);
+  }
 }
 
 export const useAuthCtx = () => {

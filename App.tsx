@@ -9,6 +9,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { AuthProvider } from "./src/context/Auth";
 import { useFonts } from "expo-font";
 import { AlertProvider } from "@/context/Alert";
+import { OfflineProvider } from "@/context/Offline";
 import { AlertModal } from "@/components/ui/AlertModal";
 import useAppTheme from "@/hooks/useAppTheme";
 import { initChatDatabase } from "@/chat/db";
@@ -38,11 +39,13 @@ export default function AppWrapped() {
           useSuspense
         >
           <AuthProvider>
-            <ChatSyncProvider>
-              <AlertProvider>
-                <App />
-              </AlertProvider>
-            </ChatSyncProvider>
+            <OfflineProvider>
+              <ChatSyncProvider>
+                <AlertProvider>
+                  <App />
+                </AlertProvider>
+              </ChatSyncProvider>
+            </OfflineProvider>
           </AuthProvider>
         </SQLiteProvider>
       </Suspense>
