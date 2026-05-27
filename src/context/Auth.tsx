@@ -6,6 +6,7 @@ import {
   getCachedAuthUserById,
 } from "@/offline/store";
 import { verifyOfflineCredential } from "@/offline/auth";
+import { getProfileByUser } from "@/api/profiles";
 
 const initialUser: User = {
   id: "",
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const profile = await fetchProfile(session.user.id);
         if (profile) {
           await cacheAuthUser(profile, true);
+          await cacheProfileDetailsBestEffort(profile);
           setAuthData({
             user: profile,
             authenticated: true,
@@ -72,6 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const profile = await fetchProfile(session.user.id);
         if (profile) {
           await cacheAuthUser(profile, true);
+          await cacheProfileDetailsBestEffort(profile);
           setAuthData({
             user: profile,
             authenticated: true,
@@ -140,6 +143,14 @@ async function fetchProfile(userId: string): Promise<User | null> {
     updated_at: data.updated_at,
     location: data.location || undefined,
   };
+}
+
+async function cacheProfileDetailsBestEffort(user: User) {
+  try {
+    await getProfileByUser(user);
+  } catch (error) {
+    console.log("Profile details cache failed:", error);
+  }
 }
 
 export const useAuthCtx = () => {

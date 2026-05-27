@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { ServiceRequest } from "@/models/ServiceRequest";
-import { throwIfError } from "./common";
+import { isAuthError, throwIfError } from "./common";
 import { ServiceRequestWithRelations } from "./types";
 import { getOfflineNetworkState, isLikelyNetworkError } from "@/offline/network";
 import { createLocalUuid } from "@/offline/ids";
@@ -63,6 +63,10 @@ export async function listClientRequests(clientId: string) {
     return listCachedServiceRequestsForUser(clientId);
   }
 
+  if (!(await hasRemoteSessionForUser(clientId))) {
+    return listCachedServiceRequestsForUser(clientId);
+  }
+
   try {
     const { data, error } = await supabase
       .from("service_request")
@@ -77,7 +81,7 @@ export async function listClientRequests(clientId: string) {
 
     return requests;
   } catch (error) {
-    if (isLikelyNetworkError(error)) {
+    if (isLikelyNetworkError(error) || isAuthError(error)) {
       return listCachedServiceRequestsForUser(clientId);
     }
 
@@ -87,6 +91,10 @@ export async function listClientRequests(clientId: string) {
 
 export async function listAllUserRequests(userId: string) {
   if (!getOfflineNetworkState()) {
+    return listCachedServiceRequestsForUser(userId);
+  }
+
+  if (!(await hasRemoteSessionForUser(userId))) {
     return listCachedServiceRequestsForUser(userId);
   }
 
@@ -104,7 +112,7 @@ export async function listAllUserRequests(userId: string) {
 
     return requests;
   } catch (error) {
-    if (isLikelyNetworkError(error)) {
+    if (isLikelyNetworkError(error) || isAuthError(error)) {
       return listCachedServiceRequestsForUser(userId);
     }
 
@@ -117,6 +125,10 @@ export async function listServiceRequestsForClient(
   clientId: string
 ) {
   if (!getOfflineNetworkState()) {
+    return listCachedServiceRequestsForServiceClient(serviceId, clientId);
+  }
+
+  if (!(await hasRemoteSessionForUser(clientId))) {
     return listCachedServiceRequestsForServiceClient(serviceId, clientId);
   }
 
@@ -134,7 +146,7 @@ export async function listServiceRequestsForClient(
 
     return requests;
   } catch (error) {
-    if (isLikelyNetworkError(error)) {
+    if (isLikelyNetworkError(error) || isAuthError(error)) {
       return listCachedServiceRequestsForServiceClient(serviceId, clientId);
     }
 
@@ -147,6 +159,13 @@ export async function listContractingApplicationsForProvider(
   providerId: string
 ) {
   if (!getOfflineNetworkState()) {
+    return listCachedServiceRequestsForContractingProvider(
+      contractingId,
+      providerId
+    );
+  }
+
+  if (!(await hasRemoteSessionForUser(providerId))) {
     return listCachedServiceRequestsForContractingProvider(
       contractingId,
       providerId
@@ -167,7 +186,7 @@ export async function listContractingApplicationsForProvider(
 
     return requests;
   } catch (error) {
-    if (isLikelyNetworkError(error)) {
+    if (isLikelyNetworkError(error) || isAuthError(error)) {
       return listCachedServiceRequestsForContractingProvider(
         contractingId,
         providerId
@@ -199,10 +218,8 @@ export async function getServiceRequestById(requestId: string) {
 
     return request;
   } catch (error) {
-    if (isLikelyNetworkError(error)) {
-      const cached = await getCachedServiceRequest(requestId);
-      if (cached) return cached;
-    }
+    const cached = await getCachedServiceRequest(requestId);
+    if (cached) return cached;
 
     throw error;
   }
@@ -401,6 +418,11 @@ export async function listFinishedRequestsForUser(userId: string) {
     return requests.filter((request) => request.agreement_state === "FINISHED");
   }
 
+  if (!(await hasRemoteSessionForUser(userId))) {
+    const requests = await listCachedServiceRequestsForUser(userId);
+    return requests.filter((request) => request.agreement_state === "FINISHED");
+  }
+
   const { data, error } = await supabase
     .from("service_request")
     .select(serviceRequestSelect)
@@ -413,6 +435,14 @@ export async function listFinishedRequestsForUser(userId: string) {
   await cacheServiceRequests(userId, requests);
 
   return requests;
+}
+
+async function hasRemoteSessionForUser(userId: string) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  return session?.user.id === userId;
 }
 
 function createFallbackProfile(id: string): ServiceRequestWithRelations["client_profile"] {

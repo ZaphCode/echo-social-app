@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { Notification } from "@/models/Notification";
-import { throwIfError } from "./common";
+import { isAuthError, throwIfError } from "./common";
 import { NotificationWithUser } from "./types";
 import { getOfflineNetworkState, isLikelyNetworkError } from "@/offline/network";
 import {
@@ -32,6 +32,10 @@ export async function listNotificationsByUser(userId: string) {
     return listCachedNotifications(userId);
   }
 
+  if (!(await hasRemoteSessionForUser(userId))) {
+    return listCachedNotifications(userId);
+  }
+
   try {
     const { data, error } = await supabase
       .from("notification")
@@ -46,7 +50,7 @@ export async function listNotificationsByUser(userId: string) {
 
     return notifications;
   } catch (error) {
-    if (isLikelyNetworkError(error)) {
+    if (isLikelyNetworkError(error) || isAuthError(error)) {
       return listCachedNotifications(userId);
     }
 
@@ -56,6 +60,10 @@ export async function listNotificationsByUser(userId: string) {
 
 export async function countUnreadNotificationsByUser(userId: string) {
   if (!getOfflineNetworkState()) {
+    return countCachedUnreadNotifications(userId);
+  }
+
+  if (!(await hasRemoteSessionForUser(userId))) {
     return countCachedUnreadNotifications(userId);
   }
 
@@ -70,12 +78,20 @@ export async function countUnreadNotificationsByUser(userId: string) {
 
     return count ?? 0;
   } catch (error) {
-    if (isLikelyNetworkError(error)) {
+    if (isLikelyNetworkError(error) || isAuthError(error)) {
       return countCachedUnreadNotifications(userId);
     }
 
     throw error;
   }
+}
+
+async function hasRemoteSessionForUser(userId: string) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  return session?.user.id === userId;
 }
 
 export async function createNotification(input: CreateNotificationInput) {

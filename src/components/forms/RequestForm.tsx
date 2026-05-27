@@ -1,7 +1,12 @@
-import { StyleSheet, View } from "react-native";
+import {
+  Keyboard,
+  ScrollView,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { createNotification, notificationsKeys } from "@/api/notifications";
 import {
@@ -196,49 +201,50 @@ export default function RequestForm({
   });
 
   return (
-    <KeyboardAwareScrollView
-      bottomOffset={theme.spacing.md}
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
-      <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.xl}>
-        {offeringMode
-          ? "Realiza una oferta"
-          : isContracting
-            ? "Aplicar a Contratación"
-            : "Solicitud de Servicio"}
-      </Text>
-      <View style={styles.fields}>
-        <Field
-          label={offeringMode ? "Precio" : "Oferta inicial"}
-          placeholder={`${subject.base_price}`}
-          keyboardType="numeric"
-          name="price"
-          icon="dollar-sign"
-          control={control}
-          rules={validPriceRules}
-        />
-        <DateField control={control} name="date" label="Fecha" />
-        {!offeringMode && (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.xl}>
+          {offeringMode
+            ? "Realiza una oferta"
+            : isContracting
+              ? "Aplicar a Contratación"
+              : "Solicitud de Servicio"}
+        </Text>
+        <View style={styles.fields}>
           <Field
-            label="Notas (opcional)"
-            placeholder="Especifique algo..."
-            icon="edit"
-            name="notes"
+            label={offeringMode ? "Precio" : "Oferta inicial"}
+            placeholder={`${subject.base_price}`}
+            keyboardType="numeric"
+            name="price"
+            icon="dollar-sign"
             control={control}
-            rules={{ required: false, validate: () => true }}
+            rules={validPriceRules}
           />
-        )}
-        <Button
-          loading={
-            createRequestMutation.isPending || updateRequestMutation.isPending
-          }
-          title="Enviar"
-          onPress={onSubmit}
-        />
-      </View>
-    </KeyboardAwareScrollView>
+          <DateField control={control} name="date" label="Fecha" />
+          {!offeringMode && (
+            <Field
+              label="Notas (opcional)"
+              placeholder="Especifique algo..."
+              icon="edit"
+              name="notes"
+              control={control}
+              rules={{ required: false, validate: () => true }}
+            />
+          )}
+          <Button
+            loading={
+              createRequestMutation.isPending || updateRequestMutation.isPending
+            }
+            title="Enviar"
+            onPress={onSubmit}
+          />
+        </View>
+      </ScrollView>
+    </TouchableWithoutFeedback>
   );
 }
 

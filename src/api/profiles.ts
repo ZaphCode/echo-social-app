@@ -2,11 +2,15 @@ import { supabase } from "@/lib/supabase";
 import { ClientProfile } from "@/models/ClientProfile";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import { User } from "@/models/User";
-import { throwIfError } from "./common";
+import { isAuthError, throwIfError } from "./common";
 import { resolveStorageUrl } from "./storage";
 import { ClientProfileWithUser, ProviderProfileWithCategory } from "./types";
 import { getOfflineNetworkState, isLikelyNetworkError } from "@/offline/network";
-import { cacheProfile, getCachedProfile } from "@/offline/store";
+import {
+  cacheProfileDetails,
+  getCachedProfile,
+  getCachedProfileDetails,
+} from "@/offline/store";
 
 const clientProfileSelect = "*, user_profile:profiles!user(*)";
 const providerProfileSelect =
@@ -19,22 +23,20 @@ export const profilesKeys = {
 };
 
 export async function getProfileByUser(user: User) {
+  const cachedDetails = await getCachedProfileDetails(user.id);
+
   if (!getOfflineNetworkState()) {
-    const cached = await getCachedProfile(user.id);
-    if (cached) {
-      return {
-        id: user.id,
-        user: user.id,
-        phone: "",
-        state: "",
-        city: "",
-        address: "",
-        zip: "",
-        updated_at: cached.updated_at,
-        created_at: cached.created_at,
-        user_profile: cached,
-      } as ClientProfileWithUser;
-    }
+    if (cachedDetails) return cachedDetails;
+    return getFallbackProfileDetails(user);
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.user.id !== user.id) {
+    if (cachedDetails) return cachedDetails;
+    return getFallbackProfileDetails(user);
   }
 
   if (user.role === "client") {
@@ -48,26 +50,12 @@ export async function getProfileByUser(user: User) {
       throwIfError(error);
 
       const profile = data as ClientProfileWithUser;
-      await cacheProfile(profile.user_profile);
+      await cacheProfileDetails(profile);
 
       return profile;
     } catch (error) {
-      if (isLikelyNetworkError(error)) {
-        const cached = await getCachedProfile(user.id);
-        if (cached) {
-          return {
-            id: user.id,
-            user: user.id,
-            phone: "",
-            state: "",
-            city: "",
-            address: "",
-            zip: "",
-            updated_at: cached.updated_at,
-            created_at: cached.created_at,
-            user_profile: cached,
-          } as ClientProfileWithUser;
-        }
+      if (isLikelyNetworkError(error) || isAuthError(error)) {
+        if (cachedDetails) return cachedDetails;
       }
 
       throw error;
@@ -84,32 +72,12 @@ export async function getProfileByUser(user: User) {
     throwIfError(error);
 
     const profile = data as ProviderProfileWithCategory;
-    await cacheProfile(profile.user_profile);
+    await cacheProfileDetails(profile);
 
     return profile;
   } catch (error) {
-    if (isLikelyNetworkError(error)) {
-      const cached = await getCachedProfile(user.id);
-      if (cached) {
-        return {
-          id: user.id,
-          user: user.id,
-          specialty: "",
-          phone: "",
-          description: "",
-          state: "",
-          city: "",
-          address: "",
-          zip: "",
-          jobs_done: 0,
-          experience_years: 0,
-          available_days: [],
-          updated_at: cached.updated_at,
-          created_at: cached.created_at,
-          user_profile: cached,
-          specialty_category: { id: "", name: "" },
-        } as ProviderProfileWithCategory;
-      }
+    if (isLikelyNetworkError(error) || isAuthError(error)) {
+      if (cachedDetails) return cachedDetails;
     }
 
     throw error;
@@ -129,7 +97,10 @@ export async function updateClientProfile(
 
   throwIfError(error);
 
-  return data as ClientProfileWithUser;
+  const profile = data as ClientProfileWithUser;
+  await cacheProfileDetails(profile);
+
+  return profile;
 }
 
 export async function updateProviderProfile(
@@ -145,7 +116,10 @@ export async function updateProviderProfile(
 
   throwIfError(error);
 
-  return data as ProviderProfileWithCategory;
+  const profile = data as ProviderProfileWithCategory;
+  await cacheProfileDetails(profile);
+
+  return profile;
 }
 
 export async function updateProfileAvatar(userId: string, avatarPath: string) {
@@ -180,6 +154,45 @@ export async function updateProfileAvatar(userId: string, avatarPath: string) {
   }
 
   return data as User;
+}
+
+async function getFallbackProfileDetails(user: User) {
+  const cached = await getCachedProfile(user.id);
+  const userProfile = cached ?? user;
+
+  if (user.role === "client") {
+    return {
+      id: user.id,
+      user: user.id,
+      phone: "",
+      state: "",
+      city: "",
+      address: "",
+      zip: "",
+      updated_at: userProfile.updated_at,
+      created_at: userProfile.created_at,
+      user_profile: userProfile,
+    } as ClientProfileWithUser;
+  }
+
+  return {
+    id: user.id,
+    user: user.id,
+    specialty: "",
+    phone: "",
+    description: "",
+    state: "",
+    city: "",
+    address: "",
+    zip: "",
+    jobs_done: 0,
+    experience_years: 0,
+    available_days: [],
+    updated_at: userProfile.updated_at,
+    created_at: userProfile.created_at,
+    user_profile: userProfile,
+    specialty_category: { id: "", name: "" },
+  } as ProviderProfileWithCategory;
 }
 
 export async function incrementProviderJobsDone(

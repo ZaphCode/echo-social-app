@@ -9,6 +9,13 @@ export default function useLogout() {
   const queryClient = useQueryClient();
 
   const logout = async () => {
+    if (!getOfflineNetworkState()) {
+      await AsyncStorage.removeItem(SUPABASE_AUTH_STORAGE_KEY);
+      queryClient.clear();
+      auth.logout();
+      return;
+    }
+
     if (getOfflineNetworkState()) {
       try {
         await supabase.auth.signOut();

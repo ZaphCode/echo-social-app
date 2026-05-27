@@ -4,6 +4,7 @@ import { User } from "@/models/User";
 import {
   ContractingWithOwner,
   NotificationWithUser,
+  ProfileDetails,
   ReviewWithProfiles,
   ServiceRequestWithRelations,
   ServiceWithProvider,
@@ -170,6 +171,48 @@ export async function getCachedProfile(userId: string) {
   );
 
   return row ? parsePayload<User>(row) : null;
+}
+
+export async function cacheProfileDetails(profile: ProfileDetails) {
+  const db = getChatDatabase();
+  const userProfile = profile.user_profile;
+
+  await cacheProfile(userProfile);
+  await db.runAsync(
+    `
+      INSERT INTO local_profile_details (
+        user_id,
+        role,
+        payload_json,
+        cached_at
+      ) VALUES (?, ?, ?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET
+        role = excluded.role,
+        payload_json = excluded.payload_json,
+        cached_at = excluded.cached_at
+    `,
+    [
+      userProfile.id,
+      userProfile.role,
+      stringifyPayload(profile),
+      nowIso(),
+    ]
+  );
+}
+
+export async function getCachedProfileDetails(userId: string) {
+  const db = getChatDatabase();
+  const row = await db.getFirstAsync<PayloadRow>(
+    `
+      SELECT payload_json
+      FROM local_profile_details
+      WHERE user_id = ?
+      LIMIT 1
+    `,
+    userId
+  );
+
+  return row ? parsePayload<ProfileDetails>(row) : null;
 }
 
 export async function cacheCategories(categories: Category[]) {

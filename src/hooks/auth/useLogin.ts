@@ -1,5 +1,6 @@
 import { useAuthCtx } from "@/context/Auth";
 import { supabase } from "@/lib/supabase";
+import { getProfileByUser } from "@/api/profiles";
 import { saveOfflineCredential } from "@/offline/auth";
 import { getOfflineNetworkState, isLikelyNetworkError } from "@/offline/network";
 import { logError } from "@/utils/testing";
@@ -70,6 +71,12 @@ export default function useLogin() {
         updated_at: profile.updated_at,
         location: profile.location || undefined,
       };
+
+      try {
+        await getProfileByUser(user);
+      } catch (error) {
+        console.log("Profile details cache failed:", error);
+      }
 
       await saveOfflineCredential(email, password, user);
       auth.login(user, "online");

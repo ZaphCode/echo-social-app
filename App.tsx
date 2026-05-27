@@ -14,7 +14,6 @@ import { AlertModal } from "@/components/ui/AlertModal";
 import useAppTheme from "@/hooks/useAppTheme";
 import { initChatDatabase } from "@/chat/db";
 import { ChatSyncProvider } from "@/chat/ChatSyncProvider";
-import { KeyboardProvider } from "react-native-keyboard-controller";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -33,25 +32,23 @@ export default function AppWrapped() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <KeyboardProvider>
-        <Suspense fallback={null}>
-          <SQLiteProvider
-            databaseName="echo-chat.db"
-            onInit={initChatDatabase}
-            useSuspense
-          >
-            <AuthProvider>
-              <OfflineProvider>
-                <ChatSyncProvider>
-                  <AlertProvider>
-                    <App />
-                  </AlertProvider>
-                </ChatSyncProvider>
-              </OfflineProvider>
-            </AuthProvider>
-          </SQLiteProvider>
-        </Suspense>
-      </KeyboardProvider>
+      <Suspense fallback={null}>
+        <SQLiteProvider
+          databaseName="echo-chat.db"
+          onInit={initChatDatabase}
+          useSuspense
+        >
+          <AuthProvider>
+            <OfflineProvider>
+              <ChatSyncProvider>
+                <AlertProvider>
+                  <App />
+                </AlertProvider>
+              </ChatSyncProvider>
+            </OfflineProvider>
+          </AuthProvider>
+        </SQLiteProvider>
+      </Suspense>
     </QueryClientProvider>
   );
 }

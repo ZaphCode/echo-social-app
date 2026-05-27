@@ -64,6 +64,13 @@ export async function initChatDatabase(db: SQLiteDatabase) {
     CREATE INDEX IF NOT EXISTS idx_local_profiles_email
       ON local_profiles (email);
 
+    CREATE TABLE IF NOT EXISTS local_profile_details (
+      user_id TEXT PRIMARY KEY NOT NULL,
+      role TEXT NOT NULL,
+      payload_json TEXT NOT NULL,
+      cached_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS local_categories (
       id TEXT PRIMARY KEY NOT NULL,
       name TEXT NOT NULL,
@@ -243,7 +250,20 @@ export async function initChatDatabase(db: SQLiteDatabase) {
       CREATE INDEX IF NOT EXISTS idx_local_service_requests_contracting_provider
         ON local_service_requests (contracting, provider);
 
-      PRAGMA user_version = 3;
+      PRAGMA user_version = 4;
+    `);
+  }
+
+  if (currentVersion < 4) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS local_profile_details (
+        user_id TEXT PRIMARY KEY NOT NULL,
+        role TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        cached_at TEXT NOT NULL
+      );
+
+      PRAGMA user_version = 4;
     `);
   }
 }
