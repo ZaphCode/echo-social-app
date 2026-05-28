@@ -15,6 +15,7 @@ import useAppTheme from "@/hooks/useAppTheme";
 import { theme } from "@/theme/theme";
 import { useNavigation } from "@react-navigation/native";
 import { NOTIFICATIONS_KEY } from "@/utils/constants";
+import useSqlViewerPreference from "@/hooks/useSqlViewerPreference";
 
 const THEME_OPTIONS = [
   { label: "Auto", value: "auto" as const },
@@ -32,6 +33,11 @@ export default function ProfileConfigSection() {
   } = useAppTheme();
   const [notificationsOn, setNotificationOn] = useState(true);
   const [loading, setLoading] = useState(true);
+  const {
+    enabled: sqlViewerEnabled,
+    loading: sqlViewerLoading,
+    setSqlViewerEnabled,
+  } = useSqlViewerPreference();
   const { colors } = appTheme;
 
   useEffect(() => {
@@ -59,6 +65,17 @@ export default function ProfileConfigSection() {
       Alert.alert(
         "Error al guardar configuración",
         "Hubo un problema al guardar tu configuración de notificaciones. Por favor, intenta más tarde.",
+      );
+    }
+  };
+
+  const handleSqlViewerToggle = async () => {
+    try {
+      await setSqlViewerEnabled(!sqlViewerEnabled);
+    } catch (e) {
+      Alert.alert(
+        "Error al guardar configuración",
+        "Hubo un problema al guardar la configuración del SQL Viewer. Por favor, intenta más tarde.",
       );
     }
   };
@@ -97,6 +114,31 @@ export default function ProfileConfigSection() {
           value={notificationsOn}
           onValueChange={handleToggle}
           disabled={loading}
+        />
+      </View>
+      <View style={[styles.settingRow, { borderBottomColor: colors.darkGray }]}>
+        <View style={styles.labelContainer}>
+          <Feather name="database" size={20} color={colors.text} />
+          <View>
+            <Text color={colors.text} style={styles.settingLabel}>
+              SQL Viewer Debug
+            </Text>
+            <Text color={colors.lightGray} style={styles.settingHint}>
+              Muestra el botón flotante
+            </Text>
+          </View>
+        </View>
+        <Switch
+          trackColor={{
+            false: colors.lightGray,
+            true: colors.primaryBlue,
+          }}
+          thumbColor={"white"}
+          style={styles.switch}
+          ios_backgroundColor={colors.lightGray}
+          value={sqlViewerEnabled}
+          onValueChange={handleSqlViewerToggle}
+          disabled={sqlViewerLoading}
         />
       </View>
       <View style={[styles.settingRow, { borderBottomColor: colors.darkGray }]}>
@@ -197,7 +239,7 @@ const styles = StyleSheet.create({
   switch: {
     transform:
       Platform.OS === "ios"
-        ? [{ scaleX: 0.75 }, { scaleY: 0.75 }]
+        ? [{ scaleX: 0.7 }, { scaleY: 0.7 }]
         : [{ scaleX: 1.2 }, { scaleY: 1.2 }],
   },
   segmentedControl: {

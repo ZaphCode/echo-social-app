@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { SQLiteProvider } from "expo-sqlite";
 
 import { Navigation } from "./src/navigation/Navigation";
@@ -14,6 +14,8 @@ import { AlertModal } from "@/components/ui/AlertModal";
 import useAppTheme from "@/hooks/useAppTheme";
 import { initChatDatabase } from "@/chat/db";
 import { ChatSyncProvider } from "@/chat/ChatSyncProvider";
+import SqlViewerFab from "@/components/SqlViewerFab";
+import { navigationRef } from "@/navigation/navigationRef";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -55,11 +57,28 @@ export default function AppWrapped() {
 
 function App() {
   const { resolvedTheme, theme } = useAppTheme();
+  const [currentRouteName, setCurrentRouteName] = useState<string | null>(null);
+  const hideSqlViewerFab = currentRouteName === "SqlViewer";
+
+  const updateCurrentRouteName = useCallback(() => {
+    setCurrentRouteName(navigationRef.getCurrentRoute()?.name ?? null);
+  }, []);
+
+  const handleNavigationReady = useCallback(() => {
+    SplashScreen.hide();
+    updateCurrentRouteName();
+  }, [updateCurrentRouteName]);
 
   return (
     <>
       <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
-      <Navigation theme={theme.navigationTheme} onReady={SplashScreen.hide} />
+      <Navigation
+        ref={navigationRef}
+        theme={theme.navigationTheme}
+        onReady={handleNavigationReady}
+        onStateChange={updateCurrentRouteName}
+      />
+      <SqlViewerFab hidden={hideSqlViewerFab} />
       <AlertModal />
     </>
   );

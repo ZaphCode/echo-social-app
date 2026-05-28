@@ -6,6 +6,7 @@ import ServiceEditor from "@/screens/ServiceEditor";
 import ContractingEditor from "@/screens/ContractingEditor";
 import UserProfile from "@/screens/UserProfile";
 import Privacy from "@/screens/Privacy";
+import SqlViewer from "@/screens/SqlViewer";
 
 export const MainStack = createNativeStackNavigator({
   screenOptions: {
@@ -70,6 +71,22 @@ export const MainStack = createNativeStackNavigator({
         headerTintColor: theme.colors.textOnBrand,
         headerStyle: {
           backgroundColor: theme.colors.brandSurface,
+        },
+      },
+    },
+    SqlViewer: {
+      screen: SqlViewer,
+      options: {
+        headerShown: true,
+        title: "SQL Viewer",
+        headerTintColor: "#E2E8F0",
+        headerTitleStyle: {
+          color: "#F8FAFC",
+          fontSize: 18,
+          fontFamily: theme.fontFamily.bold,
+        },
+        headerStyle: {
+          backgroundColor: "#000000",
         },
       },
     },

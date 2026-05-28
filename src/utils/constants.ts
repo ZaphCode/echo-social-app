@@ -7,6 +7,7 @@ export const DEV_PROVIDER_EMAIL = "proveedor@test.com";
 export const DEV_PROVIDER_PASSWORD = "echo_de_one_123";
 
 export const NOTIFICATIONS_KEY = "notificationsEnabled";
+export const SQL_VIEWER_ENABLED_KEY = "echo.sqlViewer.enabled";
 
 export function getDevEmail(): string {
   return Platform.OS === "android" ? DEV_CLIENT_EMAIL : DEV_PROVIDER_EMAIL;
