@@ -18,6 +18,8 @@ import { ContractingWithOwner, ServiceRequestWithRelations } from "@/api/types";
 import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
 import { useAuthCtx } from "@/context/Auth";
+import { useNegotiationCtx } from "@/context/Negotiation";
+import { useOffline } from "@/context/Offline";
 import { validPriceRules } from "@/utils/validations";
 import {
   mapContractingSubject,
@@ -58,6 +60,8 @@ export default function RequestForm({
   const { colors } = useColorScheme();
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
+  const { isOnline } = useOffline();
+  const negotiation = useNegotiationCtx();
   const offeringMode = !!requestId;
   const queryClient = useQueryClient();
   const subject =
@@ -78,7 +82,9 @@ export default function RequestForm({
   const createRequestMutation = useMutation({
     mutationFn: createServiceRequest,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: serviceRequestsKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: serviceRequestsKeys.allForUser(user.id),
+      });
     },
   });
 
@@ -90,8 +96,14 @@ export default function RequestForm({
       id: string;
       patch: Parameters<typeof updateServiceRequest>[1];
     }) => updateServiceRequest(id, patch, user.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: serviceRequestsKeys.all });
+    onSuccess: (updatedRequest) => {
+      queryClient.setQueryData(
+        serviceRequestsKeys.detail(updatedRequest.id),
+        updatedRequest,
+      );
+      queryClient.invalidateQueries({
+        queryKey: serviceRequestsKeys.allForUser(user.id),
+      });
     },
   });
 
@@ -101,8 +113,10 @@ export default function RequestForm({
 
   const onSubmit = handleSubmit(async (data) => {
     if (offeringMode) {
+      let updatedRequest: ServiceRequestWithRelations;
+
       try {
-        await updateRequestMutation.mutateAsync({
+        updatedRequest = await updateRequestMutation.mutateAsync({
           id: requestId!,
           patch: {
             agreed_price: parseFloat(data.price),
@@ -148,7 +162,21 @@ export default function RequestForm({
         });
       }
 
-      onSuccess();
+      if (negotiation.setRequest) {
+        negotiation.setRequest(updatedRequest);
+      }
+
+      if (!isOnline) {
+        show({
+          title: "Propuesta guardada sin conexión",
+          message:
+            "Actualizamos la propuesta en tu app. Se enviará a la otra persona cuando recuperes conexión; si esa persona hace cambios antes, el estado final puede actualizarse al sincronizar.",
+          icon: "cloud-sync",
+          iconColor: theme.colors.primaryBlue,
+        });
+      }
+
+      onSuccess(updatedRequest);
     } else {
       let newRequest: ServiceRequestWithRelations;
 
