@@ -71,6 +71,8 @@ export default function NotificationList() {
 
   return (
     <FlatList
+      style={styles.list}
+      contentContainerStyle={styles.listContent}
       data={notifications}
       renderItem={({ item }) => <NotificationCard notification={item} />}
       keyExtractor={(item) => item.id}
@@ -142,6 +144,14 @@ function ErrorNotificationComponent() {
 }
 
 const styles = StyleSheet.create({
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.sm,
+  },
   centeredContainer: {
     alignItems: "center",
     justifyContent: "center",

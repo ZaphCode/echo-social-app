@@ -31,6 +31,9 @@ export async function initChatDatabase(db: SQLiteDatabase) {
     CREATE INDEX IF NOT EXISTS idx_chat_messages_request_created
       ON chat_messages (request_id, created_at_client);
 
+    CREATE INDEX IF NOT EXISTS idx_chat_messages_request_server_created
+      ON chat_messages (request_id, created_at_server);
+
     CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_messages_server_id
       ON chat_messages (server_id);
 

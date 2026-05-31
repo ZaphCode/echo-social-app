@@ -32,15 +32,6 @@ type PendingMessageInput = {
   createdAtClient: string;
 };
 
-const getMessageSentAt = (message: ChatMessage) => message.created_at_client;
-
-const sortBySentTimestamp = (a: ChatMessage, b: ChatMessage) => {
-  return (
-    new Date(getMessageSentAt(a)).getTime() -
-    new Date(getMessageSentAt(b)).getTime()
-  );
-};
-
 function mapRow(row: ChatMessageRow): ChatMessage {
   return {
     local_id: row.local_id,
@@ -69,26 +60,27 @@ export async function listLocalMessagesByRequest(requestId: string) {
       SELECT *
       FROM chat_messages
       WHERE request_id = ?
-      ORDER BY created_at_client ASC
+      ORDER BY rowid ASC
     `,
     requestId
   );
 
-  return rows.map(mapRow).sort(sortBySentTimestamp);
+  return rows.map(mapRow);
 }
 
-export async function getLatestLocalMessageTimestamp(requestId: string) {
+export async function getLatestLocalServerTimestamp(requestId: string) {
   const db = getChatDatabase();
-  const row = await db.getFirstAsync<{ latest_created_at_client: string }>(
+  const row = await db.getFirstAsync<{ latest_created_at_server: string }>(
     `
-      SELECT MAX(created_at_client) AS latest_created_at_client
+      SELECT MAX(created_at_server) AS latest_created_at_server
       FROM chat_messages
       WHERE request_id = ?
+        AND created_at_server IS NOT NULL
     `,
     requestId
   );
 
-  return row?.latest_created_at_client ?? null;
+  return row?.latest_created_at_server ?? null;
 }
 
 export async function insertPendingMessage(input: PendingMessageInput) {

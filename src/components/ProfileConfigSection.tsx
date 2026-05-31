@@ -14,7 +14,7 @@ import Text from "@/components/ui/Text";
 import useAppTheme from "@/hooks/useAppTheme";
 import { theme } from "@/theme/theme";
 import { useNavigation } from "@react-navigation/native";
-import { NOTIFICATIONS_KEY } from "@/utils/constants";
+import { ECHO_VERSION, NOTIFICATIONS_KEY } from "@/utils/constants";
 import useSqlViewerPreference from "@/hooks/useSqlViewerPreference";
 
 const THEME_OPTIONS = [
@@ -200,6 +200,11 @@ export default function ProfileConfigSection() {
         </View>
         <Feather name="chevron-right" size={20} color={colors.lightGray} />
       </Pressable>
+      <View>
+        <Text color={colors.lightGray} style={styles.appVersionText}>
+          {"Echo V" + ECHO_VERSION}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -258,5 +263,11 @@ const styles = StyleSheet.create({
   },
   segmentLabel: {
     fontSize: theme.fontSizes.sm,
+  },
+  appVersionText: {
+    fontSize: 14,
+    marginTop: theme.spacing.sm + 2,
+    alignItems: "center",
+    textAlign: "center",
   },
 });

@@ -17,7 +17,7 @@ import { theme } from "@/theme/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuthCtx } from "@/context/Auth";
 import { useNegotiationCtx } from "@/context/Negotiation";
-import { isCanceled, isFinished } from "@/utils/negotiation";
+import { isCanceled } from "@/utils/negotiation";
 import useColorScheme from "@/hooks/useColorScheme";
 
 const DEVICE_HEIGHT = Dimensions.get("window").height;
@@ -58,7 +58,7 @@ export default function ChatInput() {
     await flushPendingMessages();
   };
 
-  const isDisabled = isFinished(request) || isCanceled(request);
+  const isDisabled = isCanceled(request);
 
   return (
     <KeyboardAvoidingView

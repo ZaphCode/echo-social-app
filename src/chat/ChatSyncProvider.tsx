@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import { AppState } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,12 +16,14 @@ import { flushPendingMessages, retryMessageByClientId } from "./sync";
 
 type ChatSyncContextType = {
   isOnline: boolean;
+  syncVersion: number;
   flushPendingMessages: () => Promise<void>;
   retryMessage: (clientId: string) => Promise<void>;
 };
 
 const ChatSyncContext = createContext<ChatSyncContextType>({
   isOnline: false,
+  syncVersion: 0,
   flushPendingMessages: async () => {},
   retryMessage: async () => {},
 });
@@ -34,6 +37,7 @@ export function ChatSyncProvider({
   const { authenticated } = useAuthCtx();
   const { isOnline } = useOffline();
   const isFlushingRef = useRef(false);
+  const [syncVersion, setSyncVersion] = useState(0);
 
   const runFlush = useCallback(async () => {
     if (!authenticated || !isOnline || isFlushingRef.current) return;
@@ -41,10 +45,14 @@ export function ChatSyncProvider({
     isFlushingRef.current = true;
 
     try {
-      await flushPendingMessages({
+      const touchedRequestIds = await flushPendingMessages({
         isOnline,
         queryClient,
       });
+
+      if (touchedRequestIds.length > 0) {
+        setSyncVersion((version) => version + 1);
+      }
     } finally {
       isFlushingRef.current = false;
     }
@@ -69,15 +77,20 @@ export function ChatSyncProvider({
   const value = useMemo<ChatSyncContextType>(
     () => ({
       isOnline,
+      syncVersion,
       flushPendingMessages: runFlush,
       retryMessage: async (clientId: string) => {
-        await retryMessageByClientId(clientId, {
+        const touchedRequestIds = await retryMessageByClientId(clientId, {
           isOnline,
           queryClient,
         });
+
+        if (touchedRequestIds && touchedRequestIds.length > 0) {
+          setSyncVersion((version) => version + 1);
+        }
       },
     }),
-    [isOnline, queryClient, runFlush]
+    [isOnline, queryClient, runFlush, syncVersion]
   );
 
   return (

@@ -20,7 +20,7 @@
         "image": "./assets/app-logo-white.png",
         "resizeMode": "contain",
         "backgroundColor": "#111315",
-        "imageWidth": 100
+        "imageWidth": 50
       }
     },
     "android": {
@@ -30,9 +30,7 @@
         "backgroundColor": "#111315"
       },
       "package": "com.anonymous.echoapp",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
