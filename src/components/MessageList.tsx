@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useRef } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleSheet,
+  View,
+} from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { ChatMessage } from "@/chat/types";
@@ -19,18 +25,34 @@ type Props = {
   requestId: string;
 };
 
+const BOTTOM_OFFSET_THRESHOLD = 48;
+
 export default function MessageList({ requestId }: Props) {
   const { user } = useAuthCtx();
   const queryClient = useQueryClient();
   const { isOnline, retryMessage } = useChatSync();
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
   const latestReadAtRef = useRef<string | null>(null);
+  const isAtBottomRef = useRef(true);
   const messagesQuery = useChatMessages(requestId);
   const messages = messagesQuery.data ?? [];
+  const messagesForList = useMemo(() => [...messages].reverse(), [messages]);
+  const newestMessageId = messagesForList[0]?.local_id ?? null;
+  const showInitialSyncLoader =
+    messagesForList.length === 0 && messagesQuery.isSyncingRemote;
 
   useEffect(() => {
     latestReadAtRef.current = null;
+    isAtBottomRef.current = true;
   }, [requestId]);
+
+  useEffect(() => {
+    if (!newestMessageId || !isAtBottomRef.current) return;
+
+    requestAnimationFrame(() => {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    });
+  }, [newestMessageId]);
 
   useEffect(() => {
     if (!messagesQuery.data) return;
@@ -39,12 +61,17 @@ export default function MessageList({ requestId }: Props) {
       messagesQuery.data.length > 0
         ? messagesQuery.data.reduce(
             (latest, message) =>
-              Math.max(latest, new Date(message.created_at_client).getTime()),
-            0
+              Math.max(
+                latest,
+                new Date(
+                  message.created_at_server ?? message.created_at_client,
+                ).getTime(),
+              ),
+            0,
           )
         : Date.now();
     const latestVisibleTimestampIso = new Date(
-      latestVisibleTimestamp
+      latestVisibleTimestamp,
     ).toISOString();
 
     if (
@@ -80,14 +107,27 @@ export default function MessageList({ requestId }: Props) {
         onRetry={retryMessage}
       />
     ),
-    [isOnline, retryMessage, user.id]
+    [isOnline, retryMessage, user.id],
   );
 
   const keyExtractor = useCallback((item: ChatMessage) => item.local_id, []);
 
-  const scrollToEnd = useCallback(() => {
-    flatListRef.current?.scrollToEnd({ animated: false });
-  }, []);
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      isAtBottomRef.current =
+        event.nativeEvent.contentOffset.y <= BOTTOM_OFFSET_THRESHOLD;
+    },
+    [],
+  );
+
+  const renderEmptyComponent = useCallback(
+    () => (
+      <View style={styles.invertedListPlaceholder}>
+        {showInitialSyncLoader ? <LoadingMessages /> : <EmptyMessages />}
+      </View>
+    ),
+    [showInitialSyncLoader],
+  );
 
   if (messagesQuery.isPending)
     return (
@@ -101,47 +141,31 @@ export default function MessageList({ requestId }: Props) {
   return (
     <FlatList
       ref={flatListRef}
-      data={messages}
+      data={messagesForList}
+      inverted
       keyExtractor={keyExtractor}
       showsVerticalScrollIndicator={false}
       renderItem={renderMessage}
       extraData={isOnline}
-      ListHeaderComponent={
-        messagesQuery.isSyncingRemote ? <SyncingMessages /> : null
-      }
-      ListEmptyComponent={
-        messagesQuery.isSyncingRemote ? LoadingMessages : EmptyMessages
-      }
+      ListEmptyComponent={renderEmptyComponent}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
-      automaticallyAdjustKeyboardInsets
+      onScroll={handleScroll}
+      scrollEventThrottle={32}
       contentContainerStyle={{ flexGrow: 1 }}
-      initialNumToRender={16}
-      maxToRenderPerBatch={12}
-      updateCellsBatchingPeriod={60}
-      windowSize={9}
+      maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+      initialNumToRender={12}
+      maxToRenderPerBatch={8}
+      updateCellsBatchingPeriod={50}
+      windowSize={7}
       removeClippedSubviews
-      onContentSizeChange={scrollToEnd}
     />
-  );
-}
-
-function SyncingMessages() {
-  const { colors } = useColorScheme();
-
-  return (
-    <View style={styles.syncingContainer}>
-      <Loader />
-      <Text color={colors.lightGray} size={theme.fontSizes.sm}>
-        Sincronizando mensajes...
-      </Text>
-    </View>
   );
 }
 
 function LoadingMessages() {
   return (
-    <View style={{ padding: 40 }}>
+    <View style={{ padding: 40, marginBottom: 200 }}>
       <Loader />
     </View>
   );
@@ -213,6 +237,7 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingHorizontal: 30,
     opacity: 0.85,
+    marginBottom: 200,
   },
   errorContainer: {
     alignItems: "center",
@@ -220,11 +245,9 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 30,
     opacity: 0.85,
+    marginBottom: 200,
   },
-  syncingContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.spacing.sm,
-    gap: theme.spacing.xs,
+  invertedListPlaceholder: {
+    transform: [{ scaleY: -1 }],
   },
 });

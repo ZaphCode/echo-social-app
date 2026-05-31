@@ -9,7 +9,7 @@ function getMessageSentAt(message: {
   created_at: string;
   created_at_client?: string | null;
 }) {
-  return message.created_at_client ?? message.created_at;
+  return message.created_at;
 }
 
 export default function useUnreadMessageCounts(

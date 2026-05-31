@@ -22,14 +22,14 @@ export async function listRemoteMessagesByRequest(requestId: string) {
     .from("message")
     .select(messageSelect)
     .eq("request", requestId)
-    .order("created_at_client", { ascending: true });
+    .order("created_at", { ascending: true });
 
   throwIfError(error);
 
   return (data ?? []) as Message[];
 }
 
-export async function listRemoteMessagesByRequestSince(
+export async function listRemoteMessagesByRequestSinceServer(
   requestId: string,
   since: string | null
 ) {
@@ -41,8 +41,8 @@ export async function listRemoteMessagesByRequestSince(
     .from("message")
     .select(messageSelect)
     .eq("request", requestId)
-    .or(`created_at_client.gt.${since},created_at.gt.${since}`)
-    .order("created_at_client", { ascending: true });
+    .gt("created_at", since)
+    .order("created_at", { ascending: true });
 
   throwIfError(error);
 

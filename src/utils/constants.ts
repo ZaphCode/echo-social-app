@@ -18,3 +18,5 @@ export function getDevPassword(): string {
     ? DEV_CLIENT_PASSWORD
     : DEV_PROVIDER_PASSWORD;
 }
+
+export const ECHO_VERSION = "2.5";

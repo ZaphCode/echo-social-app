@@ -1,11 +1,9 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { theme } from "@/theme/theme";
-import Text from "@/components/ui/Text";
 import NotificationList from "@/components/NotificationList";
 import Divider from "@/components/ui/Divider";
-import { useAlertCtx } from "@/context/Alert";
 import useColorScheme from "@/hooks/useColorScheme";
 import Title from "@/components/ui/Title";
 
@@ -14,10 +12,13 @@ export default function Notifications() {
 
   return (
     <SafeAreaView
+      edges={["top", "left", "right"]}
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <Title title="Notificaciones" />
-      <Divider />
+      <View style={styles.header}>
+        <Title title="Notificaciones" />
+        <Divider />
+      </View>
       <NotificationList />
     </SafeAreaView>
   );
@@ -25,8 +26,10 @@ export default function Notifications() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: theme.spacing.md,
-    height: "100%",
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: theme.spacing.md,
     paddingTop: theme.spacing.tabPT,
     gap: theme.spacing.sm,
   },

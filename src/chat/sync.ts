@@ -36,7 +36,7 @@ export async function flushPendingMessages({
   isOnline,
   queryClient,
 }: FlushPendingMessagesOptions) {
-  if (!isOnline) return;
+  if (!isOnline) return [];
 
   const pendingMessages = await listPendingMessages();
   const touchedRequestIds: string[] = [];
@@ -64,11 +64,21 @@ export async function flushPendingMessages({
     }
   }
 
-  for (const requestId of [...new Set(touchedRequestIds)]) {
+  const uniqueTouchedRequestIds = [...new Set(touchedRequestIds)];
+
+  for (const requestId of uniqueTouchedRequestIds) {
     await queryClient.invalidateQueries({
       queryKey: chatMessagesKeys.byRequest(requestId),
     });
   }
+
+  if (uniqueTouchedRequestIds.length > 0) {
+    await queryClient.invalidateQueries({
+      queryKey: chatMessagesKeys.all,
+    });
+  }
+
+  return uniqueTouchedRequestIds;
 }
 
 export async function retryMessageByClientId(
@@ -84,5 +94,5 @@ export async function retryMessageByClientId(
     queryKey: chatMessagesKeys.byRequest(message.request_id),
   });
 
-  await flushPendingMessages(options);
+  return flushPendingMessages(options);
 }
