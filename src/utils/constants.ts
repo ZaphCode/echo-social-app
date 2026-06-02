@@ -19,4 +19,4 @@ export function getDevPassword(): string {
     : DEV_PROVIDER_PASSWORD;
 }
 
-export const ECHO_VERSION = "2.5";
+export const ECHO_VERSION = process.env.EXPO_PUBLIC_APP_VERSION ?? "2.0";
