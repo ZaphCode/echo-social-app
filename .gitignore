@@ -4,6 +4,7 @@ __pb__/
 .zed/
 # dependencies
 node_modules/
+.env
 
 # Expo
 .expo/
