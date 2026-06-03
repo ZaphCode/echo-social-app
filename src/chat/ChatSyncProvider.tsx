@@ -37,22 +37,32 @@ export function ChatSyncProvider({
   const { authenticated } = useAuthCtx();
   const { isOnline } = useOffline();
   const isFlushingRef = useRef(false);
+  const shouldFlushAgainRef = useRef(false);
   const [syncVersion, setSyncVersion] = useState(0);
 
   const runFlush = useCallback(async () => {
-    if (!authenticated || !isOnline || isFlushingRef.current) return;
+    if (!authenticated || !isOnline) return;
+
+    if (isFlushingRef.current) {
+      shouldFlushAgainRef.current = true;
+      return;
+    }
 
     isFlushingRef.current = true;
 
     try {
-      const touchedRequestIds = await flushPendingMessages({
-        isOnline,
-        queryClient,
-      });
+      do {
+        shouldFlushAgainRef.current = false;
 
-      if (touchedRequestIds.length > 0) {
-        setSyncVersion((version) => version + 1);
-      }
+        const touchedRequestIds = await flushPendingMessages({
+          isOnline,
+          queryClient,
+        });
+
+        if (touchedRequestIds.length > 0) {
+          setSyncVersion((version) => version + 1);
+        }
+      } while (shouldFlushAgainRef.current);
     } finally {
       isFlushingRef.current = false;
     }

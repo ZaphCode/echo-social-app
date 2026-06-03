@@ -204,25 +204,29 @@ export async function getServiceRequestById(requestId: string) {
   }
 
   try {
-    const { data, error } = await supabase
-      .from("service_request")
-      .select(serviceRequestSelect)
-      .eq("id", requestId)
-      .single();
-
-    throwIfError(error);
-
-    const request = data as ServiceRequestWithRelations;
-    await cacheServiceRequests(request.client, [request]);
-    await cacheServiceRequests(request.provider, [request]);
-
-    return request;
+    return getRemoteServiceRequestById(requestId);
   } catch (error) {
     const cached = await getCachedServiceRequest(requestId);
     if (cached) return cached;
 
     throw error;
   }
+}
+
+export async function getRemoteServiceRequestById(requestId: string) {
+  const { data, error } = await supabase
+    .from("service_request")
+    .select(serviceRequestSelect)
+    .eq("id", requestId)
+    .single();
+
+  throwIfError(error);
+
+  const request = data as ServiceRequestWithRelations;
+  await cacheServiceRequests(request.client, [request]);
+  await cacheServiceRequests(request.provider, [request]);
+
+  return request;
 }
 
 export async function createServiceRequest(input: CreateServiceRequestInput) {

@@ -76,6 +76,7 @@ export async function flushOfflineMutations({
 
   const mutations = await listPendingOfflineMutations();
   const touchedRequestUserIds = new Set<string>();
+  const touchedRequestIds = new Set<string>();
   const touchedNotificationUserIds = new Set<string>();
   const touchedProfileUserIds = new Set<string>();
   const locallySyncedRequestIds = new Set<string>();
@@ -87,6 +88,7 @@ export async function flushOfflineMutations({
       if (mutation.action === "service_request_create") {
         const request = await syncCreateServiceRequest(mutation);
         locallySyncedRequestIds.add(request.id);
+        touchedRequestIds.add(request.id);
         touchedRequestUserIds.add(request.client);
         touchedRequestUserIds.add(request.provider);
       } else if (mutation.action === "service_request_update") {
@@ -95,6 +97,7 @@ export async function flushOfflineMutations({
           locallySyncedRequestIds.has(mutation.entity_id)
         );
         locallySyncedRequestIds.add(request.id);
+        touchedRequestIds.add(request.id);
         touchedRequestUserIds.add(request.client);
         touchedRequestUserIds.add(request.provider);
       } else if (mutation.action === "notification_create") {
@@ -125,6 +128,9 @@ export async function flushOfflineMutations({
       if (error instanceof ConflictError) {
         const actorUserId = getMutationActorUserId(mutation);
         if (actorUserId) touchedProfileUserIds.add(actorUserId);
+        if (mutation.entity_type === "service_request") {
+          touchedRequestIds.add(mutation.entity_id);
+        }
         await markOfflineMutationStatus(mutation.id, "conflict", error.message);
       } else {
         await markOfflineMutationStatus(
@@ -139,6 +145,12 @@ export async function flushOfflineMutations({
   for (const userId of touchedRequestUserIds) {
     await queryClient.invalidateQueries({
       queryKey: serviceRequestsKeys.allForUser(userId),
+    });
+  }
+
+  for (const requestId of touchedRequestIds) {
+    await queryClient.invalidateQueries({
+      queryKey: serviceRequestsKeys.detail(requestId),
     });
   }
 

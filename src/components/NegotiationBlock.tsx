@@ -9,9 +9,9 @@ import { useNegotiationCtx } from "@/context/Negotiation";
 import { useAlertCtx } from "@/context/Alert";
 import * as NS from "@/utils/negotiation";
 import Text from "./ui/Text";
-import { useChatSync } from "@/chat/ChatSyncProvider";
+import { useOffline } from "@/context/Offline";
 import {
-  getServiceRequestById,
+  getRemoteServiceRequestById,
   serviceRequestsKeys,
 } from "@/api/serviceRequests";
 import useSubscription from "@/hooks/useSubscription";
@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from "react";
 const PERSON_ICON_SIZE = 38;
 const ACTION_ICON_SIZE = 15;
 const ACTION_TEXT_SIZE = theme.fontSizes.sm - 1;
+const REQUEST_REFRESH_TIMEOUT_MS = 15_000;
 
 type Props = {
   openOfferFn: () => void;
@@ -30,6 +31,17 @@ type Props = {
   hasReviewed: boolean;
   shouldNotifyCounterparty: boolean;
 };
+
+function withRequestRefreshTimeout<T>(promise: Promise<T>) {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Tiempo de espera agotado al actualizar la propuesta."));
+      }, REQUEST_REFRESH_TIMEOUT_MS);
+    }),
+  ]);
+}
 
 export default function NegotiationBlock({
   openOfferFn,
@@ -40,7 +52,7 @@ export default function NegotiationBlock({
   const { user: authUser } = useAuthCtx();
   const { show } = useAlertCtx();
   const { request, client, provider, subject, setRequest } = useNegotiationCtx();
-  const { isOnline } = useChatSync();
+  const { isOnline, isSyncing } = useOffline();
   const queryClient = useQueryClient();
   const statusModifier = useRequestStatus(authUser, {
     shouldNotifyCounterparty,
@@ -49,13 +61,16 @@ export default function NegotiationBlock({
   const [isRefreshingRequest, setIsRefreshingRequest] = useState(false);
   const hasBootstrappedRef = useRef(false);
   const wasOnlineRef = useRef(isOnline);
+  const wasSyncingRef = useRef(isSyncing);
 
   useSubscription<ServiceRequest>(
     "service_request",
     request.id,
     async ({ action, record }) => {
       if (action === "UPDATE" && record.id === request.id) {
-        const latestRequest = await getServiceRequestById(record.id);
+        const latestRequest = await withRequestRefreshTimeout(
+          getRemoteServiceRequestById(record.id)
+        );
         setRequest(latestRequest);
       }
     },
@@ -63,10 +78,12 @@ export default function NegotiationBlock({
 
   useEffect(() => {
     const becameOnline = !wasOnlineRef.current && isOnline;
+    const finishedSyncing = wasSyncingRef.current && !isSyncing;
     wasOnlineRef.current = isOnline;
+    wasSyncingRef.current = isSyncing;
 
     if (!isOnline) return;
-    if (hasBootstrappedRef.current && !becameOnline) return;
+    if (hasBootstrappedRef.current && !becameOnline && !finishedSyncing) return;
 
     let cancelled = false;
 
@@ -74,7 +91,9 @@ export default function NegotiationBlock({
       setIsRefreshingRequest(true);
 
       try {
-        const latestRequest = await getServiceRequestById(request.id);
+        const latestRequest = await withRequestRefreshTimeout(
+          getRemoteServiceRequestById(request.id)
+        );
 
         if (cancelled) return;
 
@@ -101,7 +120,7 @@ export default function NegotiationBlock({
     return () => {
       cancelled = true;
     };
-  }, [authUser.id, isOnline, queryClient, request.id, setRequest]);
+  }, [authUser.id, isOnline, isSyncing, queryClient, request.id, setRequest]);
 
   const lastOfferUserId = request.last_offer_user;
   const hasRejectedCurrentOffer =

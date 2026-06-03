@@ -120,7 +120,7 @@ export async function listPendingMessages() {
     `
       SELECT *
       FROM chat_messages
-      WHERE sync_status IN ('pending', 'failed')
+      WHERE sync_status IN ('pending', 'failed', 'sending')
       ORDER BY created_at_client ASC
     `
   );
