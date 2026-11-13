@@ -147,7 +147,7 @@ El *config plugin* [`plugins/withFmtConsteval.js`](../plugins/withFmtConsteval.j
 ## 4. Estructura del proyecto
 
 ```text
-echo-social-app/
+echo-service-marketplace/
 ├── App.tsx               # Árbol de providers y montaje de la navegación
 ├── index.ts              # Punto de entrada (registerRootComponent)
 ├── app.json              # Configuración Expo (ids, permisos, plugins)

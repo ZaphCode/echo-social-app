@@ -43,7 +43,7 @@ En los dos casos se abre un chat con un panel de negociación de precio y fecha.
 ## Estructura
 
 ```text
-echo-social-app/
+echo-service-marketplace/
 ├── App.tsx                 # Providers y montaje de la navegación
 ├── app.json, app.config.js # Configuración de Expo (ids, permisos, plugins, llave de Google Maps)
 ├── assets/                 # Logo, íconos, splash y fuentes
@@ -83,11 +83,11 @@ Esta guía levanta Supabase en tu máquina con Docker, así que no necesitas una
 ### 1. Clonar e instalar
 
 ```bash
-git clone https://github.com/ZaphCode/echo-social-app.git
+git clone https://github.com/ZaphCode/echo-service-marketplace.git
 ```
 
 ```bash
-cd echo-social-app && bun install
+cd echo-service-marketplace && bun install
 ```
 
 ### 2. Levantar Supabase
