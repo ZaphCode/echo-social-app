@@ -21,10 +21,10 @@ import { validEmailRules } from "@/utils/validations";
 /** Tiles orbiting the echo rings: [category, x%, y%, size, rotation]. */
 const ORBIT: [string, number, number, number, string][] = [
   ["Plomería", 8, 18, 64, "-8deg"],
-  ["Electricista", 70, 6, 72, "6deg"],
-  ["Pintura", 78, 58, 60, "-5deg"],
+  ["Electricista", 62, 10, 72, "6deg"],
+  ["Pintura", 78, 70, 60, "-5deg"],
   ["Jardinería", 4, 64, 58, "7deg"],
-  ["Carpintería", 40, 74, 54, "-3deg"],
+  ["Carpintería", 40, 100, 48, "-5deg"],
 ];
 
 export default function SignIn() {
@@ -40,6 +40,8 @@ export default function SignIn() {
     defaultValues: {
       email: __DEV__ ? getDevEmail() : "",
       password: __DEV__ ? getDevPassword() : "",
+      // email: "",
+      // password: ""
     },
   });
 
