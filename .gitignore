@@ -45,3 +45,6 @@ yarn-error.*
 
 # Seed images: only seed/images.zip is versioned (bun run seed:images)
 /seed/images/
+
+# Supabase CLI local state (linked project, versions)
+/supabase/.temp/
