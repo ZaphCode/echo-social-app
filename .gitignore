@@ -42,3 +42,6 @@ yarn-error.*
 /ios
 /android
 /statistics_ui
+
+# Seed images: only seed/images.zip is versioned (bun run seed:images)
+/seed/images/
