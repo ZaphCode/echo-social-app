@@ -81,7 +81,8 @@
           "backgroundColor": "#111315",
           "imageWidth": 50,
           "ios": {
-            "image": "./assets/app-logo-white.png"
+            "image": "./assets/app-logo-white.png",
+            "imageWidth": 240
           }
         }
       ],

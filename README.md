@@ -114,7 +114,9 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=<ANON_KEY>
 SUPABASE_SERVICE_ROLE_KEY=<SERVICE_ROLE_KEY>
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` solo la usan los scripts de seed, nunca la app. Si vas a usar el **emulador de Android**, cambia `127.0.0.1` por `10.0.2.2` en `EXPO_PUBLIC_SUPABASE_URL`. En un **teléfono físico**, usa la IP de tu computadora en la red local.
+`SUPABASE_SERVICE_ROLE_KEY` solo la usan los scripts de seed, nunca la app.
+
+Opcional: para que el inicio de sesión se llene solo en modo desarrollo, agrega `EXPO_PUBLIC_DEV_EMAIL` y `EXPO_PUBLIC_DEV_PASSWORD` con un usuario de la seed. Si quieres que Android entre con otra cuenta, usa también `EXPO_PUBLIC_DEV_ANDROID_EMAIL` y `EXPO_PUBLIC_DEV_ANDROID_PASSWORD`. Si vas a usar el **emulador de Android**, cambia `127.0.0.1` por `10.0.2.2` en `EXPO_PUBLIC_SUPABASE_URL`. En un **teléfono físico**, usa la IP de tu computadora en la red local.
 
 ### 4. Cargar datos de demo
 

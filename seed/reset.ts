@@ -126,6 +126,10 @@ export async function reset(admin: SupabaseClient) {
 
   console.log("\nCategorías…");
   await ensureCategories(admin);
+
+  // Devices compare this on startup and wipe their local replica if it changed.
+  const epoch = must(await admin.rpc("bump_data_epoch"), "Cambiando data_epoch");
+  console.log(`\nNueva época de datos: ${epoch}`);
 }
 
 if (isMain(import.meta)) {
