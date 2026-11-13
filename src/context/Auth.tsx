@@ -7,6 +7,7 @@ import {
 } from "@/offline/store";
 import { verifyOfflineCredential } from "@/offline/auth";
 import { getProfileByUser } from "@/api/profiles";
+import { reconcileLocalDataWithServer } from "@/offline/reset";
 
 const initialUser: User = {
   id: "",
@@ -40,8 +41,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Wipe stale local data first if the server was reset, then restore the
+    // session (which may have just been cleared).
+    reconcileLocalDataWithServer()
+      .then(() => supabase.auth.getSession())
+      .then(async ({ data: { session } }) => {
       if (session?.user) {
         const profile = await fetchProfile(session.user.id);
         if (profile) {

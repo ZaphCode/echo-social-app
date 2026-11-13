@@ -47,6 +47,12 @@ export async function initChatDatabase(db: SQLiteDatabase) {
     CREATE INDEX IF NOT EXISTS idx_chat_read_states_user
       ON chat_read_states (user_id);
 
+    -- Device-level metadata that survives local wipes (e.g. data_epoch).
+    CREATE TABLE IF NOT EXISTS local_meta (
+      key TEXT PRIMARY KEY NOT NULL,
+      value TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS local_auth_users (
       user_id TEXT PRIMARY KEY NOT NULL,
       email TEXT NOT NULL UNIQUE,

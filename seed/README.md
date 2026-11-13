@@ -23,7 +23,7 @@ bun run seed:images
 | Comando | Qué hace |
 |---|---|
 | `bun run db:reseed -- --yes` | Reset + seed |
-| `bun run db:reset -- --yes` | Borra usuarios de Auth, datos y fotos de Storage (conserva categorías) |
+| `bun run db:reset -- --yes` | Borra usuarios de Auth, datos y fotos de Storage (conserva categorías) y cambia `app_meta.data_epoch`, para que las apps instaladas borren su base local al abrir |
 | `bun run db:seed` | Carga la seed en una base limpia |
 | `bun run seed:zip` | Regenera `images.zip` después de cambiar imágenes |
 
