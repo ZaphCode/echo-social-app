@@ -1,116 +1,85 @@
+import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
-import Text from "./ui/Text";
-import { theme } from "@/theme/theme";
+
 import { listServiceReviews, reviewsKeys } from "@/api/reviews";
-import { useMemo } from "react";
-import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
-import ReviewCard from "./ReviewCard";
-import { User } from "@/models/User";
 import { Service } from "@/models/Service";
+import ReviewCard, { Stars } from "./ReviewCard";
+import EmptyState from "./ui/EmptyState";
 import Loader from "./ui/Loader";
-import useColorScheme from "@/hooks/useColorScheme";
+import Text from "./ui/Text";
 
-type Props = { service: Service; authUser: User };
+type Props = { service: Service };
 
-export default function ReviewSection({ service, authUser }: Props) {
+export default function ReviewSection({ service }: Props) {
   const reviewsQuery = useQuery({
     queryKey: reviewsKeys.byService(service.id),
     queryFn: () => listServiceReviews(service.id),
   });
-  const { colors } = useColorScheme();
-
-  const reviewAverage = useMemo(() => {
-    const reviews = reviewsQuery.data ?? [];
-    if (reviews.length === 0) return 0;
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-    return totalRating / reviews.length;
-  }, [reviewsQuery.data]);
-
-  if (reviewsQuery.isPending) {
-    return (
-      <View style={styles.container}>
-        <Loader horizontal />
-      </View>
-    );
-  }
-
-  if (reviewsQuery.isError) {
-    return <ErrorComponent />;
-  }
-
-  const reviews = reviewsQuery.data ?? [];
+  const reviews = useMemo(() => reviewsQuery.data ?? [], [reviewsQuery.data]);
+  const average = useMemo(
+    () =>
+      reviews.length === 0
+        ? 0
+        : reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length,
+    [reviews],
+  );
 
   return (
     <View style={styles.container}>
-      <View style={styles.infoContainer}>
-        <Text
-          color={colors.text}
-          size={theme.fontSizes.xl + 2}
-          fontFamily="bold"
-        >
-          Valoraciones
-        </Text>
-        <View style={styles.averageContainer}>
-          <Text color={colors.secondaryBlue} size={theme.fontSizes.lg}>
-            {`${reviewAverage}`}
-          </Text>
-          <AntDesign name="star" size={24} color={colors.primaryBlue} />
-          <Text color={colors.lightGray} size={theme.fontSizes.lg}>
-            {`(${reviews.length})`}
-          </Text>
-        </View>
-      </View>
-      <View style={{ gap: theme.spacing.sm }}>
-        {reviews.length > 0 ? (
-          reviews.map((review) => (
-            <ReviewCard review={review} key={review.id} authUser={authUser} />
-          ))
-        ) : (
-          <Text color={colors.lightGray} size={theme.fontSizes.md}>
-            Aún no hay valoraciones para este servicio.
-          </Text>
+      <View style={styles.header}>
+        <Text variant="heading">Valoraciones</Text>
+        {reviews.length > 0 && (
+          <View style={styles.summary}>
+            <Text variant="heading">{average.toFixed(1)}</Text>
+            <View>
+              <Stars rating={average} />
+              <Text variant="caption" tone="subtle">
+                {`${reviews.length} ${reviews.length === 1 ? "reseña" : "reseñas"}`}
+              </Text>
+            </View>
+          </View>
         )}
       </View>
-    </View>
-  );
-}
-
-function ErrorComponent() {
-  return (
-    <View style={styles.errorContainer}>
-      <MaterialCommunityIcons
-        name="alert-circle-outline"
-        size={22}
-        color={theme.colors.redError}
-      />
-      <Text color={theme.colors.redError} size={theme.fontSizes.md}>
-        Error al cargar las valoraciones.
-      </Text>
+      {reviewsQuery.isPending ? (
+        <Loader inline />
+      ) : reviewsQuery.isError ? (
+        <Text variant="label" tone="danger">
+          No se pudieron cargar las valoraciones.
+        </Text>
+      ) : reviews.length === 0 ? (
+        <EmptyState
+          compact
+          icon="star"
+          title="Sin valoraciones todavía"
+          message="Las reseñas aparecen cuando se completa un trato."
+        />
+      ) : (
+        <View style={styles.list}>
+          {reviews.map((review) => (
+            <ReviewCard key={review.id} review={review} />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: theme.spacing.md,
-    paddingBottom: 56,
+    gap: 14,
   },
-  infoContainer: {
+  header: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
-    gap: theme.spacing.sm,
   },
-  averageContainer: {
+  summary: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 10,
   },
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    justifyContent: "center",
+  list: {
+    gap: 10,
   },
 });

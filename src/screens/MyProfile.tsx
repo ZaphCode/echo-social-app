@@ -1,167 +1,84 @@
-import { StyleSheet, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useEffect } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ProviderProfileWithCategory } from "@/api/types";
-import { theme } from "@/theme/theme";
-import { useAuthCtx } from "@/context/Auth";
-import { ProfileError } from "@/components/ProfileError";
-import Button from "@/components/ui/Button";
-import useLogout from "@/hooks/auth/useLogout";
-import ProfileConfigSection from "@/components/ProfileConfigSection";
-import useProfile from "@/hooks/useProfile";
+import PersonalInfoSection from "@/components/PersonalInfoSection";
 import ProfessionalInfoSection from "@/components/ProfessionalInfoSection";
+import ProfileConfigSection from "@/components/ProfileConfigSection";
+import { ProfileError } from "@/components/ProfileError";
 import ProfileHeader from "@/components/ProfileHeader";
-import PersonalInfoSection from "./PersonalInfoSection";
+import Button from "@/components/ui/Button";
 import Loader from "@/components/ui/Loader";
-import UserStats from "@/components/UserStats";
-import { useEffect } from "react";
-import useColorScheme from "@/hooks/useColorScheme";
+import Text from "@/components/ui/Text";
+import { useAuthCtx } from "@/context/Auth";
+import useLogout from "@/hooks/auth/useLogout";
+import useProfile from "@/hooks/useProfile";
+import useTheme from "@/hooks/useTheme";
+import { space, TAB_BAR_SPACE } from "@/theme/theme";
+import { ECHO_VERSION } from "@/utils/constants";
 
 export default function MyProfile() {
   const { user } = useAuthCtx();
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const logout = useLogout();
-  const navigation = useNavigation();
   const [profile, profileState] = useProfile(user);
 
-  const containerStyle = {
-    flex: 1,
-    backgroundColor: colors.background,
-  };
-
-  const onLogout = async () => {
-    await logout();
-  };
-
-  const goToServiceCreation = () => {
-    navigation.navigate("Main", {
-      screen: "ServiceEditor",
-      params: {},
-    });
-  };
-
-  const goToContractingCreation = () => {
-    navigation.navigate("Main", {
-      screen: "ContractingEditor",
-      params: {},
-    });
-  };
-
   useEffect(() => {
-    if (profileState.status === "error") onLogout();
+    if (profileState.status === "error") logout();
   }, [profileState.status]);
 
   if (profileState.status === "loading") {
     return (
-      <SafeAreaView
-        edges={["top"]}
-        style={[containerStyle, { justifyContent: "center" }]}
-      >
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
         <Loader />
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!profile || profileState.status === "error") {
     return (
-      <SafeAreaView edges={["top"]} style={containerStyle}>
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
         <ProfileError />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={containerStyle}>
-      <ScrollView
-        style={{ width: "100%" }}
-        contentContainerStyle={{ alignItems: "center", paddingBottom: 20 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <ProfileHeader user={user} editable />
-
-        <UserStats userId={user.id} />
-
-        {user.role === "provider" && (
-          <Button
-            title="Publicar nuevo servicio"
-            style={[
-              styles.newServiceButton,
-              { backgroundColor: colors.darkerGray },
-            ]}
-            labelColor={theme.colors.primaryBlue}
-            onPress={goToServiceCreation}
-          />
-        )}
-
-        <Button
-          title="Publicar contratación"
-          style={[
-            styles.newServiceButton,
-            { backgroundColor: colors.darkerGray },
-          ]}
-          labelColor={theme.colors.primaryBlue}
-          onPress={goToContractingCreation}
+    <ScrollView
+      style={{ backgroundColor: colors.bg }}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: insets.top + space.md, paddingBottom: TAB_BAR_SPACE + insets.bottom },
+      ]}
+      showsVerticalScrollIndicator={false}
+    >
+      <ProfileHeader user={user} editable />
+      <PersonalInfoSection user={user} profile={profile} editable />
+      {user.role === "provider" && (
+        <ProfessionalInfoSection
+          providerProfile={profile as ProviderProfileWithCategory}
+          userId={user.id}
+          editable
         />
-
-        <PersonalInfoSection user={user} profile={profile} editable />
-
-        {user.role === "provider" && (
-          <ProfessionalInfoSection
-            providerProfile={profile as ProviderProfileWithCategory}
-            userId={user.id}
-            editable
-          />
-        )}
-        <ProfileConfigSection />
-
-        <Button
-          title="Cerrar Sesión"
-          style={[styles.logoutButton, { backgroundColor: colors.darkGray }]}
-          labelColor={theme.colors.redError}
-          onPress={onLogout}
-        />
-      </ScrollView>
-    </SafeAreaView>
+      )}
+      <ProfileConfigSection />
+      <Button title="Cerrar sesión" icon="log-out" variant="danger" onPress={logout} />
+      <Text variant="caption" tone="subtle" align="center">
+        {`Echo v${ECHO_VERSION}`}
+      </Text>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    alignItems: "center",
-    paddingVertical: 18,
-    gap: 4,
-    width: "100%",
+  center: {
+    flex: 1,
+    justifyContent: "center",
   },
-  userName: {
-    color: "white",
-    fontSize: theme.fontSizes.xl,
-    fontFamily: theme.fontFamily.bold,
-    textAlign: "center",
-    maxWidth: "80%",
-  },
-  roleContainer: {
-    backgroundColor: theme.colors.secondaryBlue,
-    paddingHorizontal: 16,
-    gap: 5,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginTop: 5,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  newServiceButton: {
-    width: "90%",
-    marginTop: 10,
-  },
-  logoutButton: {
-    marginTop: 20,
-    width: "90%",
+  content: {
+    paddingHorizontal: space.gutter,
+    gap: space.lg,
   },
 });

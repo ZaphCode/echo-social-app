@@ -1,79 +1,63 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Tabs } from "./Tabs";
+
 import Chatroom from "@/screens/Chatroom";
-import { theme } from "@/theme/theme";
-import ServiceEditor from "@/screens/ServiceEditor";
 import ContractingEditor from "@/screens/ContractingEditor";
-import UserProfile from "@/screens/UserProfile";
+import ContractingOverview from "@/screens/ContractingOverview";
+import Notifications from "@/screens/Notifications";
 import Privacy from "@/screens/Privacy";
+import SearchService from "@/screens/SearchService";
+import ServiceEditor from "@/screens/ServiceEditor";
+import ServiceOverview from "@/screens/ServiceOverview";
 import SqlViewer from "@/screens/SqlViewer";
+import UserProfile from "@/screens/UserProfile";
+import { fonts } from "@/theme/theme";
+import { stackHeader } from "../headerOptions";
+import { Tabs } from "./Tabs";
 
 export const MainStack = createNativeStackNavigator({
+  initialRouteName: "Tabs",
   screenOptions: {
     headerShown: false,
   },
-  initialRouteName: "Tabs",
   screens: {
-    Tabs: {
-      screen: Tabs,
+    Tabs: Tabs,
+    // Detail screens draw their own floating back button over the photo.
+    ServiceOverview: ServiceOverview,
+    ContractingOverview: ContractingOverview,
+    Chatroom: Chatroom,
+    SearchService: {
+      screen: SearchService,
+      options: (props) => stackHeader(props, "Buscar"),
     },
-    Chatroom: {
-      screen: Chatroom,
+    Notifications: {
+      screen: Notifications,
+      options: (props) => stackHeader(props, "Notificaciones"),
     },
     ServiceEditor: {
       screen: ServiceEditor,
-      options: {
-        headerShown: true,
-        title: "Editor de Servicio",
-        headerTitleStyle: {
-          color: theme.colors.textOnBrand,
-          fontSize: theme.fontSizes.lg,
-          fontFamily: theme.fontFamily.bold,
-        },
-        headerTintColor: theme.colors.textOnBrand,
-        headerStyle: {
-          backgroundColor: theme.colors.brandSurface,
-        },
-      },
+      options: (props) => ({
+        ...stackHeader(props),
+        presentation: "modal",
+        headerShown: false,
+      }),
     },
     ContractingEditor: {
       screen: ContractingEditor,
-      options: {
-        headerShown: true,
-        title: "Editor de Contratación",
-        headerTitleStyle: {
-          color: theme.colors.textOnBrand,
-          fontSize: theme.fontSizes.lg,
-          fontFamily: theme.fontFamily.bold,
-        },
-        headerTintColor: theme.colors.textOnBrand,
-        headerStyle: {
-          backgroundColor: theme.colors.brandSurface,
-        },
-      },
+      options: (props) => ({
+        ...stackHeader(props),
+        presentation: "modal",
+        headerShown: false,
+      }),
     },
     UserProfile: {
       screen: UserProfile,
-      options: {
-        headerShown: true,
-        title: "",
-        headerTintColor: theme.colors.textOnBrand,
-        headerStyle: {
-          backgroundColor: theme.colors.brandSurface,
-        },
-      },
+      options: (props) => stackHeader(props),
     },
     Privacy: {
       screen: Privacy,
-      options: {
-        headerShown: true,
-        title: "",
-        headerTintColor: theme.colors.textOnBrand,
-        headerStyle: {
-          backgroundColor: theme.colors.brandSurface,
-        },
-      },
+      options: (props) => stackHeader(props, "Privacidad"),
     },
+    // Debug tool: intentionally keeps its own look.
     SqlViewer: {
       screen: SqlViewer,
       options: {
@@ -83,7 +67,7 @@ export const MainStack = createNativeStackNavigator({
         headerTitleStyle: {
           color: "#F8FAFC",
           fontSize: 18,
-          fontFamily: theme.fontFamily.bold,
+          fontFamily: fonts.bold,
         },
         headerStyle: {
           backgroundColor: "#000000",

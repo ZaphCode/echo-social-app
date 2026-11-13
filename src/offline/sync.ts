@@ -9,7 +9,11 @@ import {
   UpdateServiceRequestInput,
 } from "@/api/serviceRequests";
 import { servicesKeys, SaveServiceInput } from "@/api/services";
-import { contractingsKeys, SaveContractingInput } from "@/api/contractings";
+import {
+  contractingsKeys,
+  SaveContractingInput,
+  saveContractingLocation,
+} from "@/api/contractings";
 import {
   ClientProfileWithUser,
   ContractingWithOwner,
@@ -481,6 +485,10 @@ async function syncContractingUpdate(mutation: OfflineMutation) {
   if (isRemoteNewer(remoteContracting.updated_at, mutation.base_updated_at)) {
     await cacheContractings([remoteContracting]);
     throw new ConflictError("El servidor tiene una versión más reciente.");
+  }
+
+  if (payload.input.location !== undefined) {
+    await saveContractingLocation(payload.contractingId, payload.input.location);
   }
 
   const photos = await uploadContractingImages(

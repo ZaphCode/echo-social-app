@@ -1,121 +1,112 @@
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
+import { useState } from "react";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useChatSync } from "@/chat/ChatSyncProvider";
 import { insertPendingMessage } from "@/chat/messages";
 import { chatMessagesKeys } from "@/chat/sync";
-import { useChatSync } from "@/chat/ChatSyncProvider";
-import { theme } from "@/theme/theme";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuthCtx } from "@/context/Auth";
 import { useNegotiationCtx } from "@/context/Negotiation";
+import useTheme from "@/hooks/useTheme";
+import { fonts, radius } from "@/theme/theme";
 import { isCanceled } from "@/utils/negotiation";
-import useColorScheme from "@/hooks/useColorScheme";
-
-const DEVICE_HEIGHT = Dimensions.get("window").height;
 
 export default function ChatInput() {
   const { user } = useAuthCtx();
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { flushPendingMessages } = useChatSync();
-
-  const [message, setMessage] = useState("");
   const { request } = useNegotiationCtx();
+  const [message, setMessage] = useState("");
+
+  const isDisabled = isCanceled(request);
+  const canSend = !isDisabled && message.trim().length > 0;
 
   const handleSend = async () => {
-    const trimmedMessage = message.trim();
-
-    if (trimmedMessage === "") return;
+    const content = message.trim();
+    if (!content || isDisabled) return;
 
     const timestamp = new Date().toISOString();
     const randomSuffix = Math.random().toString(36).slice(2, 10);
-    const localId = `local:${timestamp}:${randomSuffix}`;
-    const clientId = `client:${user.id}:${timestamp}:${randomSuffix}`;
 
     await insertPendingMessage({
-      localId,
-      clientId,
+      localId: `local:${timestamp}:${randomSuffix}`,
+      clientId: `client:${user.id}:${timestamp}:${randomSuffix}`,
       requestId: request.id,
       senderId: user.id,
-      content: trimmedMessage,
+      content,
       createdAtClient: timestamp,
     });
     setMessage("");
 
-    await queryClient.invalidateQueries({
-      queryKey: chatMessagesKeys.byRequest(request.id),
-    });
-
+    await queryClient.invalidateQueries({ queryKey: chatMessagesKeys.byRequest(request.id) });
     await flushPendingMessages();
   };
 
-  const isDisabled = isCanceled(request);
-
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? DEVICE_HEIGHT * 0.02 : 0}
-    >
-      <View style={{ ...styles.inputContainer, borderColor: colors.darkGray }}>
+    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <View style={[styles.field, { backgroundColor: colors.surface, borderColor: colors.line }]}>
         <TextInput
-          style={{
-            ...styles.input,
-            backgroundColor: colors.darkGray,
-            color: colors.text,
-          }}
+          style={[styles.input, { color: colors.text }]}
           value={message}
           onChangeText={setMessage}
-          placeholder="Escribe un mensaje..."
-          placeholderTextColor={colors.lightGray}
-          onSubmitEditing={handleSend}
-          returnKeyType="send"
+          placeholder={isDisabled ? "Esta solicitud fue cancelada" : "Escribe un mensaje…"}
+          placeholderTextColor={colors.textSubtle}
           editable={!isDisabled}
+          multiline
+          accessibilityLabel="Mensaje"
         />
-        <TouchableOpacity
-          onPress={handleSend}
-          disabled={isDisabled}
-          style={styles.sendButton}
-        >
-          <MaterialCommunityIcons
-            name="send"
-            size={24}
-            color={colors.primaryBlue}
-            style={{ opacity: isDisabled ? 0.3 : 1 }}
-          />
-        </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Enviar mensaje"
+        disabled={!canSend}
+        onPress={handleSend}
+        style={({ pressed }) => [
+          styles.send,
+          {
+            backgroundColor: canSend ? colors.accent : colors.surface2,
+            transform: [{ scale: pressed ? 0.94 : 1 }],
+          },
+        ]}
+      >
+        <Feather name="arrow-up" size={22} color={canSend ? colors.onAccent : colors.textSubtle} />
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  inputContainer: {
+  bar: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingTop: theme.spacing.sm + 4,
-    paddingBottom: Platform.OS === "android" ? theme.spacing.md + 1 : 3,
-    paddingHorizontal: theme.spacing.md,
-    borderTopWidth: 1,
+    alignItems: "flex-end",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  field: {
+    flex: 1,
+    minHeight: 48,
+    maxHeight: 120,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    paddingHorizontal: 18,
+    justifyContent: "center",
   },
   input: {
-    flex: 1,
-    height: 44,
-    borderRadius: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md + 2,
-    fontFamily: theme.fontFamily.regular,
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
-  sendButton: {
-    marginLeft: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 6,
+  send: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

@@ -1,15 +1,13 @@
-import { View, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import Text from "./ui/Text";
-import { theme } from "@/theme/theme";
-import { User } from "@/models/User";
-import { ServiceRequest } from "@/models/ServiceRequest";
-import Divider from "./ui/Divider";
-import InfoRow from "./InfoRow";
-import useColorScheme from "@/hooks/useColorScheme";
-import StorageImage from "./ui/StorageImage";
-import useAppTheme from "@/hooks/useAppTheme";
 import { useNegotiationCtx } from "@/context/Negotiation";
+import useTheme from "@/hooks/useTheme";
+import { ServiceRequest } from "@/models/ServiceRequest";
+import { User } from "@/models/User";
+import { radius } from "@/theme/theme";
+import { formatDateLong, formatPrice } from "@/utils/format";
+import Avatar from "./ui/Avatar";
+import Text from "./ui/Text";
 
 type Props = {
   client: User;
@@ -18,71 +16,57 @@ type Props = {
 };
 
 export default function RequestDetails({ client, provider, request }: Props) {
-  const { theme } = useAppTheme();
+  const { colors } = useTheme();
   const { subject } = useNegotiationCtx();
-  const requesterLabel = subject.type === "contracting" ? "Publicador" : "Cliente";
+  const clientLabel = subject.type === "contracting" ? "Publicó" : "Cliente";
+
   return (
     <View style={styles.container}>
-      {/* Notas */}
-      <Text
-        fontFamily="bold"
-        size={theme.fontSizes.xl}
-        color={theme.colors.text}
-        style={{ marginBottom: 7, textAlign: "center" }}
-      >
-        Detalles de la solicitud
-      </Text>
-      <View style={styles.usersRow}>
-        <UserMiniCard
-          id={client.id}
-          label={requesterLabel}
-          name={client.name}
-          avatar={client.avatar}
-        />
-        <View style={styles.userSpacer} />
-        <UserMiniCard
-          id={provider.id}
-          label="Proveedor"
-          name={provider.name}
-          avatar={provider.avatar}
-        />
+      <Text variant="title">Detalles de la solicitud</Text>
+      <View style={styles.people}>
+        <Person label={clientLabel} user={client} />
+        <Person label="Profesional" user={provider} />
       </View>
-      <Divider />
-      <View style={{ paddingHorizontal: theme.spacing.md }}>
-        <InfoRow
-          label="Notas"
-          value={request.notes?.trim() ? request.notes : "Sin notas"}
-          icon="file-text"
-        />
+      <View style={[styles.box, { backgroundColor: colors.surface2 }]}>
+        <Row label={subject.type === "contracting" ? "Contratación" : "Servicio"} value={subject.name} />
+        <Row label="Precio base" value={formatPrice(subject.base_price)} />
+        <Row label="Solicitada" value={formatDateLong(request.requested)} />
+      </View>
+      <View style={styles.notes}>
+        <Text variant="label" bold tone="muted">
+          Notas
+        </Text>
+        <Text tone={request.notes?.trim() ? "default" : "subtle"}>
+          {request.notes?.trim() || "Sin notas"}
+        </Text>
       </View>
     </View>
   );
 }
 
-function UserMiniCard({
-  id,
-  label,
-  name,
-  avatar,
-}: {
-  id: string;
-  label: string;
-  name: string;
-  avatar?: string;
-}) {
-  const { theme } = useAppTheme();
+function Person({ label, user }: { label: string; user: User }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.userCard}>
-      <StorageImage bucket="avatars" path={avatar} style={styles.avatar} />
-      <Text color={theme.colors.lightGray} size={12}>
+    <View style={[styles.person, { backgroundColor: colors.surface2 }]}>
+      <Avatar name={user.name} path={user.avatar} size={48} />
+      <Text variant="caption" tone="subtle">
         {label}
       </Text>
-      <Text
-        color={theme.colors.text}
-        numberOfLines={1}
-        style={{ fontWeight: "bold" }}
-      >
-        {name}
+      <Text variant="label" bold numberOfLines={1}>
+        {user.name || "—"}
+      </Text>
+    </View>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.row}>
+      <Text variant="label" tone="muted">
+        {label}
+      </Text>
+      <Text variant="label" bold numberOfLines={1} style={styles.rowValue}>
+        {value}
       </Text>
     </View>
   );
@@ -90,36 +74,34 @@ function UserMiniCard({
 
 const styles = StyleSheet.create({
   container: {
-    padding: theme.spacing.md,
-    gap: 18,
+    gap: 16,
   },
-  datesRow: {
+  people: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  person: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+    padding: 14,
+    borderRadius: radius.card,
+  },
+  box: {
+    borderRadius: radius.card,
+    padding: 14,
+    gap: 10,
+  },
+  row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
-    gap: 14,
+    gap: 16,
   },
-  dateCol: {
-    flex: 1,
-    alignItems: "flex-start",
+  rowValue: {
+    flexShrink: 1,
+    textAlign: "right",
   },
-  usersRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  userCard: {
-    alignItems: "center",
-    gap: 2,
-    flex: 1,
-  },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    marginBottom: 2,
-    backgroundColor: "#DDD",
-  },
-  userSpacer: {
-    width: 24,
+  notes: {
+    gap: 4,
   },
 });

@@ -1,26 +1,30 @@
-import React, { FC, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
-import { Controller, RegisterOptions } from "react-hook-form";
+import { ComponentProps } from "react";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { Control, Controller, RegisterOptions } from "react-hook-form";
 import { Feather } from "@expo/vector-icons";
-import { theme } from "@/theme/theme";
-import useColorScheme from "@/hooks/useColorScheme";
 
-interface Props<T = any> {
+import useModal from "@/hooks/useModal";
+import useTheme from "@/hooks/useTheme";
+import { radius } from "@/theme/theme";
+import { SlideModal } from "../ui/SlideModal";
+import Text from "../ui/Text";
+import { FieldShell } from "./Field";
+
+type Props<T> = {
   name: string;
   label?: string;
-  control: any;
+  control: Control<any>;
   options: T[];
   getLabel: (option: T) => string;
-  getValue: (option: T) => string | number;
+  getValue: (option: T) => string;
   rules?: RegisterOptions;
-  defaultValue?: string | number;
-  zIndex?: number;
-  icon?: keyof typeof Feather.glyphMap;
-  iconColor?: string;
-}
+  placeholder?: string;
+  loading?: boolean;
+  icon?: ComponentProps<typeof Feather>["name"];
+};
 
-const Dropdown: FC<Props> = ({
+/** Select field that opens a bottom sheet list (categories, specialty...). */
+export default function Dropdown<T>({
   name,
   label,
   control,
@@ -28,110 +32,111 @@ const Dropdown: FC<Props> = ({
   getLabel,
   getValue,
   rules,
-  defaultValue,
-  zIndex = 1000,
+  placeholder = "Selecciona una opción",
+  loading,
   icon,
-  iconColor,
-}) => {
-  const [open, setOpen] = useState(false);
-  const [items, setItems] = useState(
-    options.map((opt) => ({
-      label: getLabel(opt),
-      value: getValue(opt),
-    }))
-  );
-
-  const { colors } = useColorScheme();
-
-  const styles = StyleSheet.create({
-    label: {
-      color: colors.text,
-      fontFamily: theme.fontFamily.regular,
-      fontSize: theme.fontSizes.md,
-      marginBottom: theme.spacing.sm,
-      marginLeft: theme.spacing.sm,
-    },
-    inputContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: colors.darkGray,
-      borderRadius: 12,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: 4.5,
-    },
-    icon: {
-      marginRight: 10,
-    },
-    dropdown: {
-      backgroundColor: colors.darkGray,
-      color: colors.text,
-      borderWidth: 0,
-      borderRadius: 12,
-      minHeight: 44,
-    },
-    dropdownContainer: {
-      backgroundColor: colors.darkGray,
-      borderRadius: 12,
-      borderWidth: 0,
-    },
-    dropdownText: {
-      color: colors.text,
-      fontSize: theme.fontSizes.md,
-      fontFamily: theme.fontFamily.regular,
-    },
-    placeholder: {
-      color: colors.lightGray,
-    },
-    error: {
-      color: theme.colors.redError,
-      marginTop: theme.spacing.sm,
-      fontSize: theme.fontSizes.sm,
-    },
-  });
+}: Props<T>) {
+  const { colors } = useTheme();
+  const [visible, open, close] = useModal();
 
   return (
     <Controller
       control={control}
       name={name}
       rules={rules || { required: "Este campo es requerido" }}
-      defaultValue={defaultValue || null}
-      render={({ field: { onChange, value }, fieldState: { error } }) => (
-        <View style={{ zIndex }}>
-          {label && <Text style={styles.label}>{label}</Text>}
-          <View style={styles.inputContainer}>
-            {icon && (
-              <Feather
-                name={icon}
-                size={20}
-                color={iconColor || colors.lightGray}
-                style={styles.icon}
+      render={({ field: { onChange, value }, fieldState: { error } }) => {
+        const selected = options.find((option) => getValue(option) === value);
+        return (
+          <FieldShell label={label} error={error?.message}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={label ?? placeholder}
+              onPress={open}
+              disabled={loading}
+              style={[
+                styles.box,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: error ? colors.danger : colors.line,
+                },
+              ]}
+            >
+              {icon && <Feather name={icon} size={18} color={colors.textSubtle} />}
+              <Text tone={selected ? "default" : "subtle"} style={styles.flex} numberOfLines={1}>
+                {loading ? "Cargando…" : selected ? getLabel(selected) : placeholder}
+              </Text>
+              <Feather name="chevron-down" size={18} color={colors.textSubtle} />
+            </Pressable>
+
+            <SlideModal visible={visible} onClose={close}>
+              <Text variant="title" style={styles.sheetTitle}>
+                {label ?? placeholder}
+              </Text>
+              <FlatList
+                data={options}
+                keyExtractor={(option) => getValue(option)}
+                style={styles.list}
+                renderItem={({ item }) => {
+                  const isSelected = getValue(item) === value;
+                  return (
+                    <Pressable
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: isSelected }}
+                      onPress={() => {
+                        onChange(getValue(item));
+                        close();
+                      }}
+                      style={({ pressed }) => [
+                        styles.option,
+                        {
+                          backgroundColor: isSelected
+                            ? colors.accentSoft
+                            : pressed
+                              ? colors.surface2
+                              : "transparent",
+                        },
+                      ]}
+                    >
+                      <Text bold={isSelected} tone={isSelected ? "accent" : "default"} style={styles.flex}>
+                        {getLabel(item)}
+                      </Text>
+                      {isSelected && <Feather name="check" size={18} color={colors.accentText} />}
+                    </Pressable>
+                  );
+                }}
               />
-            )}
-            <View style={{ flex: 1 }}>
-              <DropDownPicker
-                open={open}
-                setOpen={setOpen}
-                value={value}
-                setValue={onChange}
-                items={items}
-                setItems={setItems}
-                placeholder="Selecciona una opción..."
-                style={styles.dropdown}
-                dropDownContainerStyle={styles.dropdownContainer}
-                textStyle={styles.dropdownText}
-                placeholderStyle={styles.placeholder}
-                listItemLabelStyle={styles.dropdownText}
-                theme="DARK"
-                autoScroll
-                onChangeValue={(val) => onChange(val)}
-              />
-            </View>
-          </View>
-          {error && <Text style={styles.error}>{error.message}</Text>}
-        </View>
-      )}
+            </SlideModal>
+          </FieldShell>
+        );
+      }}
     />
   );
-};
+}
 
-export default Dropdown;
+const styles = StyleSheet.create({
+  box: {
+    height: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: radius.input,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+  },
+  flex: {
+    flex: 1,
+  },
+  sheetTitle: {
+    marginBottom: 12,
+  },
+  list: {
+    maxHeight: 440,
+  },
+  option: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 50,
+    paddingHorizontal: 14,
+    borderRadius: radius.sm,
+  },
+});

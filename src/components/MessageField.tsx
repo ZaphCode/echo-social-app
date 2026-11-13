@@ -1,22 +1,11 @@
 import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 
 import { ChatMessage } from "@/chat/types";
+import useTheme from "@/hooks/useTheme";
+import { ThemeColors } from "@/theme/theme";
 import Text from "./ui/Text";
-import { theme } from "@/theme/theme";
-import useColorScheme from "@/hooks/useColorScheme";
-
-type StatusDescriptor =
-  | {
-      kind: "loading";
-      color: string;
-    }
-  | {
-      kind: "icon";
-      icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
-      color: string;
-    };
 
 type Props = {
   message: ChatMessage;
@@ -25,73 +14,77 @@ type Props = {
   onRetry: (clientId: string) => Promise<void>;
 };
 
-function MessageField({
-  message,
-  currentUserId,
-  isOnline,
-  onRetry,
-}: Props) {
-  const { colors } = useColorScheme();
-  const isSender = message.sender_id === currentUserId;
-  const canRetry = isSender && message.sync_status === "failed";
+type Status =
+  | { kind: "sending"; label: string; color: string }
+  | { kind: "icon"; icon: React.ComponentProps<typeof Feather>["name"]; label: string; color: string };
 
-  const status = getMessageStatus({
-    syncStatus: message.sync_status,
-    isOnline,
-    colors,
-  });
-  const sentTime = formatMessageTime(message.created_at_client);
+function getStatus(
+  syncStatus: ChatMessage["sync_status"],
+  isOnline: boolean,
+  colors: ThemeColors,
+): Status {
+  if (syncStatus === "sending") return { kind: "sending", label: "Enviando", color: colors.textSubtle };
+  if (syncStatus === "failed")
+    return { kind: "icon", icon: "alert-circle", label: "No se envió · Toca para reintentar", color: colors.danger };
+  if (syncStatus === "pending")
+    return isOnline
+      ? { kind: "icon", icon: "clock", label: "En cola", color: colors.textSubtle }
+      : { kind: "icon", icon: "cloud-off", label: "En espera de conexión", color: colors.warn };
+  return { kind: "icon", icon: "check", label: "", color: colors.success };
+}
+
+const timeFormatter = new Intl.DateTimeFormat("es-MX", { hour: "2-digit", minute: "2-digit" });
+
+function MessageField({ message, currentUserId, isOnline, onRetry }: Props) {
+  const { colors } = useTheme();
+  const isMine = message.sender_id === currentUserId;
+  const failed = isMine && message.sync_status === "failed";
+  const status = getStatus(message.sync_status, isOnline, colors);
+  const time = timeFormatter.format(new Date(message.created_at_client));
+  const isWaiting = isMine && message.sync_status !== "sent" && !failed;
 
   return (
     <Pressable
-      style={[
-        styles.container,
-        isSender
-          ? [
-              styles.sender,
-              { backgroundColor: colors.secondaryBlue },
-            ]
-          : [
-              styles.receiver,
-              { backgroundColor: colors.darkGray },
-            ],
-      ]}
-      disabled={!canRetry}
+      disabled={!failed}
       onPress={() => onRetry(message.client_id)}
+      accessibilityRole={failed ? "button" : undefined}
+      accessibilityHint={failed ? "Reintentar envío" : undefined}
+      style={[styles.wrap, isMine ? styles.mine : styles.theirs]}
     >
-      <Text
-        style={[
-          styles.text,
-          isSender ? styles.textSender : { color: colors.lightGray },
-        ]}
-      >
-        {message.content}
-      </Text>
       <View
         style={[
-          styles.statusContainer,
-          isSender ? styles.senderStatus : styles.receiverStatus,
+          styles.bubble,
+          isMine
+            ? [
+                styles.bubbleMine,
+                failed
+                  ? { backgroundColor: colors.dangerSoft, borderColor: colors.danger, borderWidth: 1 }
+                  : { backgroundColor: colors.accent, opacity: isWaiting ? 0.82 : 1 },
+              ]
+            : [styles.bubbleTheirs, { backgroundColor: colors.surface, borderColor: colors.line }],
         ]}
       >
-        <Text
-          style={[
-            styles.metaText,
-            { color: isSender ? "rgba(255,255,255,0.72)" : colors.lightGray },
-          ]}
-        >
-          {sentTime}
+        <Text color={isMine && !failed ? colors.onAccent : colors.text} style={styles.text}>
+          {message.content}
         </Text>
-        {isSender && status ? (
-          status.kind === "loading" ? (
-            <ActivityIndicator size="small" color={status.color} />
+      </View>
+      <View style={styles.meta}>
+        <Text variant="micro" tone="subtle">
+          {time}
+        </Text>
+        {isMine &&
+          (status.kind === "sending" ? (
+            <ActivityIndicator size="small" color={status.color} style={styles.spinner} />
           ) : (
-            <MaterialCommunityIcons
-              name={status.icon}
-              size={12}
-              color={status.color}
-            />
-          )
-        ) : null}
+            <>
+              {status.label ? (
+                <Text variant="micro" bold={failed} color={status.color}>
+                  {status.label}
+                </Text>
+              ) : null}
+              <Feather name={status.icon} size={12} color={status.color} />
+            </>
+          ))}
       </View>
     </Pressable>
   );
@@ -111,87 +104,44 @@ export default React.memo(MessageField, (prev, next) => {
   );
 });
 
-function getMessageStatus({
-  syncStatus,
-  isOnline,
-  colors,
-}: {
-  syncStatus: ChatMessage["sync_status"];
-  isOnline: boolean;
-  colors: ReturnType<typeof useColorScheme>["colors"];
-}): StatusDescriptor {
-  if (syncStatus === "sending") {
-    return {
-      kind: "loading" as const,
-      color: colors.primaryBlue,
-    };
-  }
-
-  if (syncStatus === "failed") {
-    return {
-      kind: "icon" as const,
-      icon: "alert-circle-outline" as const,
-      color: colors.redError,
-    };
-  }
-
-  if (syncStatus === "pending") {
-    return {
-      kind: "icon" as const,
-      icon: isOnline ? "clock-time-three-outline" : "cloud-off-outline",
-      color: colors.lightGray,
-    };
-  }
-
-  return {
-    kind: "icon" as const,
-    icon: "check-all" as const,
-    color: colors.successGreen,
-  };
-}
-
-function formatMessageTime(dateString: string) {
-  return new Date(dateString).toLocaleTimeString("es-MX", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 const styles = StyleSheet.create({
-  container: {
-    maxWidth: "75%",
-    marginVertical: theme.spacing.xs,
-    padding: theme.spacing.sm,
-    borderRadius: 12,
-  },
-  sender: {
-    alignSelf: "flex-end",
-    borderTopRightRadius: 0,
-  },
-  receiver: {
-    alignSelf: "flex-start",
-    borderTopLeftRadius: 0,
-  },
-  text: {
-    fontFamily: theme.fontFamily.regular,
-    fontSize: theme.fontSizes.md,
-  },
-  textSender: {
-    color: "white",
-  },
-  statusContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 6,
+  wrap: {
+    maxWidth: "78%",
+    marginVertical: 4,
     gap: 4,
   },
-  senderStatus: {
+  mine: {
     alignSelf: "flex-end",
+    alignItems: "flex-end",
   },
-  receiverStatus: {
+  theirs: {
     alignSelf: "flex-start",
+    alignItems: "flex-start",
   },
-  metaText: {
-    fontSize: 11,
+  bubble: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  bubbleMine: {
+    borderBottomRightRadius: 6,
+  },
+  bubbleTheirs: {
+    borderBottomLeftRadius: 6,
+    borderWidth: 1,
+  },
+  text: {
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  meta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 4,
+  },
+  spinner: {
+    transform: [{ scale: 0.6 }],
+    height: 12,
   },
 });

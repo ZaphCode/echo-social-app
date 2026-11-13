@@ -1,40 +1,57 @@
-import useAppTheme from "@/hooks/useAppTheme";
-import { theme } from "../../theme/theme";
 import { Text as RNText, TextProps } from "react-native";
 
-type FontFamily = keyof typeof theme.fontFamily;
+import useTheme from "@/hooks/useTheme";
+import { fonts, ThemeColors, typeScale, TypeVariant } from "@/theme/theme";
 
-type Props = {
-  fontFamily?: FontFamily;
+type Tone = "default" | "muted" | "subtle" | "accent" | "danger" | "success" | "done" | "onAccent";
+
+type Props = TextProps & {
+  variant?: TypeVariant;
+  bold?: boolean;
+  tone?: Tone;
+  /** Raw color; wins over `tone`. */
   color?: string;
-  children?: string;
-  size?: number;
-} & TextProps;
+  align?: "left" | "center" | "right";
+};
+
+const toneKey: Record<Tone, keyof ThemeColors> = {
+  default: "text",
+  muted: "textMuted",
+  subtle: "textSubtle",
+  accent: "accentText",
+  danger: "danger",
+  success: "success",
+  done: "done",
+  onAccent: "onAccent",
+};
 
 export default function Text({
-  fontFamily,
+  variant = "body",
+  bold,
+  tone = "default",
   color,
-  children,
+  align,
   style,
-  size,
   ...rest
 }: Props) {
-  const { theme: appTheme } = useAppTheme();
+  const { colors } = useTheme();
+  const [fontSize, lineHeight] = typeScale[variant];
+  const isHeading = variant === "display" || variant === "title" || variant === "heading";
+
   return (
     <RNText
       {...rest}
       style={[
         {
-          fontFamily: fontFamily
-            ? theme.fontFamily[fontFamily]
-            : theme.fontFamily.regular,
-          color: color ?? appTheme.colors.text,
-          fontSize: size ?? theme.fontSizes.md,
+          fontFamily: bold ?? isHeading ? fonts.bold : fonts.regular,
+          fontSize,
+          lineHeight,
+          color: color ?? colors[toneKey[tone]],
+          letterSpacing: isHeading ? -0.3 : 0,
+          textAlign: align,
         },
         style,
       ]}
-    >
-      {children}
-    </RNText>
+    />
   );
 }

@@ -1,161 +1,65 @@
-import { View, StyleSheet, Pressable } from "react-native";
-import React from "react";
+import { memo } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+
 import { ServiceRequestWithRelations } from "@/api/types";
-import Text from "./ui/Text";
-import { theme } from "@/theme/theme";
-import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { useAuthCtx } from "@/context/Auth";
-import useColorScheme from "@/hooks/useColorScheme";
+import useTheme from "@/hooks/useTheme";
+import useAppNavigation from "@/navigation/useAppNavigation";
+import { fonts, radius } from "@/theme/theme";
+import { formatPrice, formatRelativeShort } from "@/utils/format";
+import { getRequestProvider, getRequestSubject } from "@/utils/negotiationSubject";
+import StatusPill from "./ui/StatusPill";
 import StorageImage from "./ui/StorageImage";
-import {
-  getRequestProvider,
-  getRequestSubject,
-} from "@/utils/negotiationSubject";
+import Text from "./ui/Text";
 
 type Props = {
   request: ServiceRequestWithRelations;
+  authUserId: string;
   unreadCount?: number;
 };
 
-const STATUS_MAP = {
-  NEGOTIATION: {
-    label: "Negociación",
-    color: theme.colors.primaryBlue,
-    backgroundColor: "rgba(99, 195, 255, 0.12)",
-    borderColor: "rgba(99, 195, 255, 0.28)",
-  },
-  ACCEPTED: {
-    label: "Aceptado",
-    color: theme.colors.successGreen,
-    backgroundColor: "rgba(0, 184, 107, 0.12)",
-    borderColor: "rgba(0, 184, 107, 0.28)",
-  },
-  CANCELED: {
-    label: "Cancelado",
-    color: theme.colors.redError,
-    backgroundColor: "rgba(255, 105, 89, 0.12)",
-    borderColor: "rgba(255, 105, 89, 0.28)",
-  },
-  FINISHED: {
-    label: "Finalizado",
-    color: theme.colors.completePurple,
-    backgroundColor: "rgba(164, 94, 229, 0.12)",
-    borderColor: "rgba(164, 94, 229, 0.28)",
-  },
-};
-
-function formatPrice(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-export default function RequestCard({ request, unreadCount = 0 }: Props) {
-  const { colors } = useColorScheme();
-  const navigation = useNavigation();
-  const { user } = useAuthCtx();
-
+function RequestCard({ request, authUserId, unreadCount = 0 }: Props) {
+  const { colors } = useTheme();
+  const nav = useAppNavigation();
   const subject = getRequestSubject(request);
   const provider = getRequestProvider(request);
-  const client = request.client_profile || ({} as any);
-
-  const statusData = STATUS_MAP[request.agreement_state] || {
-    label: "Pendiente",
-    color: colors.lightGray,
-    backgroundColor: "transparent",
-    borderColor: colors.border,
-  };
-
-  const otherUserName = user.id === client?.id ? provider.name : client.name;
-
-  const handlePress = () => {
-    navigation.navigate("Main", {
-      screen: "Chatroom",
-      params: { request },
-    });
-  };
+  const isClient = authUserId === request.client;
+  const counterpart = isClient ? provider?.name : request.client_profile?.name;
+  const role = subject.type === "contracting" ? "Contratación" : "Servicio";
 
   return (
     <Pressable
-      onPress={handlePress}
-      style={[
+      accessibilityRole="button"
+      accessibilityLabel={`${subject.name}, ${unreadCount > 0 ? `${unreadCount} mensajes sin leer` : "abrir chat"}`}
+      onPress={() => nav.chat(request)}
+      style={({ pressed }) => [
         styles.card,
-        {
-          backgroundColor: colors.darkGray,
-          borderColor: colors.darkerGray,
-        },
+        { backgroundColor: colors.surface, borderColor: colors.line, opacity: pressed ? 0.85 : 1 },
       ]}
     >
-      <View
-        style={[styles.statusAccent, { backgroundColor: statusData.color }]}
-      />
-      <View style={styles.content}>
-        <StorageImage
-          bucket="service-photos"
-          path={subject.photos?.[0]}
-          fallbackUri="https://via.placeholder.com/100x100"
-          style={styles.image}
-        />
-        <View style={styles.info}>
-          <View style={styles.topSection}>
-            <Text numberOfLines={2} color={colors.text} style={styles.title}>
-              {subject.name}
-            </Text>
-
-            <View style={styles.metaRow}>
-              <View style={styles.userRow}>
-                <Feather name="user" size={13} color={colors.lightGray} />
-                <Text
-                  numberOfLines={1}
-                  style={[styles.sub, { color: colors.lightGray }]}
-                >
-                  {otherUserName}
+      <StorageImage bucket="service-photos" path={subject.photos?.[0]} style={styles.image} />
+      <View style={styles.info}>
+        <View style={styles.titleRow}>
+          <Text bold numberOfLines={1} style={styles.flex}>
+            {subject.name}
+          </Text>
+          <Text variant="caption" tone="subtle">
+            {formatRelativeShort(request.updated_at ?? request.requested)}
+          </Text>
+        </View>
+        <Text variant="label" tone="muted" numberOfLines={1}>
+          {`${role} · con ${counterpart || "otra persona"}`}
+        </Text>
+        <View style={styles.bottomRow}>
+          <StatusPill state={request.agreement_state} />
+          <View style={styles.priceRow}>
+            <Text bold>{formatPrice(request.agreed_price)}</Text>
+            {unreadCount > 0 && (
+              <View style={[styles.unread, { backgroundColor: colors.accent }]}>
+                <Text color={colors.onAccent} style={styles.unreadText}>
+                  {unreadCount > 99 ? "99+" : String(unreadCount)}
                 </Text>
               </View>
-              <View style={styles.statusAndUnread}>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    {
-                      backgroundColor: statusData.backgroundColor,
-                      borderColor: statusData.borderColor,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.status, { color: statusData.color }]}>
-                    {statusData.label}
-                  </Text>
-                </View>
-                {unreadCount > 0 ? (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadBadgeText}>
-                      {unreadCount > 99 ? "99+" : String(unreadCount)}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-            </View>
-          </View>
-
-          <View
-            style={[styles.bottomSection, { borderTopColor: colors.border }]}
-          >
-            <View style={styles.priceRow}>
-              <Text style={[styles.label, { color: colors.lightGray }]}>
-                Propuesta:
-              </Text>
-            </View>
-            <View style={styles.priceGroup}>
-              <Text style={styles.price}>
-                {formatPrice(request.agreed_price)}
-              </Text>
-              <Text style={[styles.currency, { color: colors.lightGray }]}>
-                USD
-              </Text>
-            </View>
+            )}
           </View>
         </View>
       </View>
@@ -163,125 +67,57 @@ export default function RequestCard({ request, unreadCount = 0 }: Props) {
   );
 }
 
+export default memo(RequestCard);
+
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderRadius: 16,
-    marginBottom: theme.spacing.md,
-    overflow: "hidden",
-    position: "relative",
-  },
-  statusAccent: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 5,
-  },
-  content: {
-    padding: 14,
     flexDirection: "row",
     gap: 12,
+    padding: 12,
+    borderRadius: radius.card,
+    borderWidth: 1,
   },
   image: {
-    width: 96,
-    height: 96,
-    borderRadius: 14,
-    backgroundColor: "#333",
+    width: 76,
+    height: 76,
+    borderRadius: 16,
   },
   info: {
     flex: 1,
-    minHeight: 96,
-    justifyContent: "space-between",
+    minWidth: 0,
+    gap: 3,
+    justifyContent: "center",
   },
-  topSection: {
-    gap: 7,
-  },
-  metaRow: {
+  titleRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: 8,
   },
-  title: {
-    fontSize: theme.fontSizes.md,
-    fontFamily: theme.fontFamily.bold,
-    lineHeight: 23,
-  },
-  status: {
-    fontFamily: theme.fontFamily.bold,
-    fontSize: 10,
-  },
-  statusBadge: {
-    minHeight: 28,
-    paddingHorizontal: 10,
-    borderRadius: theme.radii.pill,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  userRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flex: 1,
-    minWidth: 0,
-  },
-  statusAndUnread: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flexShrink: 0,
-  },
-  label: {
-    fontSize: theme.fontSizes.sm,
-    fontFamily: theme.fontFamily.bold,
-  },
-  sub: {
-    fontSize: theme.fontSizes.sm - 1,
-    fontFamily: theme.fontFamily.regular,
+  flex: {
     flex: 1,
   },
-  price: {
-    color: theme.colors.primaryBlue,
-    fontFamily: theme.fontFamily.bold,
-    fontSize: 22,
-  },
-  currency: {
-    fontSize: theme.fontSizes.sm,
-    fontFamily: theme.fontFamily.bold,
-    marginBottom: 2,
-  },
-  bottomSection: {
-    borderTopWidth: 1,
-    marginTop: 10,
-    paddingTop: 10,
+  bottomRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    marginTop: 4,
   },
   priceRow: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  priceGroup: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 6,
+    alignItems: "center",
+    gap: 8,
   },
-  unreadBadge: {
+  unread: {
     minWidth: 22,
     height: 22,
     paddingHorizontal: 6,
     borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.primaryBlue,
   },
-  unreadBadgeText: {
-    color: "white",
-    fontFamily: theme.fontFamily.bold,
-    fontSize: 12,
+  unreadText: {
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    lineHeight: 13,
   },
 });

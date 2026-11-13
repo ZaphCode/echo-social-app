@@ -11,7 +11,7 @@ import { useFonts } from "expo-font";
 import { AlertProvider } from "@/context/Alert";
 import { OfflineProvider } from "@/context/Offline";
 import { AlertModal } from "@/components/ui/AlertModal";
-import useAppTheme from "@/hooks/useAppTheme";
+import useTheme from "@/hooks/useTheme";
 import { initChatDatabase } from "@/chat/db";
 import { ChatSyncProvider } from "@/chat/ChatSyncProvider";
 import SqlViewerFab from "@/components/SqlViewerFab";
@@ -56,7 +56,7 @@ export default function AppWrapped() {
 }
 
 function App() {
-  const { resolvedTheme, theme } = useAppTheme();
+  const { mode, navigationTheme } = useTheme();
   const [currentRouteName, setCurrentRouteName] = useState<string | null>(null);
   const hideSqlViewerFab = currentRouteName === "SqlViewer";
 
@@ -71,10 +71,10 @@ function App() {
 
   return (
     <>
-      <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
       <Navigation
         ref={navigationRef}
-        theme={theme.navigationTheme}
+        theme={navigationTheme}
         onReady={handleNavigationReady}
         onStateChange={updateCurrentRouteName}
       />

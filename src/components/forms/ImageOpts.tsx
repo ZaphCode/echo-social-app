@@ -1,75 +1,77 @@
-import useColorScheme from "@/hooks/useColorScheme";
-import { theme } from "@/theme/theme";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { ComponentProps } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+
+import useTheme from "@/hooks/useTheme";
+import { radius, space } from "@/theme/theme";
 import Text from "../ui/Text";
-import Feather from "@expo/vector-icons/Feather";
 
 type Props = {
-  onPressCamera: () => Promise<void>;
-  onPressLibrary: () => Promise<void>;
+  onPressCamera: () => void | Promise<void>;
+  onPressLibrary: () => void | Promise<void>;
 };
 
 export default function ImageOpts({ onPressCamera, onPressLibrary }: Props) {
-  const { colors } = useColorScheme();
   return (
     <View style={styles.container}>
-      <Text color={colors.text} style={styles.title}>
-        Agregar imagen
-      </Text>
-      <Text color={colors.text} style={styles.descContainer}>
-        Puedes tomar una foto nueva o elegir una existente de tu galería.
-      </Text>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-around",
-          marginTop: theme.spacing.lg,
-        }}
-      >
-        <TouchableOpacity
-          style={[styles.buttons, { backgroundColor: colors.darkGray }]}
-          onPress={() => {
-            console.log("Camera press");
-            onPressCamera();
-          }}
-        >
-          <Feather name="camera" size={24} color={colors.primaryBlue} />
-          <Text color={colors.text}>Cámara</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.buttons, { backgroundColor: colors.darkGray }]}
-          onPress={() => {
-            console.log("Library press");
-            onPressLibrary();
-          }}
-        >
-          <Feather name="image" size={24} color={colors.primaryBlue} />
-          <Text color={colors.text}>Galería</Text>
-        </TouchableOpacity>
+      <Text variant="title">Agregar foto</Text>
+      <Text tone="muted">Toma una foto nueva o elige una de tu galería.</Text>
+      <View style={styles.row}>
+        <Option icon="camera" label="Cámara" onPress={onPressCamera} />
+        <Option icon="image" label="Galería" onPress={onPressLibrary} />
       </View>
     </View>
   );
 }
 
+function Option({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: ComponentProps<typeof Feather>["name"];
+  label: string;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.option,
+        { backgroundColor: colors.surface2, opacity: pressed ? 0.8 : 1 },
+      ]}
+    >
+      <View style={[styles.icon, { backgroundColor: colors.accentSoft }]}>
+        <Feather name={icon} size={22} color={colors.accentText} />
+      </View>
+      <Text bold>{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
+    gap: space.xs,
   },
-  title: {
-    fontSize: theme.fontSizes.xl,
-    fontFamily: theme.fontFamily.bold,
-    textAlign: "center",
+  row: {
+    flexDirection: "row",
+    gap: space.sm,
+    marginTop: space.sm,
   },
-  descContainer: {
-    gap: theme.spacing.sm,
-  },
-  buttons: {
-    flexDirection: "column",
-    justifyContent: "center",
+  option: {
+    flex: 1,
     alignItems: "center",
-    gap: theme.spacing.sm - 5,
-    padding: theme.spacing.md + 5,
-    borderRadius: 10,
+    gap: 10,
+    paddingVertical: space.lg,
+    borderRadius: radius.card,
+  },
+  icon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

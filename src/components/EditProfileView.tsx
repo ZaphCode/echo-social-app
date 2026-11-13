@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -9,13 +9,12 @@ import {
 } from "@/api/profiles";
 import { ClientProfile } from "@/models/ClientProfile";
 import { ProviderProfile } from "@/models/ProviderProfile";
-import { theme } from "@/theme/theme";
 import { User } from "@/models/User";
 import { useAlertCtx } from "@/context/Alert";
 import { useOffline } from "@/context/Offline";
 import Text from "./ui/Text";
 import ProfileForm from "./forms/ProfileForm";
-import useColorScheme from "@/hooks/useColorScheme";
+import useTheme from "@/hooks/useTheme";
 
 type Props = {
   userRole: User["role"];
@@ -32,7 +31,7 @@ export default function EditProfileView({
 }: Props) {
   const { show } = useAlertCtx();
   const { isOnline } = useOffline();
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
   const queryClient = useQueryClient();
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -67,7 +66,7 @@ export default function EditProfileView({
           ? "Tus datos se actualizaron exitosamente."
           : "Tus datos se guardaron localmente y se sincronizarán al reconectar.",
         icon: "check-circle",
-        iconColor: theme.colors.successGreen,
+        iconColor: colors.success,
       });
       onSuccess?.(result);
     } catch {
@@ -76,31 +75,31 @@ export default function EditProfileView({
         message:
           "Ocurrió un error al guardar los cambios en tu perfil. Inténtalo de nuevo.",
         icon: "alert-circle",
-        iconColor: colors.redError,
+        iconColor: colors.danger,
       });
     }
   });
 
   return (
-    <View>
-      <Text fontFamily="bold" style={styles.title} color={colors.text}>
-        Editar Datos Personales
+    <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <Text variant="title" style={styles.title}>
+        Editar datos personales
       </Text>
       <ProfileForm
         control={control}
         loading={profileMutation.isPending}
         onContinue={onSubmit}
-        submitBtnLabel="Guardar Cambios"
+        submitBtnLabel="Guardar cambios"
       />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flexGrow: 0,
+  },
   title: {
-    fontSize: theme.fontSizes.xl,
     marginBottom: 16,
-    textAlign: "center",
-    paddingVertical: theme.spacing.md,
   },
 });

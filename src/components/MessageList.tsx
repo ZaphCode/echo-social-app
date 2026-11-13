@@ -14,12 +14,9 @@ import useChatMessages from "@/chat/useChatMessages";
 import { markRequestMessagesRead } from "@/chat/messages";
 import { chatMessagesKeys } from "@/chat/sync";
 import { useAuthCtx } from "@/context/Auth";
-import Text from "./ui/Text";
 import MessageField from "./MessageField";
-import { theme } from "@/theme/theme";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Loader from "./ui/Loader";
-import useColorScheme from "@/hooks/useColorScheme";
+import EmptyState from "./ui/EmptyState";
 
 type Props = {
   requestId: string;
@@ -129,14 +126,18 @@ export default function MessageList({ requestId }: Props) {
     [showInitialSyncLoader],
   );
 
-  if (messagesQuery.isPending)
-    return (
-      <View style={{ padding: 40 }}>
-        <Loader />
-      </View>
-    );
+  if (messagesQuery.isPending) return <Loader />;
 
-  if (messagesQuery.isError) return <ErrorMessages />;
+  if (messagesQuery.isError) {
+    return (
+      <EmptyState
+        tone="error"
+        icon="alert-circle"
+        title="No pudimos cargar los mensajes"
+        message="Revisa tu conexión o intenta más tarde."
+      />
+    );
+  }
 
   return (
     <FlatList
@@ -164,90 +165,23 @@ export default function MessageList({ requestId }: Props) {
 }
 
 function LoadingMessages() {
-  return (
-    <View style={{ padding: 40, marginBottom: 200 }}>
-      <Loader />
-    </View>
-  );
+  return <Loader label="Sincronizando mensajes…" />;
 }
 
 function EmptyMessages() {
-  const { colors } = useColorScheme();
   return (
-    <View style={styles.emptyContainer}>
-      <MaterialCommunityIcons
-        name="message-text-outline"
-        size={52}
-        color={colors.primaryBlue}
-        style={{ marginBottom: 18 }}
-      />
-      <Text
-        fontFamily="bold"
-        size={theme.fontSizes.lg + 2}
-        color={colors.text}
-        style={{ marginBottom: 6 }}
-      >
-        ¡Sin mensajes!
-      </Text>
-      <Text
-        style={{ textAlign: "center" }}
-        color={colors.lightGray}
-        size={theme.fontSizes.md}
-      >
-        No hay mensajes en esta conversación. ¡Envía el primero!
-      </Text>
-    </View>
-  );
-}
-
-function ErrorMessages() {
-  const { colors } = useColorScheme();
-  return (
-    <View style={styles.errorContainer}>
-      <MaterialCommunityIcons
-        name="alert-circle-outline"
-        size={52}
-        color={colors.redError}
-        style={{ marginBottom: 16 }}
-      />
-      <Text
-        fontFamily="bold"
-        size={theme.fontSizes.lg + 2}
-        color={"white"}
-        style={{ marginBottom: 6 }}
-      >
-        ¡Ups! Hubo un error
-      </Text>
-      <Text
-        style={{ textAlign: "center" }}
-        color={colors.lightGray}
-        size={theme.fontSizes.md}
-      >
-        No pudimos cargar los mensajes. Por favor, revisa tu conexión o intenta
-        nuevamente más tarde.
-      </Text>
-    </View>
+    <EmptyState
+      icon="message-circle"
+      title="Empieza la conversación"
+      message="Pregunta detalles antes de cerrar el trato. Los mensajes se guardan aunque no tengas conexión."
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 40,
-    paddingHorizontal: 30,
-    opacity: 0.85,
-    marginBottom: 200,
-  },
-  errorContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 60,
-    paddingHorizontal: 30,
-    opacity: 0.85,
-    marginBottom: 200,
-  },
   invertedListPlaceholder: {
+    flex: 1,
+    justifyContent: "center",
     transform: [{ scaleY: -1 }],
   },
 });

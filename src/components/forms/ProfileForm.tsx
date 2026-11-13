@@ -1,75 +1,73 @@
-import { View, StyleSheet } from "react-native";
-import React from "react";
+import { StyleSheet, View } from "react-native";
+import { Control } from "react-hook-form";
+
+import * as rules from "@/utils/validations";
 import Button from "../ui/Button";
 import Field from "./Field";
-import * as rules from "@/utils/validations";
-import { theme } from "@/theme/theme";
-import Divider from "../ui/Divider";
 
 type Props = {
   submitBtnLabel: string;
-  control: any;
+  control: Control<any>;
   onContinue: () => void;
   loading?: boolean;
 };
 
-export default function ProfileForm({
-  submitBtnLabel,
-  control,
-  onContinue,
-  loading = false,
-}: Props) {
+export default function ProfileForm({ submitBtnLabel, control, onContinue, loading = false }: Props) {
   return (
-    <View style={styles.fieldsContainer}>
+    <View style={styles.fields}>
       <Field
         name="phone"
         control={control}
         label="Teléfono"
+        icon="phone"
         placeholder="+52 123 456 7890"
-        keyboardType="numeric"
+        keyboardType="phone-pad"
         rules={rules.validPhoneRules}
       />
-      <Divider />
       <Field
         name="address"
         control={control}
         label="Dirección"
-        placeholder="Calle Reforma, Número 123"
+        icon="home"
+        placeholder="Calle Reforma 123"
+        autoCapitalize="words"
       />
-      <Field
-        name="city"
-        control={control}
-        label="Ciudad"
-        placeholder="Ciudad de México"
-      />
-      <Field
-        name="state"
-        control={control}
-        label="Estado"
-        placeholder="Ciudad de México"
-      />
-      <Field
-        name="zip"
-        control={control}
-        label="Código Postal"
-        placeholder="12345"
-        keyboardType="numeric"
-        rules={rules.validZipCodeRules}
-      />
-      <Button
-        title={submitBtnLabel}
-        onPress={onContinue}
-        loading={loading}
-        style={{ marginTop: 18 }}
-      />
+      <View style={styles.row}>
+        <View style={styles.flex}>
+          <Field name="city" control={control} label="Ciudad" placeholder="Mérida" autoCapitalize="words" />
+        </View>
+        <View style={styles.zip}>
+          <Field
+            name="zip"
+            control={control}
+            label="C.P."
+            placeholder="97000"
+            keyboardType="numeric"
+            rules={rules.validZipCodeRules}
+          />
+        </View>
+      </View>
+      <Field name="state" control={control} label="Estado" placeholder="Yucatán" autoCapitalize="words" />
+      <Button title={submitBtnLabel} onPress={onContinue} loading={loading} style={styles.submit} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  fieldsContainer: {
-    paddingHorizontal: theme.spacing.md - 2,
-    gap: theme.spacing.sm - 2,
-    paddingBottom: theme.spacing.lg + 24,
+  fields: {
+    gap: 16,
+  },
+  row: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  flex: {
+    flex: 1,
+  },
+  zip: {
+    width: 120,
+  },
+  submit: {
+    marginTop: 8,
   },
 });

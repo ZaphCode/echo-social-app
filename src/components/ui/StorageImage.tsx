@@ -1,65 +1,50 @@
 import { Image, ImageProps } from "expo-image";
-import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { StyleProp, View, ViewStyle } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
 import { resolveStorageUrl } from "@/api/storage";
+import useTheme from "@/hooks/useTheme";
 
 type Props = Omit<ImageProps, "source"> & {
   bucket?: string;
   path?: string | null;
-  fallbackUri?: string;
   style?: StyleProp<ViewStyle>;
 };
 
+/** Image from a Supabase bucket (or a local/remote URI) with a themed placeholder. */
 export default function StorageImage({
   bucket,
   path,
-  fallbackUri,
   style,
   contentFit = "cover",
   transition = 180,
   cachePolicy = "memory-disk",
   ...rest
 }: Props) {
-  const resolvedUri = resolveImageUri({ bucket, path, fallbackUri });
+  const { colors } = useTheme();
+  const uri = path?.trim() ? (bucket ? resolveStorageUrl(bucket, path) : path) : "";
 
-  if (!resolvedUri) {
-    return <View style={[styles.placeholder, style]} />;
+  if (!uri) {
+    return (
+      <View
+        style={[
+          { backgroundColor: colors.surface2, alignItems: "center", justifyContent: "center" },
+          style,
+        ]}
+      >
+        <Feather name="image" size={22} color={colors.textSubtle} />
+      </View>
+    );
   }
 
   return (
     <Image
       {...rest}
-      source={{ uri: resolvedUri }}
-      style={style}
+      source={{ uri }}
+      style={[{ backgroundColor: colors.surface2 }, style]}
       contentFit={contentFit}
       transition={transition}
       cachePolicy={cachePolicy}
     />
   );
 }
-
-function resolveImageUri({
-  bucket,
-  path,
-  fallbackUri,
-}: {
-  bucket?: string;
-  path?: string | null;
-  fallbackUri?: string;
-}) {
-  if (path?.trim()) {
-    return bucket ? resolveStorageUrl(bucket, path) : path;
-  }
-
-  if (fallbackUri?.trim()) {
-    return fallbackUri;
-  }
-
-  return "";
-}
-
-const styles = StyleSheet.create({
-  placeholder: {
-    backgroundColor: "#2A2D31",
-  },
-});

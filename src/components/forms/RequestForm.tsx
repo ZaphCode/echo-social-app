@@ -1,10 +1,4 @@
-import {
-  Keyboard,
-  ScrollView,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -15,7 +9,7 @@ import {
   updateServiceRequest,
 } from "@/api/serviceRequests";
 import { ContractingWithOwner, ServiceRequestWithRelations } from "@/api/types";
-import { theme } from "@/theme/theme";
+import { formatPrice } from "@/utils/format";
 import { Service } from "@/models/Service";
 import { useAuthCtx } from "@/context/Auth";
 import { useNegotiationCtx } from "@/context/Negotiation";
@@ -31,7 +25,8 @@ import Text from "../ui/Text";
 import Button from "../ui/Button";
 import DateField from "./DateField";
 import { useAlertCtx } from "@/context/Alert";
-import useColorScheme from "@/hooks/useColorScheme";
+import useTheme from "@/hooks/useTheme";
+import StorageImage from "../ui/StorageImage";
 
 type Props = {
   service?: Service;
@@ -57,7 +52,7 @@ export default function RequestForm({
   defaultPrice,
   offerNotification,
 }: Props) {
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
   const { isOnline } = useOffline();
@@ -158,7 +153,7 @@ export default function RequestForm({
           title: "Error al Ofertar",
           message: "No se pudo enviar tu oferta. Intente nuevamente.",
           icon: "alert-circle",
-          iconColor: theme.colors.redError,
+          iconColor: colors.danger,
         });
       }
 
@@ -172,7 +167,7 @@ export default function RequestForm({
           message:
             "Actualizamos la propuesta en tu app. Se enviará a la otra persona cuando recuperes conexión; si esa persona hace cambios antes, el estado final puede actualizarse al sincronizar.",
           icon: "cloud-sync",
-          iconColor: theme.colors.primaryBlue,
+          iconColor: colors.accent,
         });
       }
 
@@ -196,7 +191,7 @@ export default function RequestForm({
           title: "Error al Solicitar Servicio",
           message: "No se pudo enviar tu solicitud. Intente nuevamente.",
           icon: "alert-circle",
-          iconColor: theme.colors.redError,
+          iconColor: colors.danger,
         });
       }
 
@@ -222,71 +217,87 @@ export default function RequestForm({
         console.log("Failed to create notification:", err);
       }
 
-      console.log("New request created:", newRequest);
-
       onSuccess(newRequest);
     }
   });
 
+  const title = offeringMode
+    ? "Hacer contraoferta"
+    : isContracting
+      ? "Aplicar a la contratación"
+      : "Solicitar servicio";
+  const priceLabel = offeringMode
+    ? "Tu propuesta"
+    : isContracting
+      ? "Tu cotización"
+      : "Tu oferta inicial";
+
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Text color={colors.text} fontFamily="bold" size={theme.fontSizes.xl}>
-          {offeringMode
-            ? "Realiza una oferta"
-            : isContracting
-              ? "Aplicar a Contratación"
-              : "Solicitud de Servicio"}
-        </Text>
-        <View style={styles.fields}>
-          <Field
-            label={offeringMode ? "Precio" : "Oferta inicial"}
-            placeholder={`${subject.base_price}`}
-            keyboardType="numeric"
-            name="price"
-            icon="dollar-sign"
-            control={control}
-            rules={validPriceRules}
-          />
-          <DateField control={control} name="date" label="Fecha" />
-          {!offeringMode && (
-            <Field
-              label="Notas (opcional)"
-              placeholder="Especifique algo..."
-              icon="edit"
-              name="notes"
-              control={control}
-              rules={{ required: false, validate: () => true }}
-            />
-          )}
-          <Button
-            loading={
-              createRequestMutation.isPending || updateRequestMutation.isPending
-            }
-            title="Enviar"
-            onPress={onSubmit}
-          />
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <Text variant="title">{title}</Text>
+      <View style={[styles.subject, { backgroundColor: colors.surface2 }]}>
+        <StorageImage bucket="service-photos" path={subject.photos?.[0]} style={styles.subjectImage} />
+        <View style={styles.flex}>
+          <Text bold numberOfLines={1}>
+            {subject.name}
+          </Text>
+          <Text variant="label" tone="muted">
+            {`${isContracting ? "Presupuesto" : "Precio base"} ${formatPrice(subject.base_price)}`}
+          </Text>
         </View>
-      </ScrollView>
-    </TouchableWithoutFeedback>
+      </View>
+      <Field
+        label={priceLabel}
+        placeholder={`${subject.base_price}`}
+        keyboardType="numeric"
+        name="price"
+        icon="dollar-sign"
+        control={control}
+        rules={validPriceRules}
+      />
+      <DateField control={control} name="date" label="Fecha propuesta" />
+      {!offeringMode && (
+        <Field
+          label="Notas (opcional)"
+          placeholder="Detalles que el otro debe saber"
+          name="notes"
+          control={control}
+          autoCapitalize="sentences"
+          multiline
+          rules={{ required: false, validate: () => true }}
+        />
+      )}
+      <Button
+        loading={createRequestMutation.isPending || updateRequestMutation.isPending}
+        title={offeringMode ? "Enviar contraoferta" : isContracting ? "Enviar aplicación" : "Enviar solicitud"}
+        onPress={onSubmit}
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    gap: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
+    gap: 16,
+    paddingBottom: 20,
   },
-  fields: {
-    width: "90%",
-    gap: theme.spacing.md,
+  subject: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 10,
+    borderRadius: 18,
+  },
+  subjectImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+  },
+  flex: {
+    flex: 1,
   },
 });

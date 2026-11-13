@@ -1,10 +1,7 @@
-import { View, StyleSheet, Pressable, ScrollView } from "react-native";
-import { Image } from "expo-image";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 
-import { theme } from "@/theme/theme";
 import { useAlertCtx } from "@/context/Alert";
 import { User } from "@/models/User";
 import { supabase } from "@/lib/supabase";
@@ -14,20 +11,21 @@ import Field from "@/components/forms/Field";
 import Button from "@/components/ui/Button";
 import useRedirect from "@/hooks/auth/useRedirect";
 import RoleSelector from "@/components/forms/RoleSelector";
-import useColorScheme from "@/hooks/useColorScheme";
+import useTheme from "@/hooks/useTheme";
+import AuthLayout from "@/components/AuthLayout";
 
 export default function SignUp() {
   useRedirect();
-  const { colors, activeMode } = useColorScheme();
+  const { colors } = useTheme();
   const { show } = useAlertCtx();
   const navigation = useNavigation();
 
-  const { control, handleSubmit, ...signInForm } = useForm({
+  const { control, handleSubmit, watch, setValue } = useForm({
     defaultValues: {
-      name: "Bob bob",
-      email: "b@b.com",
-      password: "password",
-      confirmPassword: "password",
+      name: __DEV__ ? "Bob bob" : "",
+      email: __DEV__ ? "b@b.com" : "",
+      password: __DEV__ ? "password" : "",
+      confirmPassword: __DEV__ ? "password" : "",
       role: "client" as User["role"],
     },
   });
@@ -51,10 +49,10 @@ export default function SignUp() {
   const onSubmit = handleSubmit(async (data) => {
     if (await emailExists(data.email)) {
       return show({
-        title: "Correo Inválido",
-        message: "El correo electrónico que ingresaste ya está en uso.",
+        title: "Ese correo ya está registrado",
+        message: "Inicia sesión o usa otro correo.",
         icon: "email-remove",
-        iconColor: theme.colors.redError,
+        iconColor: colors.danger,
       });
     }
 
@@ -65,113 +63,75 @@ export default function SignUp() {
   });
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      <ScrollView>
-        <View style={{ gap: 5, alignItems: "center" }}>
-          {Object.keys(signInForm.formState.errors).length === 0 && (
-            <View>
-              <Image
-                source={
-                  activeMode === "dark"
-                    ? require("@Assets/app-logo-white.png")
-                    : require("@Assets/app-logo-black.png")
-                }
-                contentFit="contain"
-                style={{ width: 130, height: 50, marginBottom: 10 }}
-              />
-            </View>
-          )}
-          <Text
-            fontFamily="bold"
-            color={colors.text}
-            size={theme.fontSizes.xl + 5}
-          >
-            Regístrate Ahora
-          </Text>
-          <RoleSelector
-            onChange={(role) => signInForm.setValue("role", role)}
-          />
-        </View>
-
-        <View style={{ width: "100%", gap: 20, marginTop: 20 }}>
-          <Field
-            name="name"
-            label="Nombre"
-            control={control}
-            placeholder="Nombre"
-            icon="user"
-            keyboardType="default"
-            rules={rules.validNameRules}
-          />
-          <Field
-            name="email"
-            label="Correo electrónico"
-            control={control}
-            placeholder="Correo electrónico"
-            icon="mail"
-            keyboardType="email-address"
-            secureTextEntry={false}
-            rules={rules.validEmailRules}
-          />
-          <Field
-            name="password"
-            label="Contraseña"
-            control={control}
-            placeholder="*****"
-            icon="lock"
-            secureTextEntry={true}
-            rules={rules.validPasswordRules}
-          />
-          <Field
-            name="confirmPassword"
-            label="Confirmar contraseña"
-            control={control}
-            placeholder="*****"
-            icon="lock"
-            secureTextEntry={true}
-            rules={rules.validConfirmPasswordRules}
-          />
-          <Button
-            title="Continuar"
-            style={{ marginTop: 10 }}
-            onPress={onSubmit}
-          />
-        </View>
-        <View style={styles.loginAccountView}>
-          <Text>¿Ya tienes una cuenta?</Text>
+    <AuthLayout
+      step={{ current: 1, total: watch("role") === "provider" ? 3 : 2 }}
+      title="Crea tu cuenta"
+      subtitle="Primero, ¿cómo vas a usar Echo?"
+      footer={
+        <View style={styles.footer}>
+          <Text tone="muted">¿Ya tienes cuenta?</Text>
           <Pressable
+            accessibilityRole="link"
+            hitSlop={10}
             onPress={() => navigation.navigate("Auth", { screen: "SignIn" })}
           >
-            <Text
-              style={styles.loginAccountText}
-              color={theme.colors.primaryBlue}
-            >
+            <Text bold tone="accent">
               Inicia sesión
             </Text>
           </Pressable>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      }
+    >
+      <RoleSelector value={watch("role")} onChange={(role) => setValue("role", role)} />
+      <Text variant="caption" tone="subtle">
+        El tipo de cuenta no se puede cambiar después.
+      </Text>
+      <Field
+        name="name"
+        label="Nombre completo"
+        control={control}
+        placeholder="Daniela Pérez"
+        icon="user"
+        autoCapitalize="words"
+        rules={rules.validNameRules}
+      />
+      <Field
+        name="email"
+        label="Correo"
+        control={control}
+        placeholder="tu@correo.com"
+        icon="mail"
+        keyboardType="email-address"
+        rules={rules.validEmailRules}
+      />
+      <Field
+        name="password"
+        label="Contraseña"
+        control={control}
+        placeholder="Mínimo 8 caracteres"
+        icon="lock"
+        secureTextEntry
+        rules={rules.validPasswordRules}
+      />
+      <Field
+        name="confirmPassword"
+        label="Confirmar contraseña"
+        control={control}
+        placeholder="Repite tu contraseña"
+        icon="lock"
+        secureTextEntry
+        rules={rules.validConfirmPasswordRules}
+      />
+      <Button title="Continuar" onPress={onSubmit} />
+    </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    gap: theme.spacing.sm,
-    paddingTop: theme.spacing.tabPT,
-  },
-  loginAccountView: {
+  footer: {
     flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center",
-    gap: 5,
-    marginTop: 30,
-  },
-  loginAccountText: {
-    textDecorationLine: "underline",
+    gap: 6,
+    marginTop: "auto",
   },
 });

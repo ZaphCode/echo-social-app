@@ -1,160 +1,90 @@
-import { View, StyleSheet, FlatList } from "react-native";
+import { useState } from "react";
+import { FlatList, StyleSheet, View } from "react-native";
 import { StaticScreenProps } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { searchServices, servicesKeys } from "@/api/services";
-import { theme } from "@/theme/theme";
-import { useAuthCtx } from "@/context/Auth";
-import { useState } from "react";
-import Text from "@/components/ui/Text";
-import ServiceCard from "@/components/ServiceCard";
 import SearchBar from "@/components/forms/SearchBar";
-import Divider from "@/components/ui/Divider";
+import ServiceCard from "@/components/ServiceCard";
+import EmptyState from "@/components/ui/EmptyState";
 import Loader from "@/components/ui/Loader";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import useColorScheme from "@/hooks/useColorScheme";
+import Text from "@/components/ui/Text";
+import { useAuthCtx } from "@/context/Auth";
+import useTheme from "@/hooks/useTheme";
+import { space } from "@/theme/theme";
 
 type Props = StaticScreenProps<{ search: string }>;
 
 export default function SearchService({ route }: Props) {
   const { user } = useAuthCtx();
-  const { colors } = useColorScheme();
-  const initialSearch = route.params.search;
-  const [search, setSearch] = useState(initialSearch);
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const [search, setSearch] = useState(route.params.search);
 
   const servicesQuery = useQuery({
     queryKey: servicesKeys.search(search),
     queryFn: () => searchServices(search),
     enabled: !!search.trim(),
   });
-
-  function handleSearch(newSearch: string) {
-    setSearch(newSearch);
-  }
+  const results = servicesQuery.data ?? [];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.titleContainer}>
-        <Text fontFamily="bold" size={theme.fontSizes.xl} color={colors.text}>
-          Resultados de
-        </Text>
-        <Text
-          size={theme.fontSizes.xl}
-          style={{ flexShrink: 1 }}
-          numberOfLines={1}
-          fontFamily="bold"
-          color={theme.colors.primaryBlue}
-        >{`"${search}"`}</Text>
+    <View style={[styles.fill, { backgroundColor: colors.bg }]}>
+      <View style={styles.header}>
+        <SearchBar initialValue={search} onSearch={setSearch} />
+        {servicesQuery.isSuccess && (
+          <Text variant="label" tone="subtle">
+            {`${results.length} ${results.length === 1 ? "resultado" : "resultados"} para “${search}”`}
+          </Text>
+        )}
       </View>
-      <SearchBar onSearch={handleSearch} />
-      <Divider />
       {servicesQuery.isPending ? (
-        <Loader />
-      ) : servicesQuery.isError ? (
-        <ErrorSearchResults />
+        <Loader label="Buscando…" />
       ) : (
         <FlatList
-          data={servicesQuery.data}
+          data={results}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <ServiceCard authUser={user} service={item} />
-          )}
-          contentContainerStyle={styles.contentContainer}
+          renderItem={({ item }) => <ServiceCard authUser={user} service={item} />}
+          ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
+          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + space.xl }]}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={<EmptySearchResults query={search} />}
+          ListEmptyComponent={
+            servicesQuery.isError ? (
+              <EmptyState
+                tone="error"
+                icon="alert-circle"
+                title="No pudimos buscar"
+                message="Revisa tu conexión e intenta de nuevo."
+                action={{ label: "Reintentar", onPress: () => servicesQuery.refetch() }}
+              />
+            ) : (
+              <EmptyState
+                icon="search"
+                title="Sin resultados"
+                message={`No encontramos servicios para “${search}”. Prueba con otra palabra.`}
+              />
+            )
+          }
         />
       )}
     </View>
   );
 }
 
-export function ErrorSearchResults() {
-  const { colors } = useColorScheme();
-  return (
-    <View style={styles.errorContainer}>
-      <MaterialCommunityIcons
-        name="alert-circle-outline"
-        size={50}
-        color={theme.colors.redError}
-        style={{ marginBottom: 12 }}
-      />
-      <Text
-        fontFamily="bold"
-        size={theme.fontSizes.lg + 2}
-        color={theme.colors.redError}
-        style={{ marginBottom: 6, textAlign: "center" }}
-      >
-        Error al buscar servicios
-      </Text>
-      <Text
-        color={colors.lightGray}
-        size={theme.fontSizes.md}
-        style={{ textAlign: "center" }}
-      >
-        Ocurrió un problema al realizar la búsqueda. Revisa tu conexión e
-        intenta de nuevo.
-      </Text>
-    </View>
-  );
-}
-
-export function EmptySearchResults({ query }: { query: string }) {
-  const { colors } = useColorScheme();
-  return (
-    <View style={styles.emptyContainer}>
-      <MaterialCommunityIcons
-        name="magnify-close"
-        size={56}
-        color={theme.colors.primaryBlue}
-        style={{ marginBottom: 12 }}
-      />
-      <Text
-        fontFamily="bold"
-        size={theme.fontSizes.lg + 2}
-        color={colors.text}
-        style={{ marginBottom: 6, textAlign: "center" }}
-      >
-        No se encontraron servicios
-      </Text>
-      <Text
-        color={colors.lightGray}
-        size={theme.fontSizes.md}
-        style={{ textAlign: "center" }}
-      >
-        {`No se encontraron servicios relacionados con "${query}". Intenta con otra búsqueda.`}
-      </Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: {
+  fill: {
     flex: 1,
-    padding: theme.spacing.md,
-    gap: theme.spacing.md,
   },
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
+  header: {
+    paddingHorizontal: space.gutter,
+    paddingTop: space.xs,
+    paddingBottom: space.md,
+    gap: 10,
   },
-  contentContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    gap: theme.spacing.lg,
-  },
-  errorContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 54,
-    paddingHorizontal: 30,
-    opacity: 0.92,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 54,
-    paddingHorizontal: 30,
-    opacity: 0.92,
+  list: {
+    flexGrow: 1,
+    paddingHorizontal: space.gutter,
   },
 });

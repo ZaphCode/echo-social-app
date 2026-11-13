@@ -1,101 +1,57 @@
-import { StyleSheet, ScrollView, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { StaticScreenProps } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ProviderProfileWithCategory } from "@/api/types";
-import { theme } from "@/theme/theme";
-import { User } from "@/models/User";
-import { ProfileError } from "@/components/ProfileError";
-import useProfile from "@/hooks/useProfile";
+import PersonalInfoSection from "@/components/PersonalInfoSection";
 import ProfessionalInfoSection from "@/components/ProfessionalInfoSection";
+import { ProfileError } from "@/components/ProfileError";
 import ProfileHeader from "@/components/ProfileHeader";
-import PersonalInfoSection from "./PersonalInfoSection";
 import Loader from "@/components/ui/Loader";
-import UserStats from "@/components/UserStats";
-import useColorScheme from "@/hooks/useColorScheme";
+import useProfile from "@/hooks/useProfile";
+import useTheme from "@/hooks/useTheme";
+import { User } from "@/models/User";
+import { space } from "@/theme/theme";
 
 type Props = StaticScreenProps<{ user: User }>;
 
 export default function UserProfile({ route }: Props) {
   const { user } = route.params;
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [profile, profileState] = useProfile(user);
 
-  if (profileState.status === "loading") {
+  if (profileState.status === "loading" || !profile || profileState.status === "error") {
     return (
-      <View style={[styles.container, { justifyContent: "center" }]}>
-        <Loader />
-      </View>
-    );
-  }
-
-  if (!profile || profileState.status === "error") {
-    return (
-      <View style={styles.container}>
-        <ProfileError />
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        {profileState.status === "loading" ? <Loader /> : <ProfileError />}
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView
-        style={{ width: "100%" }}
-        contentContainerStyle={{ alignItems: "center", paddingBottom: 20 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <ProfileHeader user={user} />
-        <UserStats userId={user.id} />
-        <PersonalInfoSection user={user} profile={profile} />
-        {user.role === "provider" && (
-          <ProfessionalInfoSection
-            providerProfile={profile as ProviderProfileWithCategory}
-          />
-        )}
-      </ScrollView>
-    </View>
+    <ScrollView
+      style={{ backgroundColor: colors.bg }}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space.xl }]}
+      showsVerticalScrollIndicator={false}
+    >
+      <ProfileHeader user={user} />
+      {user.role === "provider" && (
+        <ProfessionalInfoSection providerProfile={profile as ProviderProfileWithCategory} />
+      )}
+      <PersonalInfoSection user={user} profile={profile} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  center: {
     flex: 1,
-    paddingBottom: 20,
+    justifyContent: "center",
   },
-  header: {
-    alignItems: "center",
-    paddingVertical: 18,
-    gap: 4,
-    width: "100%",
-  },
-  userName: {
-    color: "white",
-    fontSize: theme.fontSizes.xl,
-    fontFamily: theme.fontFamily.bold,
-    textAlign: "center",
-    maxWidth: "80%",
-  },
-  roleContainer: {
-    backgroundColor: theme.colors.secondaryBlue,
-    paddingHorizontal: 16,
-    gap: 5,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginTop: 5,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  infoContainer: {
-    width: "90%",
-    backgroundColor: theme.colors.primaryBlue,
-    borderRadius: 15,
-    padding: 26,
-    gap: 13,
-    marginTop: 20,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
+  content: {
+    paddingHorizontal: space.gutter,
+    paddingTop: space.xs,
+    gap: space.lg,
   },
 });

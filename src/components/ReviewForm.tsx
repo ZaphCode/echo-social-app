@@ -1,19 +1,19 @@
-import { StyleSheet, View, Text as RNText } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createNotification, notificationsKeys } from "@/api/notifications";
 import { createReview, reviewsKeys } from "@/api/reviews";
-import { theme } from "@/theme/theme";
+import { useAlertCtx } from "@/context/Alert";
 import { useAuthCtx } from "@/context/Auth";
 import { useNegotiationCtx } from "@/context/Negotiation";
-import { useAlertCtx } from "@/context/Alert";
-import Text from "./ui/Text";
-import Divider from "./ui/Divider";
-import Field from "./forms/Field";
+import useTheme from "@/hooks/useTheme";
+import EchoRings from "./ui/EchoRings";
+import Avatar from "./ui/Avatar";
 import Button from "./ui/Button";
+import Text from "./ui/Text";
+import Field from "./forms/Field";
 import StarRatingField from "./forms/StarRatingField";
-import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   onSuccess?: () => void;
@@ -21,23 +21,15 @@ type Props = {
 
 export default function ReviewForm({ onSuccess }: Props) {
   const { user: authUser } = useAuthCtx();
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
   const { request, client, provider, subject } = useNegotiationCtx();
   const { show } = useAlertCtx();
   const queryClient = useQueryClient();
 
-  const theOther =
-    subject.type === "contracting"
-      ? provider
-      : authUser.id === client.id
-        ? provider
-        : client;
-  const reviewType =
-    subject.type === "contracting"
-      ? "AS_CLIENT"
-      : authUser.id === client.id
-        ? "AS_CLIENT"
-        : "AS_PROVIDER";
+  const isClientSide = subject.type === "contracting" || authUser.id === client.id;
+  const theOther = isClientSide ? provider : client;
+  const reviewType = isClientSide ? "AS_CLIENT" : "AS_PROVIDER";
+
   const reviewMutation = useMutation({
     mutationFn: createReview,
     onSuccess: () => {
@@ -53,20 +45,13 @@ export default function ReviewForm({ onSuccess }: Props) {
             ? reviewsKeys.byReviewerAndService(authUser.id, subject.id)
             : reviewsKeys.byReviewerAndContracting(authUser.id, subject.id),
       });
-      queryClient.invalidateQueries({
-        queryKey: reviewsKeys.byReviewedUser(theOther.id),
-      });
+      queryClient.invalidateQueries({ queryKey: reviewsKeys.byReviewedUser(theOther.id) });
     },
   });
-  const notificationMutation = useMutation({
-    mutationFn: createNotification,
-  });
+  const notificationMutation = useMutation({ mutationFn: createNotification });
 
   const { control, handleSubmit } = useForm({
-    defaultValues: {
-      rating: 0,
-      comment: "",
-    },
+    defaultValues: { rating: 0, comment: "" },
   });
 
   const onSubmit = handleSubmit(async (data) => {
@@ -83,11 +68,10 @@ export default function ReviewForm({ onSuccess }: Props) {
       });
     } catch {
       return show({
-        title: "Error al enviar la valoración",
-        message:
-          "Lo sentimos. No se pudo enviar tu valoración. Por favor, inténtalo de nuevo más tarde.",
+        title: "No se pudo enviar",
+        message: "Tu valoración no se guardó. Inténtalo de nuevo más tarde.",
         icon: "alert",
-        iconColor: theme.colors.redError,
+        iconColor: colors.danger,
       });
     }
 
@@ -101,12 +85,8 @@ export default function ReviewForm({ onSuccess }: Props) {
         service: subject.type === "service" ? subject.id : undefined,
         contracting: subject.type === "contracting" ? subject.id : undefined,
       });
-      queryClient.invalidateQueries({
-        queryKey: notificationsKeys.byUser(theOther.id),
-      });
-      queryClient.invalidateQueries({
-        queryKey: notificationsKeys.unreadCount(theOther.id),
-      });
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.byUser(theOther.id) });
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.unreadCount(theOther.id) });
     } catch (err) {
       console.log("Failed to create review notification:", err);
     }
@@ -116,51 +96,46 @@ export default function ReviewForm({ onSuccess }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text color={colors.text} style={styles.title}>
-        Deja tu Valoración
-      </Text>
-      <RNText style={styles.descContainer}>
-        <Text>{`Por favor, comparte tu experiencia al tratar con `}</Text>
-        <Text color={theme.colors.primaryBlue}>{theOther.name}</Text>
-        <Text>
-          {
-            " durante el proceso de negociación o en la prestación del servicio."
-          }
-        </Text>
-      </RNText>
-      <Divider />
-      <View>
-        <StarRatingField control={control} name="rating" label="Valoración" />
-        <Field
-          name="comment"
-          control={control}
-          label="Comentarios"
-          placeholder="Que te pareció el trato?"
-          icon="user"
-          rules={{ required: false }}
-        />
-        <Button
-          title="Enviar Valoración"
-          onPress={onSubmit}
-          loading={reviewMutation.isPending}
-          style={{ marginTop: theme.spacing.lg + 6 }}
-        />
+      <View style={styles.hero}>
+        <EchoRings size={150} style={styles.rings} />
+        <Avatar name={theOther.name} path={theOther.avatar} size={72} ring />
       </View>
+      <View style={styles.copy}>
+        <Text variant="title" align="center">
+          {`¿Cómo te fue con ${theOther.name?.split(" ")[0] ?? "esta persona"}?`}
+        </Text>
+        <Text tone="muted" align="center">
+          {`Tu reseña sobre “${subject.name}” ayuda a otros a decidir.`}
+        </Text>
+      </View>
+      <StarRatingField control={control} name="rating" />
+      <Field
+        name="comment"
+        control={control}
+        label="Comentario (opcional)"
+        placeholder="Puntualidad, calidad, trato…"
+        autoCapitalize="sentences"
+        multiline
+        rules={{ required: false }}
+      />
+      <Button title="Publicar valoración" onPress={onSubmit} loading={reviewMutation.isPending} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
+    gap: 18,
   },
-  title: {
-    fontSize: theme.fontSizes.xl,
-    fontFamily: theme.fontFamily.bold,
-    textAlign: "center",
+  hero: {
+    height: 120,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  descContainer: {
-    gap: theme.spacing.sm,
+  rings: {
+    position: "absolute",
+  },
+  copy: {
+    gap: 6,
   },
 });

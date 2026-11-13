@@ -1,16 +1,15 @@
-import { KeyboardAvoidingView, StyleSheet, View } from "react-native";
 import { StaticScreenProps, useNavigation } from "@react-navigation/native";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { categoriesKeys, listServiceCategories } from "@/api/categories";
 import {
   contractingsKeys,
   createContracting,
+  getContractingPrivateLocation,
   updateContracting,
 } from "@/api/contractings";
 import { Contracting } from "@/models/Contracting";
-import { theme } from "@/theme/theme";
 import { useAlertCtx } from "@/context/Alert";
 import { useAuthCtx } from "@/context/Auth";
 import { useOffline } from "@/context/Offline";
@@ -19,8 +18,12 @@ import Button from "@/components/ui/Button";
 import Dropdown from "@/components/forms/Dropdown";
 import Field from "@/components/forms/Field";
 import PhotoPicker from "@/components/forms/PhotoPicker";
-import Text from "@/components/ui/Text";
-import useColorScheme from "@/hooks/useColorScheme";
+import EditorLayout from "@/components/EditorLayout";
+import useCategories from "@/hooks/useCategories";
+import useTheme from "@/hooks/useTheme";
+import useUserLocation from "@/hooks/useUserLocation";
+import LocationPickerField from "@/components/forms/LocationPickerField";
+import { Coords } from "@/utils/geo";
 
 type Props = StaticScreenProps<{ contractingToEdit?: Contracting }>;
 
@@ -29,13 +32,11 @@ export default function ContractingEditor({ route }: Props) {
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
   const { isOnline } = useOffline();
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
+  const { coords: userCoords } = useUserLocation();
   const queryClient = useQueryClient();
   const navigation = useNavigation();
-  const categoriesQuery = useQuery({
-    queryKey: categoriesKeys.all,
-    queryFn: listServiceCategories,
-  });
+  const { categories, isPending: categoriesPending } = useCategories();
   const createContractingMutation = useMutation({
     mutationFn: createContracting,
     onSuccess: () => {
@@ -55,8 +56,16 @@ export default function ContractingEditor({ route }: Props) {
     },
   });
 
-  const { control, handleSubmit } = useForm({
+  const privateLocationQuery = useQuery({
+    queryKey: contractingsKeys.privateLocation(contracting?.id ?? ""),
+    queryFn: () => getContractingPrivateLocation(contracting!.id),
+    enabled: !!contracting && isOnline,
+  });
+
+  const { control, handleSubmit, formState, resetField } = useForm({
     defaultValues: {
+      // New requests start at the user's position; edits load the saved one.
+      location: (contracting ? null : userCoords) as Coords | null,
       contractingName: contracting?.name || "",
       description: contracting?.description || "",
       category: contracting?.category || "",
@@ -65,8 +74,30 @@ export default function ContractingEditor({ route }: Props) {
     },
   });
 
+  // Read during render so react-hook-form subscribes to dirty state.
+  const locationDirty = !!formState.dirtyFields.location;
+
+  useEffect(() => {
+    if (privateLocationQuery.data !== undefined) {
+      resetField("location", { defaultValue: privateLocationQuery.data });
+    }
+  }, [privateLocationQuery.data]);
+
+  // The GPS fix may arrive after the form mounted.
+  useEffect(() => {
+    if (!contracting && userCoords && !locationDirty) {
+      resetField("location", { defaultValue: userCoords });
+    }
+  }, [userCoords?.lat, userCoords?.lon]);
+
   const onSubmit = handleSubmit(async (data) => {
     const payload = {
+      // Editing: only send the location when the owner changed it, so an
+      // offline edit never wipes a location it could not load.
+      location:
+        !contracting || locationDirty
+          ? data.location
+          : undefined,
       ownerId: contracting?.owner || user.id,
       name: data.contractingName,
       description: data.description,
@@ -86,17 +117,17 @@ export default function ContractingEditor({ route }: Props) {
       }
     } catch {
       show({
-        title: "Error al Guardar",
+        title: "No se pudo guardar",
         message:
           "Ocurrió un error al guardar la contratación. Verifique los datos e intente de nuevo.",
         icon: "database-alert",
-        iconColor: theme.colors.redError,
+        iconColor: colors.danger,
       });
       return;
     }
 
     show({
-      title: contracting ? "Contratación Actualizada" : "Contratación Creada",
+      title: contracting ? "Contratación actualizada" : "¡Contratación publicada!",
       message:
         contracting && !isOnline
           ? "La contratación se guardó localmente y se sincronizará al reconectar."
@@ -104,79 +135,69 @@ export default function ContractingEditor({ route }: Props) {
               contracting ? "actualizada" : "creada"
             } exitosamente.`,
       icon: "check-circle",
-      iconColor: theme.colors.successGreen,
+      iconColor: colors.success,
     });
     navigation.goBack();
   });
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
+    <EditorLayout
+      title={contracting ? "Editar contratación" : "Nueva contratación"}
+      subtitle={contracting ? contracting.name : "Los profesionales aplicarán con su cotización"}
+      footer={
+        <Button
+          title={contracting ? "Guardar cambios" : "Publicar contratación"}
+          onPress={onSubmit}
+          loading={createContractingMutation.isPending || updateContractingMutation.isPending}
+        />
+      }
     >
-      <View style={{ gap: theme.spacing.md }}>
-        <Field
-          name="contractingName"
-          placeholder="Qué necesitas contratar"
-          control={control}
-          label="Nombre de la Contratación"
-          icon="briefcase"
-        />
-        <Field
-          name="description"
-          placeholder="Describe lo que necesitas"
-          control={control}
-          label="Descripción"
-          icon="align-left"
-        />
-        <Field
-          name="basePrice"
-          placeholder="200"
-          control={control}
-          label="Presupuesto base"
-          icon="dollar-sign"
-          keyboardType="numeric"
-          rules={validPriceRules}
-        />
-        {categoriesQuery.isPending ? (
-          <Text>Loading categories...</Text>
-        ) : categoriesQuery.isError ? (
-          <Text>Error loading categories</Text>
-        ) : (
-          <Dropdown
-            control={control}
-            name="category"
-            icon="tag"
-            label="Categoría"
-            options={categoriesQuery.data ?? []}
-            getLabel={(c) => c.name}
-            getValue={(c) => c.id}
-            defaultValue={contracting?.category || ""}
-          />
-        )}
-        <PhotoPicker
-          service={contracting}
-          control={control}
-          name="photos"
-          label="Fotos de referencia"
-          rules={validServicesPhotoRules}
-        />
-      </View>
-      <Button
-        title={contracting ? "Actualizar" : "Crear"}
-        onPress={onSubmit}
-        loading={
-          createContractingMutation.isPending ||
-          updateContractingMutation.isPending
-        }
+      <Field
+        name="contractingName"
+        placeholder="Ej. Remodelar baño completo"
+        control={control}
+        label="¿Qué necesitas?"
+        autoCapitalize="sentences"
       />
-    </KeyboardAvoidingView>
+      <Dropdown
+        control={control}
+        name="category"
+        icon="tag"
+        label="Categoría"
+        loading={categoriesPending}
+        options={categories}
+        getLabel={(c) => c.name}
+        getValue={(c) => c.id}
+      />
+      <Field
+        name="basePrice"
+        placeholder="8500"
+        control={control}
+        label="Presupuesto"
+        icon="dollar-sign"
+        keyboardType="numeric"
+        hint="Los profesionales pueden proponer otro precio."
+        rules={validPriceRules}
+      />
+      <Field
+        name="description"
+        placeholder="Describe el trabajo, medidas, materiales…"
+        control={control}
+        label="Descripción"
+        autoCapitalize="sentences"
+        multiline
+      />
+      <PhotoPicker
+        control={control}
+        name="photos"
+        label="Fotos de referencia"
+        rules={validServicesPhotoRules}
+      />
+      <LocationPickerField
+        control={control}
+        name="location"
+        disabled={!!contracting && (!isOnline || privateLocationQuery.isPending)}
+      />
+    </EditorLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: theme.spacing.sm + 4,
-    paddingVertical: theme.spacing.md,
-    flex: 1,
-  },
-});

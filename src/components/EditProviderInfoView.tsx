@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -7,13 +7,12 @@ import {
   updateProviderProfile,
 } from "@/api/profiles";
 import { ProviderProfileWithCategory } from "@/api/types";
-import { theme } from "@/theme/theme";
 import { ProviderProfile } from "@/models/ProviderProfile";
 import { useAlertCtx } from "@/context/Alert";
 import { useOffline } from "@/context/Offline";
 import Text from "./ui/Text";
 import ProviderInfoForm from "./forms/ProviderInfoForm";
-import useColorScheme from "@/hooks/useColorScheme";
+import useTheme from "@/hooks/useTheme";
 
 type Props = {
   providerProfile: ProviderProfile;
@@ -26,7 +25,7 @@ export default function EditProviderInfoView({
   userId,
   onSuccess,
 }: Props) {
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
   const { show } = useAlertCtx();
   const { isOnline } = useOffline();
   const queryClient = useQueryClient();
@@ -59,7 +58,7 @@ export default function EditProviderInfoView({
           ? "Tu perfil profesional se actualizó exitosamente."
           : "Tu perfil profesional se guardó localmente y se sincronizará al reconectar.",
         icon: "check-circle",
-        iconColor: theme.colors.successGreen,
+        iconColor: colors.success,
       });
       onSuccess?.(result);
     } catch {
@@ -68,34 +67,31 @@ export default function EditProviderInfoView({
         message:
           "Ocurrió un error al guardar los cambios en tu perfil. Inténtalo de nuevo.",
         icon: "alert-circle",
-        iconColor: colors.redError,
+        iconColor: colors.danger,
       });
     }
   });
 
   return (
-    <View style={styles.container}>
-      <View style={{ padding: 16 }}>
-        <Text fontFamily="bold" color={colors.text} style={styles.title}>
-          Editar Perfil
-        </Text>
-      </View>
+    <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <Text variant="title" style={styles.title}>
+        Editar perfil profesional
+      </Text>
       <ProviderInfoForm
         control={control}
         loading={providerMutation.isPending}
         onContinue={onContinue}
-        submitBtnLabel="Guardar Cambios"
+        submitBtnLabel="Guardar cambios"
       />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingBottom: 32,
+  scroll: {
+    flexGrow: 0,
   },
   title: {
-    fontSize: theme.fontSizes.xl,
-    textAlign: "center",
+    marginBottom: 16,
   },
 });

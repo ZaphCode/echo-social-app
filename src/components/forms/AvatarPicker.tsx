@@ -1,29 +1,25 @@
-import React, { useEffect, useState } from "react";
-import { View, Pressable, StyleSheet, Alert } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { theme } from "@/theme/theme";
-import useColorScheme from "@/hooks/useColorScheme";
+
 import useImage from "@/hooks/useImage";
 import useModal from "@/hooks/useModal";
+import useTheme from "@/hooks/useTheme";
 import { SlideModal } from "../ui/SlideModal";
-import ImageOpts from "./ImageOpts";
 import StorageImage from "../ui/StorageImage";
+import ImageOpts from "./ImageOpts";
 
-interface Props {
+type Props = {
   onChange: (uri: string) => void;
   image?: string;
   bucket?: string;
   viewOnly?: boolean;
-}
+  size?: number;
+};
 
-export default function AvatarPicker({
-  image,
-  bucket,
-  viewOnly,
-  onChange,
-}: Props) {
+export default function AvatarPicker({ image, bucket, viewOnly, onChange, size = 112 }: Props) {
   const [img, setImg] = useState(image);
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
   const { pickImage } = useImage();
   const [visible, open, close] = useModal();
 
@@ -31,7 +27,7 @@ export default function AvatarPicker({
     setImg(image);
   }, [image]);
 
-  const onPress = async (option: "camera" | "library") => {
+  const onPick = async (option: "camera" | "library") => {
     try {
       const result = await pickImage(option, {
         mediaTypes: "images",
@@ -40,83 +36,67 @@ export default function AvatarPicker({
         aspect: [1, 1],
         quality: 0.8,
       });
-
       if (!result.canceled && result.assets?.length) {
         setImg(result.assets[0].uri);
         onChange(result.assets[0].uri);
       }
-    } catch (error) {
-      Alert.alert("Error", "No se pudo seleccionar la imagen.");
+    } catch {
+      Alert.alert("No se pudo elegir la imagen", "Revisa los permisos e intenta de nuevo.");
     } finally {
       close();
     }
   };
 
+  const circle = { width: size, height: size, borderRadius: size / 2 };
+
   return (
-    <View style={styles.center}>
-      <Pressable onPress={open} disabled={viewOnly}>
+    <>
+      <Pressable
+        accessibilityRole={viewOnly ? "image" : "button"}
+        accessibilityLabel={viewOnly ? "Foto de perfil" : "Cambiar foto de perfil"}
+        onPress={open}
+        disabled={viewOnly}
+        style={[styles.ring, { borderColor: colors.accent, borderRadius: size / 2 + 5 }]}
+      >
         {img ? (
-          <StorageImage
-            bucket={bucket}
-            path={img}
-            style={[
-              styles.image,
-              {
-                backgroundColor: colors.darkerGray,
-                borderWidth: 2,
-                borderColor: colors.lightGray,
-              },
-            ]}
-          />
+          <StorageImage bucket={bucket} path={img} style={circle} />
         ) : (
-          <View
-            style={[
-              styles.image,
-              styles.placeholder,
-              { backgroundColor: colors.darkerGray },
-            ]}
-          >
-            <Feather name="user" size={48} color={colors.lightGray} />
+          <View style={[circle, styles.placeholder, { backgroundColor: colors.surface2 }]}>
+            <Feather name="user" size={size * 0.4} color={colors.textSubtle} />
           </View>
         )}
         {!viewOnly && (
-          <View style={styles.iconContainer}>
-            <Feather name="camera" size={18} color={colors.primaryBlue} />
+          <View style={[styles.badge, { backgroundColor: colors.accent, borderColor: colors.bg }]}>
+            <Feather name="camera" size={15} color={colors.onAccent} />
           </View>
         )}
-        <SlideModal visible={visible} onClose={close}>
-          <ImageOpts
-            onPressCamera={() => onPress("camera")}
-            onPressLibrary={() => onPress("library")}
-          />
-        </SlideModal>
       </Pressable>
-    </View>
+      <SlideModal visible={visible} onClose={close}>
+        <ImageOpts onPressCamera={() => onPick("camera")} onPressLibrary={() => onPick("library")} />
+      </SlideModal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  center: {
-    alignItems: "center",
-    marginVertical: theme.spacing.lg,
-  },
-  image: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    justifyContent: "center",
-    alignItems: "center",
+  ring: {
+    padding: 3,
+    borderWidth: 2,
+    alignSelf: "center",
   },
   placeholder: {
     alignItems: "center",
     justifyContent: "center",
   },
-  iconContainer: {
+  badge: {
     position: "absolute",
-    bottom: 6,
-    right: 6,
-    backgroundColor: theme.colors.secondaryBlue,
-    borderRadius: 15,
-    padding: 6,
+    right: 0,
+    bottom: 2,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 3,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

@@ -1,65 +1,30 @@
-import React from "react";
-import { View, Pressable, StyleSheet } from "react-native";
-import Text from "@/components/ui/Text";
-import { Controller, Control, RegisterOptions } from "react-hook-form";
-import { theme } from "@/theme/theme";
-import useColorScheme from "@/hooks/useColorScheme";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Control, Controller, RegisterOptions } from "react-hook-form";
 
-const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+import useTheme from "@/hooks/useTheme";
+import { radius } from "@/theme/theme";
+import Text from "../ui/Text";
+import { FieldShell } from "./Field";
 
-const dayLabels = {
-  MON: "Lu",
-  TUE: "Ma",
-  WED: "Mi",
-  THU: "Ju",
-  FRI: "Vi",
-  SAT: "Sa",
-  SUN: "Do",
-};
+export const WEEK_DAYS = [
+  { key: "MON", short: "Lu", label: "Lun" },
+  { key: "TUE", short: "Ma", label: "Mar" },
+  { key: "WED", short: "Mi", label: "Mié" },
+  { key: "THU", short: "Ju", label: "Jue" },
+  { key: "FRI", short: "Vi", label: "Vie" },
+  { key: "SAT", short: "Sá", label: "Sáb" },
+  { key: "SUN", short: "Do", label: "Dom" },
+] as const;
 
-interface Props {
+type Props = {
   name: string;
   control: Control<any>;
   label?: string;
   rules?: RegisterOptions;
-}
+};
 
 export default function WeekDaysPicker({ name, control, label, rules }: Props) {
-  const { colors } = useColorScheme();
-
-  const styles = StyleSheet.create({
-    container: {
-      flexDirection: "row",
-      gap: 8,
-      marginVertical: 10,
-      flexWrap: "wrap",
-    },
-    label: {
-      fontFamily: theme.fontFamily.regular,
-      fontSize: theme.fontSizes.md,
-      marginLeft: theme.spacing.sm,
-    },
-    chip: {
-      backgroundColor: colors.darkGray,
-      borderRadius: 18,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderWidth: 1,
-      borderColor: "transparent",
-    },
-    chipSelected: {
-      backgroundColor: theme.colors.secondaryBlue,
-    },
-    chipText: {
-      color: colors.lightGray,
-      fontFamily: theme.fontFamily.regular,
-      fontSize: 15,
-    },
-    chipTextSelected: {
-      color: colors.primaryBlue,
-      fontFamily: theme.fontFamily.bold,
-    },
-  });
+  const { colors } = useTheme();
 
   return (
     <Controller
@@ -68,48 +33,57 @@ export default function WeekDaysPicker({ name, control, label, rules }: Props) {
       rules={rules}
       defaultValue={[]}
       render={({ field: { value = [], onChange }, fieldState: { error } }) => (
-        <View style={{ marginBottom: 10 }}>
-          {label && (
-            <Text color={colors.text} style={styles.label}>
-              {label}
-            </Text>
-          )}
-          <View style={styles.container}>
-            {weekDays.map((day) => (
-              <Pressable
-                key={day}
-                style={[
-                  styles.chip,
-                  value.includes(day) && styles.chipSelected,
-                ]}
-                onPress={() => {
-                  let updated: string[];
-                  if (value.includes(day)) {
-                    updated = value.filter((d: string) => d !== day);
-                  } else {
-                    updated = [...value, day];
+        <FieldShell label={label} error={error?.message}>
+          <View style={styles.row}>
+            {WEEK_DAYS.map((day) => {
+              const selected = value.includes(day.key);
+              return (
+                <Pressable
+                  key={day.key}
+                  accessibilityRole="checkbox"
+                  accessibilityLabel={day.label}
+                  accessibilityState={{ checked: selected }}
+                  onPress={() =>
+                    onChange(
+                      selected
+                        ? value.filter((d: string) => d !== day.key)
+                        : [...value, day.key],
+                    )
                   }
-                  onChange(updated);
-                }}
-              >
-                <Text
                   style={[
-                    styles.chipText,
-                    value.includes(day) && styles.chipTextSelected,
+                    styles.day,
+                    {
+                      backgroundColor: selected ? colors.accent : colors.surface,
+                      borderColor: selected ? colors.accent : colors.line,
+                    },
                   ]}
                 >
-                  {dayLabels[day as keyof typeof dayLabels]}
-                </Text>
-              </Pressable>
-            ))}
+                  <Text variant="label" bold color={selected ? colors.onAccent : colors.textMuted}>
+                    {day.short}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-          {error && (
-            <Text color={theme.colors.redError} size={theme.fontSizes.sm}>
-              {error.message}
-            </Text>
-          )}
-        </View>
+        </FieldShell>
       )}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 6,
+  },
+  day: {
+    flex: 1,
+    aspectRatio: 1,
+    maxWidth: 46,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

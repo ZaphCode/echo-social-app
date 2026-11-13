@@ -2,16 +2,16 @@ import { useEffect, useState } from "react";
 import { Modal, StyleSheet, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "@/theme/theme";
 import { useAlertCtx } from "@/context/Alert";
-import Text from "./Text";
+import useTheme from "@/hooks/useTheme";
+import { radius, space } from "@/theme/theme";
 import Button from "./Button";
-import useColorScheme from "@/hooks/useColorScheme";
+import Text from "./Text";
 
 export function AlertModal() {
   const { hide, visible, icon, message, title, iconColor, onConfirm } =
     useAlertCtx();
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
   const [confirming, setConfirming] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -38,61 +38,51 @@ export function AlertModal() {
     }
   };
 
+  const accent = iconColor || colors.accent;
+
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.overlay}>
-        <View style={{ ...styles.modal, backgroundColor: colors.darkerGray }}>
-          <MaterialCommunityIcons
-            name={icon}
-            size={54}
-            color={iconColor || theme.colors.primaryBlue}
-            style={{ marginBottom: 10 }}
-          />
-          <Text
-            fontFamily="bold"
-            size={theme.fontSizes.lg}
-            color={colors.text}
-            style={{ marginBottom: 4, textAlign: "center" }}
-          >
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
+      <View style={[styles.overlay, { backgroundColor: colors.scrim }]}>
+        <View style={[styles.modal, { backgroundColor: colors.surface }]}>
+          <View style={[styles.iconWrap, { backgroundColor: `${accent}22` }]}>
+            <MaterialCommunityIcons name={icon} size={30} color={accent} />
+          </View>
+          <Text variant="heading" align="center">
             {title}
           </Text>
-          <Text
-            color={colors.lightGray}
-            size={theme.fontSizes.md}
-            style={{ textAlign: "center", marginBottom: 12 }}
-          >
+          <Text tone="muted" align="center">
             {message}
           </Text>
           {errorMessage ? (
-            <Text
-              color={colors.redError}
-              size={theme.fontSizes.sm}
-              style={styles.errorText}
-            >
+            <Text variant="label" tone="danger" align="center">
               {errorMessage}
             </Text>
           ) : null}
           {onConfirm ? (
             <View style={styles.buttonRow}>
               <Button
-                style={{
-                  width: "50%",
-                  backgroundColor: colors.darkGray,
-                }}
-                title={"Cancelar"}
-                labelColor={colors.lightGray}
+                style={styles.flex}
+                variant="secondary"
+                size="md"
+                title="Cancelar"
                 disabled={confirming}
                 onPress={hide}
               />
               <Button
-                style={{ width: "50%" }}
-                title={"Confirmar"}
+                style={styles.flex}
+                size="md"
+                title="Confirmar"
                 loading={confirming}
                 onPress={handleConfirm}
               />
             </View>
           ) : (
-            <Button style={{ width: "80%" }} title="Aceptar" onPress={hide} />
+            <Button
+              style={styles.single}
+              size="md"
+              title="Entendido"
+              onPress={hide}
+            />
           )}
         </View>
       </View>
@@ -121,33 +111,37 @@ function getConfirmErrorMessage(error: unknown) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    padding: theme.spacing.md,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: space.gutter,
     justifyContent: "center",
     alignItems: "center",
   },
   modal: {
-    width: "92%",
-    padding: theme.spacing.lg + 4,
-    gap: theme.spacing.sm,
-    borderRadius: theme.spacing.md,
-    elevation: 5,
+    width: "100%",
+    maxWidth: 380,
+    padding: space.lg,
+    gap: space.xs,
+    borderRadius: radius.card + 6,
     alignItems: "center",
   },
-  button: {
-    flex: 1,
-    minWidth: 120,
-    marginHorizontal: 6,
+  iconWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: space.xs,
   },
   buttonRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     width: "100%",
-    gap: 10,
-    marginTop: 12,
+    gap: space.xs,
+    marginTop: space.sm,
   },
-  errorText: {
-    textAlign: "center",
-    marginBottom: 4,
+  flex: {
+    flex: 1,
+  },
+  single: {
+    alignSelf: "stretch",
+    marginTop: space.sm,
   },
 });

@@ -1,203 +1,108 @@
-import { View, StyleSheet, Pressable } from "react-native";
-import { Feather, Foundation } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
 
 import { ProviderProfileWithCategory } from "@/api/types";
-import { theme } from "@/theme/theme";
-import { SlideModal } from "./ui/SlideModal";
-import Text from "@/components/ui/Text";
-import InfoRow from "./InfoRow";
 import useModal from "@/hooks/useModal";
+import useTheme from "@/hooks/useTheme";
+import { radius } from "@/theme/theme";
 import EditProviderInfoView from "./EditProviderInfoView";
-import useColorScheme from "@/hooks/useColorScheme";
+import { WEEK_DAYS } from "./forms/WeekdaysPicker";
+import InfoRow, { InfoGroup } from "./InfoRow";
+import { SlideModal } from "./ui/SlideModal";
+import Text from "./ui/Text";
 
-interface Props {
+type Props = {
   providerProfile: ProviderProfileWithCategory;
   userId?: string;
   editable?: boolean;
-}
+};
 
 const OFFLINE_PLACEHOLDER = "Disponible cuando vuelvas a conectarte";
 
-const weekDays = [
-  { key: "SUN", label: "Dom" },
-  { key: "MON", label: "Lun" },
-  { key: "TUE", label: "Mar" },
-  { key: "WED", label: "Mié" },
-  { key: "THU", label: "Jue" },
-  { key: "FRI", label: "Vie" },
-  { key: "SAT", label: "Sáb" },
-];
-
-export default function ProfessionalInfoSection({
-  providerProfile,
-  userId,
-  editable,
-}: Props) {
-  const { colors } = useColorScheme();
+export default function ProfessionalInfoSection({ providerProfile, userId, editable }: Props) {
+  const { colors } = useTheme();
   const [modalVisible, openModal, closeModal] = useModal();
-  const [optimisticProfile, setOptimisticProfile] = useState(providerProfile);
-
-  const { available_days, experience_years } = optimisticProfile;
-  const specialty = optimisticProfile.specialty_category?.name;
-  const hasExperience = experience_years > 0;
-  const experienceYearsValue =
-    hasExperience || editable
-      ? `${experience_years} ${experience_years === 1 ? "año" : "años"}`
-      : OFFLINE_PLACEHOLDER;
-  const hasAvailableDays = available_days?.length > 0;
+  const [profile, setProfile] = useState(providerProfile);
 
   useEffect(() => {
-    setOptimisticProfile(providerProfile);
+    setProfile(providerProfile);
   }, [providerProfile]);
 
+  const { available_days = [], experience_years, description } = profile;
+  const specialty = profile.specialty_category?.name;
+  const experience =
+    experience_years > 0 || editable
+      ? `${experience_years} ${experience_years === 1 ? "año" : "años"}`
+      : OFFLINE_PLACEHOLDER;
+
   return (
-    <View style={{ ...styles.block, backgroundColor: colors.darkerGray }}>
-      <View style={styles.sectionHeader}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Foundation
-            name="torso-business"
-            size={28}
-            color={colors.primaryBlue}
-          />
-          <Text
-            fontFamily="bold"
-            color={colors.text}
-            size={theme.fontSizes.lg - 2.5}
-          >
-            Información Profesional
-          </Text>
-        </View>
-        {editable && (
-          <Pressable style={styles.editButton} onPress={openModal}>
-            <Feather name="edit-2" size={16} color={colors.primaryBlue} />
-            <Text color={colors.primaryBlue} style={styles.editButtonText}>
-              Editar
+    <>
+      <InfoGroup title="Información profesional" onEdit={editable ? openModal : undefined}>
+        {description?.trim() ? (
+          <View style={[styles.about, { borderBottomColor: colors.line }]}>
+            <Text variant="label" tone="muted">
+              {description}
             </Text>
-          </Pressable>
-        )}
-      </View>
-      {(specialty || !editable) && (
-        <InfoRow
-          label="Especialidad"
-          value={specialty || OFFLINE_PLACEHOLDER}
-          icon="briefcase"
-        />
-      )}
-      <InfoRow
-        label="Experiencia"
-        value={experienceYearsValue}
-        icon="calendar"
-      />
-      <View style={{ marginTop: 12, marginBottom: 12 }}>
-        <View style={styles.labelContainer}>
-          <Feather name={"check-square"} size={20} color={colors.text} />
-          <Text style={styles.label}>Días disponibles</Text>
-        </View>
-        {hasAvailableDays || editable ? (
-          <View style={styles.daysRow}>
-            {weekDays.map((d) => {
-              const selected = available_days?.includes(d.key);
+          </View>
+        ) : null}
+        <InfoRow icon="tag" label="Especialidad" value={specialty || (editable ? "" : OFFLINE_PLACEHOLDER)} />
+        <InfoRow icon="award" label="Experiencia" value={experience} />
+        <View style={styles.daysBlock}>
+          <Text variant="caption" tone="subtle">
+            Días disponibles
+          </Text>
+          <View style={styles.days}>
+            {WEEK_DAYS.map((day) => {
+              const on = available_days.includes(day.key);
               return (
-                <View key={d.key} style={styles.dayCol}>
-                  {selected ? (
-                    <Feather
-                      name="check"
-                      size={16}
-                      color={colors.secondaryBlue}
-                      style={{ marginBottom: 2 }}
-                    />
-                  ) : (
-                    <View style={{ height: 16, marginBottom: 2 }} />
-                  )}
-                  <Text
-                    style={[
-                      { ...styles.dayText, color: colors.text },
-                      selected && {
-                        color: colors.secondaryBlue,
-                        fontFamily: theme.fontFamily.bold,
-                      },
-                    ]}
-                  >
-                    {d.label}
+                <View
+                  key={day.key}
+                  accessibilityLabel={`${day.label}: ${on ? "disponible" : "no disponible"}`}
+                  style={[styles.day, { backgroundColor: on ? colors.accentSoft : colors.surface2 }]}
+                >
+                  <Text variant="caption" bold color={on ? colors.accentText : colors.textSubtle}>
+                    {day.short}
                   </Text>
                 </View>
               );
             })}
           </View>
-        ) : (
-          <Text color={colors.lightGray} style={styles.unavailableText}>
-            {OFFLINE_PLACEHOLDER}
-          </Text>
-        )}
-      </View>
+        </View>
+      </InfoGroup>
       {editable && (
         <SlideModal visible={modalVisible} onClose={closeModal}>
           <EditProviderInfoView
-            providerProfile={optimisticProfile}
+            providerProfile={profile}
             userId={userId ?? providerProfile.user}
             onSuccess={(data) => {
-              setOptimisticProfile(data);
+              setProfile(data);
               closeModal();
             }}
           />
         </SlideModal>
       )}
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 16,
+  about: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
   },
-  block: {
-    borderRadius: 16,
-    padding: 26,
-    width: "90%",
-    marginTop: 20,
-    marginBottom: 8,
+  daysBlock: {
+    paddingVertical: 14,
     gap: 10,
   },
-  daysRow: {
+  days: {
     flexDirection: "row",
-    justifyContent: "space-between",
     gap: 6,
-    marginTop: 2,
-    marginBottom: 2,
-    alignItems: "flex-end",
   },
-  dayCol: {
+  day: {
+    flex: 1,
+    height: 34,
+    borderRadius: radius.pill,
     alignItems: "center",
-    width: 37,
+    justifyContent: "center",
   },
-  dayText: {
-    fontSize: 14,
-    fontFamily: theme.fontFamily.regular,
-    textAlign: "center",
-  },
-  labelContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
-  },
-  label: { fontSize: theme.fontSizes.md },
-  value: { fontSize: theme.fontSizes.md, marginLeft: 28, marginTop: 5 },
-  unavailableText: {
-    fontSize: theme.fontSizes.md,
-    marginLeft: 28,
-    marginTop: 2,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  editButton: { flexDirection: "row", alignItems: "center", gap: 5 },
-  editButtonText: { fontSize: theme.fontSizes.sm, fontWeight: "600" },
 });

@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { View, StyleSheet, Alert, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import * as FileSystem from "expo-file-system";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as MediaLibrary from "expo-media-library";
 import Text from "@/components/ui/Text";
 import Button from "@/components/ui/Button";
-import { theme } from "@/theme/theme";
+import { radius, space } from "@/theme/theme";
 import { useAlertCtx } from "@/context/Alert";
-import useColorScheme from "@/hooks/useColorScheme";
+import useTheme from "@/hooks/useTheme";
 
 export default function Privacy() {
   const { show } = useAlertCtx();
   const [loading, setLoading] = useState(false);
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const downloadPrivacyPDF = async () => {
     setLoading(true);
@@ -61,7 +63,7 @@ export default function Privacy() {
         message:
           "Hubo un problema al descargar el PDF. Asegúrate que tienes conexión o intenta más tarde.",
         icon: "alert",
-        iconColor: theme.colors.redError,
+        iconColor: colors.danger,
       });
     } finally {
       setLoading(false);
@@ -69,48 +71,56 @@ export default function Privacy() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Feather
-        name="shield"
-        size={54}
-        color={theme.colors.primaryBlue}
-        style={{ alignSelf: "center", marginBottom: 10 }}
-      />
-      <Text color={colors.text} style={styles.title}>
-        Privacidad
-      </Text>
-      <Text>
-        Puedes descargar, guardar o compartir el documento completo de nuestra
-        política de privacidad en tu dispositivo para revisarlo cuando lo
-        necesites.
-      </Text>
-      <View style={{ marginTop: 20 }}>
-        <Button
-          style={styles.button}
-          title={"Descargar PDF"}
-          onPress={downloadPrivacyPDF}
-          loading={loading}
-          disabled={loading}
-        />
+    <View style={[styles.container, { backgroundColor: colors.bg, paddingBottom: insets.bottom + space.md }]}>
+      <View style={styles.body}>
+        <View style={[styles.icon, { backgroundColor: colors.accentSoft }]}>
+          <Feather name="shield" size={30} color={colors.accentText} />
+        </View>
+        <Text variant="title">Tu privacidad</Text>
+        <Text tone="muted">
+          Descarga, guarda o comparte el documento completo de nuestra política de privacidad
+          para revisarlo cuando lo necesites.
+        </Text>
+        <View style={[styles.note, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+          <Feather name="map-pin" size={16} color={colors.textMuted} />
+          <Text variant="label" tone="muted" style={styles.flex}>
+            En el mapa solo mostramos la zona aproximada (~500 m) de cada contratación, nunca la
+            dirección exacta.
+          </Text>
+        </View>
       </View>
+      <Button title="Descargar PDF" icon="download" onPress={downloadPrivacyPDF} loading={loading} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    // backgroundColor: theme.colors.background,
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingHorizontal: space.gutter,
+    paddingTop: space.md,
+    justifyContent: "space-between",
+  },
+  body: {
+    gap: 12,
+  },
+  icon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  note: {
+    flexDirection: "row",
     gap: 10,
+    padding: 14,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    marginTop: 8,
   },
-  title: {
-    textAlign: "center",
-    fontSize: theme.fontSizes.xxl,
-    fontFamily: theme.fontFamily.bold,
-  },
-  button: {
-    marginTop: 10,
+  flex: {
+    flex: 1,
   },
 });

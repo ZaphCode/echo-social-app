@@ -1,181 +1,154 @@
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  Alert,
-} from "react-native";
-import { Controller, Control, RegisterOptions } from "react-hook-form";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Control, Controller, RegisterOptions } from "react-hook-form";
 import { Feather } from "@expo/vector-icons";
-import { theme } from "@/theme/theme";
-import { Service } from "@/models/Service";
-import { Contracting } from "@/models/Contracting";
-import useColorScheme from "@/hooks/useColorScheme";
+
 import useImage from "@/hooks/useImage";
-import { SlideModal } from "../ui/SlideModal";
 import useModal from "@/hooks/useModal";
-import ImageOpts from "./ImageOpts";
+import useTheme from "@/hooks/useTheme";
+import { radius } from "@/theme/theme";
+import { SlideModal } from "../ui/SlideModal";
 import StorageImage from "../ui/StorageImage";
+import Text from "../ui/Text";
+import { FieldShell } from "./Field";
+import ImageOpts from "./ImageOpts";
 
 const MAX_IMAGES = 5;
 
-interface Props {
+type Props = {
   control: Control<any>;
   name: string;
   rules?: RegisterOptions;
-  service?: Pick<Service, "photos"> | Pick<Contracting, "photos">;
   label?: string;
-}
+};
 
-function PhotoPicker({ control, name, rules, service, label }: Props) {
-  const { colors } = useColorScheme();
+export default function PhotoPicker({ control, name, rules, label = "Fotos" }: Props) {
+  const { colors } = useTheme();
   const [visible, open, close] = useModal();
-
   const { pickImage } = useImage();
-
-  const styles = StyleSheet.create({
-    photosSection: {
-      marginBottom: theme.spacing.lg,
-    },
-    label: {
-      color: colors.text,
-      fontSize: theme.fontSizes.md,
-      marginBottom: theme.spacing.sm,
-      marginLeft: theme.spacing.sm,
-    },
-    imageWrapper: {
-      position: "relative",
-      marginRight: 14,
-    },
-    image: {
-      width: 70,
-      height: 70,
-      borderRadius: 10,
-      borderColor: colors.lightGray,
-      borderWidth: 1,
-    },
-    removeBtn: {
-      position: "absolute",
-      top: -8,
-      right: -8,
-      backgroundColor: "#FF6959",
-      borderRadius: 10,
-      padding: 2,
-      zIndex: 1,
-    },
-    addBtn: {
-      width: 70,
-      height: 70,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: colors.lightGray,
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 6,
-      backgroundColor: "transparent",
-    },
-    photoHint: {
-      color: colors.lightGray,
-      fontSize: theme.fontSizes.sm,
-      marginTop: 4,
-      marginLeft: theme.spacing.sm,
-    },
-  });
 
   return (
     <Controller
       name={name}
       control={control}
       rules={rules}
-      defaultValue={service?.photos || []}
       render={({ field: { value, onChange }, fieldState: { error } }) => {
-        const images = value || [];
+        const images: string[] = value || [];
 
-        const handleImagePick = async (option: "camera" | "library") => {
+        const handlePick = async (option: "camera" | "library") => {
           try {
             const result = await pickImage(option, {
               mediaTypes: "images",
               allowsEditing: true,
               quality: 0.7,
             });
-
             if (!result.canceled && result.assets?.length) {
               onChange([...images, result.assets[0].uri]);
             }
-          } catch (err) {
-            console.log(err);
+          } catch {
             Alert.alert(
-              "Error al añadir imagen",
-              "No pudimos capturar / cargar la foto. Verifica los permisos o intenta nuevamente."
+              "No se pudo agregar la foto",
+              "Revisa los permisos de cámara y fotos e intenta de nuevo.",
             );
           } finally {
             close();
           }
         };
 
-        const removeImage = (uri: string) => {
-          onChange(images.filter((img: string) => img !== uri));
-        };
-
         return (
-          <View style={styles.photosSection}>
-            <Text style={styles.label}>{label ?? "Fotos del servicio"}</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginBottom: 8, paddingTop: 10 }}
-            >
-              {images.map((uri: string) => (
-                <View key={uri} style={styles.imageWrapper}>
-                  <StorageImage
-                    bucket="service-photos"
-                    path={uri}
-                    style={styles.image}
-                  />
+          <FieldShell
+            label={`${label} · ${images.length}/${MAX_IMAGES}`}
+            error={error?.message}
+            hint="La primera foto será la portada."
+          >
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+              {images.length < MAX_IMAGES && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Agregar foto"
+                  onPress={open}
+                  style={[styles.tile, styles.add, { borderColor: colors.lineStrong, backgroundColor: colors.surface }]}
+                >
+                  <Feather name="plus" size={24} color={colors.accentText} />
+                  <Text variant="caption" bold tone="accent">
+                    Agregar
+                  </Text>
+                </Pressable>
+              )}
+              {images.map((uri, index) => (
+                <View key={uri} style={styles.tile}>
+                  <StorageImage bucket="service-photos" path={uri} style={styles.image} />
+                  {index === 0 && (
+                    <View style={styles.cover}>
+                      <Text variant="micro" bold color="#FFFFFF">
+                        Portada
+                      </Text>
+                    </View>
+                  )}
                   <Pressable
-                    style={styles.removeBtn}
-                    onPress={() => removeImage(uri)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Quitar foto"
+                    hitSlop={8}
+                    style={styles.remove}
+                    onPress={() => onChange(images.filter((img) => img !== uri))}
                   >
-                    <Feather name="x" size={16} color="#fff" />
+                    <Feather name="x" size={14} color="#FFFFFF" />
                   </Pressable>
                 </View>
               ))}
-              {images.length < MAX_IMAGES && (
-                <Pressable style={styles.addBtn} onPress={open}>
-                  <Feather name="plus" size={28} color={colors.lightGray} />
-                </Pressable>
-              )}
             </ScrollView>
-
-            {error ? (
-              <Text
-                style={{
-                  color: theme.colors.redError,
-                  marginLeft: theme.spacing.sm,
-                  marginTop: 2,
-                }}
-              >
-                {error.message}
-              </Text>
-            ) : (
-              <Text style={styles.photoHint}>
-                Puedes subir hasta {MAX_IMAGES} fotos. La primera será la
-                portada.
-              </Text>
-            )}
             <SlideModal visible={visible} onClose={close}>
               <ImageOpts
-                onPressCamera={() => handleImagePick("camera")}
-                onPressLibrary={() => handleImagePick("library")}
+                onPressCamera={() => handlePick("camera")}
+                onPressLibrary={() => handlePick("library")}
               />
             </SlideModal>
-          </View>
+          </FieldShell>
         );
       }}
     />
   );
 }
 
-export default PhotoPicker;
+const styles = StyleSheet.create({
+  row: {
+    gap: 10,
+  },
+  tile: {
+    width: 96,
+    height: 96,
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+  add: {
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  cover: {
+    position: "absolute",
+    left: 6,
+    bottom: 6,
+    paddingHorizontal: 7,
+    height: 20,
+    borderRadius: radius.pill,
+    justifyContent: "center",
+    backgroundColor: "rgba(14,15,17,0.65)",
+  },
+  remove: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(14,15,17,0.65)",
+  },
+});

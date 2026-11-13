@@ -1,27 +1,24 @@
-import { KeyboardAvoidingView, StyleSheet, View } from "react-native";
 import { useForm } from "react-hook-form";
 import { StaticScreenProps, useNavigation } from "@react-navigation/native";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { categoriesKeys, listServiceCategories } from "@/api/categories";
 import {
   createService,
   servicesKeys,
   updateService,
 } from "@/api/services";
-import { ServiceWithProvider } from "@/api/types";
-import { theme } from "@/theme/theme";
 import { Service } from "@/models/Service";
 import { useAuthCtx } from "@/context/Auth";
 import { useAlertCtx } from "@/context/Alert";
 import { useOffline } from "@/context/Offline";
 import { validPriceRules, validServicesPhotoRules } from "@/utils/validations";
-import Text from "@/components/ui/Text";
+import EditorLayout from "@/components/EditorLayout";
 import Field from "@/components/forms/Field";
 import Dropdown from "@/components/forms/Dropdown";
 import Button from "@/components/ui/Button";
 import PhotoPicker from "@/components/forms/PhotoPicker";
-import useColorScheme from "@/hooks/useColorScheme";
+import useCategories from "@/hooks/useCategories";
+import useTheme from "@/hooks/useTheme";
 
 type Props = StaticScreenProps<{ serviceToEdit?: Service }>;
 
@@ -30,13 +27,10 @@ export default function ServiceEditor({ route }: Props) {
   const { user } = useAuthCtx();
   const { show } = useAlertCtx();
   const { isOnline } = useOffline();
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
   const queryClient = useQueryClient();
   const navigation = useNavigation();
-  const categoriesQuery = useQuery({
-    queryKey: categoriesKeys.all,
-    queryFn: listServiceCategories,
-  });
+  const { categories, isPending: categoriesPending } = useCategories();
   const createServiceMutation = useMutation({
     mutationFn: createService,
     onSuccess: () => {
@@ -87,17 +81,17 @@ export default function ServiceEditor({ route }: Props) {
       }
     } catch {
       show({
-        title: "Error al Guardar",
+        title: "No se pudo guardar",
         message:
           "Ocurrió un error al guardar el servicio. Verifique los datos e intente de nuevo.",
         icon: "database-alert",
-        iconColor: theme.colors.redError,
+        iconColor: colors.danger,
       });
       return;
     }
 
     show({
-      title: service ? "Servicio Actualizado" : "Servicio Creado",
+      title: service ? "Servicio actualizado" : "¡Servicio publicado!",
       message:
         service && !isOnline
           ? "El servicio se guardó localmente y se sincronizará al reconectar."
@@ -105,76 +99,59 @@ export default function ServiceEditor({ route }: Props) {
               service ? "actualizado" : "creado"
             } exitosamente.`,
       icon: "check-circle",
-      iconColor: theme.colors.successGreen,
+      iconColor: colors.success,
     });
     navigation.goBack();
   });
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
+    <EditorLayout
+      title={service ? "Editar servicio" : "Nuevo servicio"}
+      subtitle={service ? service.name : "Los clientes te enviarán solicitudes"}
+      footer={
+        <Button
+          title={service ? "Guardar cambios" : "Publicar servicio"}
+          onPress={onSubmit}
+          loading={createServiceMutation.isPending || updateServiceMutation.isPending}
+        />
+      }
     >
-      <View style={{ gap: theme.spacing.md }}>
-        <Field
-          name="serviceName"
-          placeholder="Tu servicio"
-          control={control}
-          label="Nombre del Servicio"
-          icon="award"
-        />
-        <Field
-          name="description"
-          placeholder="Descripción del servicio"
-          control={control}
-          label="Descripción"
-          icon="align-left"
-        />
-        <Field
-          name="basePrice"
-          placeholder="200"
-          control={control}
-          label="Precio base"
-          icon="dollar-sign"
-          keyboardType="numeric"
-          rules={validPriceRules}
-        />
-        {/* // TODO: IMPROVE THIS SHIT  */}
-        {categoriesQuery.isPending ? (
-          <Text>Loading categories...</Text>
-        ) : categoriesQuery.isError ? (
-          <Text>Error loading categories</Text>
-        ) : (
-          <Dropdown
-            control={control}
-            name="category"
-            icon="tag"
-            label="Categoría"
-            options={categoriesQuery.data ?? []}
-            getLabel={(c) => c.name}
-            getValue={(c) => c.id}
-            defaultValue={service?.category || ""}
-          />
-        )}
-        <PhotoPicker
-          service={service}
-          control={control}
-          name="photos"
-          rules={validServicesPhotoRules}
-        />
-      </View>
-      <Button
-        title={service ? "Actualizar" : "Crear"}
-        onPress={onSubmit}
-        loading={createServiceMutation.isPending || updateServiceMutation.isPending}
+      <PhotoPicker control={control} name="photos" rules={validServicesPhotoRules} />
+      <Field
+        name="serviceName"
+        placeholder="Ej. Reparación de fugas y tuberías"
+        control={control}
+        label="Título"
+        autoCapitalize="sentences"
       />
-    </KeyboardAvoidingView>
+      <Dropdown
+        control={control}
+        name="category"
+        icon="tag"
+        label="Categoría"
+        loading={categoriesPending}
+        options={categories}
+        getLabel={(c) => c.name}
+        getValue={(c) => c.id}
+      />
+      <Field
+        name="basePrice"
+        placeholder="450"
+        control={control}
+        label="Precio base"
+        icon="dollar-sign"
+        keyboardType="numeric"
+        hint="Es un punto de partida: el precio final se negocia en el chat."
+        rules={validPriceRules}
+      />
+      <Field
+        name="description"
+        placeholder="Qué incluye, materiales, tiempos…"
+        control={control}
+        label="Descripción"
+        autoCapitalize="sentences"
+        multiline
+      />
+    </EditorLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: theme.spacing.sm + 4,
-    paddingVertical: theme.spacing.md,
-    flex: 1,
-  },
-});

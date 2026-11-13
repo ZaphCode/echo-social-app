@@ -6,31 +6,20 @@
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/app-splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#111315"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.echoapp",
-      "appleTeamId": "K3X2W74GBX",
-      "splash": {
-        "image": "./assets/app-logo-white.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#111315",
-        "imageWidth": 50
-      }
+      "appleTeamId": "K3X2W74GBX"
     },
     "android": {
-      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/app-splash-icon.png",
         "backgroundColor": "#111315"
       },
       "package": "com.anonymous.echoapp",
-      "permissions": ["android.permission.RECORD_AUDIO"]
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -63,9 +52,40 @@
         }
       ],
       "./plugins/withFmtConsteval",
-      "expo-maps",
+      "./plugins/withSceneLifecycle",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Usamos tu ubicación para mostrarte primero las solicitudes y servicios cercanos, y para ubicar las contrataciones que publiques.",
+          "locationAlwaysAndWhenInUsePermission": "Usamos tu ubicación para mostrarte primero las solicitudes y servicios cercanos, y para ubicar las contrataciones que publiques.",
+          "locationAlwaysPermission": "Usamos tu ubicación para mostrarte primero las solicitudes y servicios cercanos, y para ubicar las contrataciones que publiques."
+        }
+      ],
+      [
+        "expo-maps",
+        {
+          "requestLocationPermission": true,
+          "locationPermission": "Usamos tu ubicación para mostrarte primero las solicitudes y servicios cercanos, y para ubicar las contrataciones que publiques."
+        }
+      ],
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-community/datetimepicker",
+      "expo-image",
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/app-splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#111315",
+          "imageWidth": 50,
+          "ios": {
+            "image": "./assets/app-logo-white.png"
+          }
+        }
+      ],
+      "expo-status-bar"
     ]
   }
 }

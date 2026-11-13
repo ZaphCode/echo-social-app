@@ -61,3 +61,23 @@ function formatRelativeUnit(
 
   return `${prefix} ${value} ${unitLabel}${pluralSuffix}`;
 }
+
+const priceFormatter = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+  currencyDisplay: "narrowSymbol",
+  maximumFractionDigits: 0,
+});
+
+/** "$1,250" — prices are whole pesos across the app. */
+export function formatPrice(value: number | string | null | undefined) {
+  const amount = typeof value === "string" ? Number(value) : value;
+  if (amount === null || amount === undefined || Number.isNaN(amount)) return "$—";
+  return priceFormatter.format(amount);
+}
+
+/** Short relative label for card metadata: "hace 2 h", "hace 3 d". */
+export function formatRelativeShort(dateStr: string, now = new Date()) {
+  const label = formatRelativeDate(dateStr, now);
+  return label.charAt(0).toLowerCase() + label.slice(1);
+}

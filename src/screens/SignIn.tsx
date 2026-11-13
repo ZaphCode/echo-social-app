@@ -1,23 +1,36 @@
-import { View, StyleSheet, Pressable } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
-import { useForm } from "react-hook-form";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { useForm } from "react-hook-form";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { theme } from "@/theme/theme";
-import { validEmailRules } from "@/utils/validations";
-import { getDevPassword, getDevEmail } from "@/utils/constants";
-import { useAlertCtx } from "@/context/Alert";
-import Text from "@/components/ui/Text";
 import Field from "@/components/forms/Field";
 import Button from "@/components/ui/Button";
-import useRedirect from "@/hooks/auth/useRedirect";
+import EchoMark from "@/components/ui/EchoMark";
+import EchoRings from "@/components/ui/EchoRings";
+import Text from "@/components/ui/Text";
+import { useAlertCtx } from "@/context/Alert";
 import useLogin from "@/hooks/auth/useLogin";
-import useColorScheme from "@/hooks/useColorScheme";
+import useRedirect from "@/hooks/auth/useRedirect";
+import useTheme from "@/hooks/useTheme";
+import { getCategoryImage } from "@/theme/categoryImages";
+import { space } from "@/theme/theme";
+import { getDevEmail, getDevPassword } from "@/utils/constants";
+import { validEmailRules } from "@/utils/validations";
+
+/** Tiles orbiting the echo rings: [category, x%, y%, size, rotation]. */
+const ORBIT: [string, number, number, number, string][] = [
+  ["Plomería", 8, 18, 64, "-8deg"],
+  ["Electricista", 70, 6, 72, "6deg"],
+  ["Pintura", 78, 58, 60, "-5deg"],
+  ["Jardinería", 4, 64, 58, "7deg"],
+  ["Carpintería", 40, 74, 54, "-3deg"],
+];
 
 export default function SignIn() {
   const { show } = useAlertCtx();
-  const { colors, activeMode } = useColorScheme();
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { login, loading } = useLogin();
   const navigation = useNavigation();
 
@@ -32,110 +45,154 @@ export default function SignIn() {
 
   const onSubmit = handleSubmit(async ({ email, password }) => {
     const error = await login(email, password);
-
-    if (error)
+    if (error) {
       show({
-        title: "Error al iniciar sesión",
+        title: "No pudimos iniciar sesión",
         message: getLoginErrorMessage(error),
         icon: "account-remove",
-        iconColor: theme.colors.redError,
+        iconColor: colors.danger,
       });
+    }
   });
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+    <KeyboardAvoidingView
+      style={[styles.fill, { backgroundColor: colors.bg }]}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View>
-        <Image
-          source={
-            activeMode === "dark"
-              ? require("@Assets/app-logo-white.png")
-              : require("@Assets/app-logo-black.png")
-          }
-          contentFit="contain"
-          style={{ width: 200, height: 110, marginBottom: 20 }}
-        />
-      </View>
-      <View style={{ gap: 5, alignItems: "center" }}>
-        <Text
-          fontFamily="bold"
-          color={colors.text}
-          size={theme.fontSizes.xl + 5}
-        >
-          Bienvenido de Vuelta
-        </Text>
-        <Text size={theme.fontSizes.lg}>Inicia sesión para continuar</Text>
-      </View>
-      <View style={{ width: "90%", gap: 20, paddingVertical: 30 }}>
-        <Field
-          name="email"
-          label="Correo"
-          control={control}
-          placeholder="Email"
-          icon="mail"
-          keyboardType="email-address"
-          rules={validEmailRules}
-        />
-        <Field
-          name="password"
-          label="Contraseña"
-          control={control}
-          placeholder="*****"
-          icon="lock"
-          rules={{ required: "La contraseña es requerida" }}
-          secureTextEntry={true}
-        />
-        <Button
-          loading={loading}
-          title="Ingresar"
-          style={{ marginTop: 10 }}
-          onPress={onSubmit}
-        />
-      </View>
-      <View style={styles.createAccountView}>
-        <Text>¿Aún no tienes cuenta?</Text>
-        <Pressable
-          onPress={() => navigation.navigate("Auth", { screen: "SignUp" })}
-        >
-          <Text
-            style={styles.createAccountText}
-            color={theme.colors.primaryBlue}
-          >
-            Crea una
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space.lg }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.hero, { paddingTop: insets.top }]}>
+          <EchoRings size={420} rings={5} style={styles.rings} />
+          {ORBIT.map(([category, x, y, size, rotate]) => {
+            const source = getCategoryImage(category);
+            return source ? (
+              <Image
+                key={category}
+                source={source}
+                style={[
+                  styles.orbit,
+                  {
+                    left: `${x}%`,
+                    top: `${y}%`,
+                    width: size,
+                    height: size * 1.2,
+                    borderColor: colors.bg,
+                    transform: [{ rotate }],
+                  },
+                ]}
+                contentFit="cover"
+              />
+            ) : null;
+          })}
+          <View style={[styles.mark, { backgroundColor: colors.bg, boxShadow: `0 0 60px 30px ${colors.bg}` }]}>
+            <EchoMark height={40} />
+          </View>
+        </View>
+
+        <View style={styles.copy}>
+          <Text variant="display">Bienvenido de vuelta</Text>
+          <Text tone="muted">
+            Plomeros, electricistas y más profesionales de tu colonia, a un mensaje de distancia.
           </Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+        </View>
+
+        <View style={styles.form}>
+          <Field
+            name="email"
+            label="Correo"
+            control={control}
+            placeholder="tu@correo.com"
+            icon="mail"
+            keyboardType="email-address"
+            rules={validEmailRules}
+          />
+          <Field
+            name="password"
+            label="Contraseña"
+            control={control}
+            placeholder="••••••••"
+            icon="lock"
+            rules={{ required: "La contraseña es requerida" }}
+            secureTextEntry
+            onSubmitEditing={onSubmit}
+          />
+          <Button loading={loading} title="Ingresar" onPress={onSubmit} style={styles.submit} />
+        </View>
+
+        <View style={styles.footer}>
+          <Text tone="muted">¿Aún no tienes cuenta?</Text>
+          <Pressable
+            accessibilityRole="link"
+            hitSlop={10}
+            onPress={() => navigation.navigate("Auth", { screen: "SignUp" })}
+          >
+            <Text bold tone="accent">
+              Crea una
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    gap: theme.spacing.sm,
-    paddingTop: theme.spacing.tabPT,
-  },
-  createAccountView: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 5,
-  },
-  createAccountText: {
-    textDecorationLine: "underline",
-  },
-});
-
 function getLoginErrorMessage(error: string) {
   if (error === "invalid-credentials") {
-    return "Credenciales incorrectas. Por favor, verifica tu correo y contraseña.";
+    return "Correo o contraseña incorrectos. Revísalos e intenta de nuevo.";
   }
-
   if (error === "offline-login-unavailable") {
-    return "No se pudo iniciar sesión sin conexión. Debes haber iniciado sesión online antes en este dispositivo y usar la misma contraseña.";
+    return "Sin conexión solo puedes entrar si ya iniciaste sesión antes en este dispositivo, con la misma contraseña.";
   }
-
-  return "Ocurrió un error al iniciar sesión. Por favor, inténtalo de nuevo más tarde.";
+  return "Ocurrió un error al iniciar sesión. Inténtalo de nuevo más tarde.";
 }
+
+const styles = StyleSheet.create({
+  fill: {
+    flex: 1,
+  },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: space.gutter,
+    gap: space.lg,
+  },
+  hero: {
+    height: 300,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: -space.gutter,
+    overflow: "hidden",
+  },
+  rings: {
+    position: "absolute",
+  },
+  orbit: {
+    position: "absolute",
+    borderRadius: 18,
+    borderWidth: 3,
+    opacity: 0.9,
+  },
+  mark: {
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 40,
+  },
+  copy: {
+    gap: 6,
+  },
+  form: {
+    gap: 16,
+  },
+  submit: {
+    marginTop: 4,
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: "auto",
+  },
+});

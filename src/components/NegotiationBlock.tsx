@@ -1,14 +1,18 @@
-import { View, StyleSheet, Pressable } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { StyleSheet, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
 import { ServiceRequest } from "@/models/ServiceRequest";
-import { theme } from "@/theme/theme";
-import { formatDate } from "@/utils/format";
+import { User } from "@/models/User";
+import { radius, ThemeColors } from "@/theme/theme";
+import { formatPrice } from "@/utils/format";
 import { useAuthCtx } from "@/context/Auth";
 import { useNegotiationCtx } from "@/context/Negotiation";
 import { useAlertCtx } from "@/context/Alert";
 import * as NS from "@/utils/negotiation";
 import Text from "./ui/Text";
+import Avatar from "./ui/Avatar";
+import Button from "./ui/Button";
+import StatusPill from "./ui/StatusPill";
 import { useOffline } from "@/context/Offline";
 import {
   getRemoteServiceRequestById,
@@ -16,13 +20,10 @@ import {
 } from "@/api/serviceRequests";
 import useSubscription from "@/hooks/useSubscription";
 import useRequestStatus from "@/hooks/useRequestStatus";
-import useColorScheme from "@/hooks/useColorScheme";
+import useTheme from "@/hooks/useTheme";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
-const PERSON_ICON_SIZE = 38;
-const ACTION_ICON_SIZE = 15;
-const ACTION_TEXT_SIZE = theme.fontSizes.sm - 1;
 const REQUEST_REFRESH_TIMEOUT_MS = 15_000;
 
 type Props = {
@@ -57,7 +58,7 @@ export default function NegotiationBlock({
   const statusModifier = useRequestStatus(authUser, {
     shouldNotifyCounterparty,
   });
-  const { colors, activeMode } = useColorScheme();
+  const { colors } = useTheme();
   const [isRefreshingRequest, setIsRefreshingRequest] = useState(false);
   const hasBootstrappedRef = useRef(false);
   const wasOnlineRef = useRef(isOnline);
@@ -152,247 +153,129 @@ export default function NegotiationBlock({
     !NS.isFinished(request) ||
     hasReviewed ||
     (subject.type === "contracting" && authUser.id !== client.id);
-  const acceptButtonStyles = getButtonVariantStyles(
-    "accept",
-    colors,
-    activeMode,
-  );
-  const offerButtonStyles = getButtonVariantStyles("offer", colors, activeMode);
-  const rejectButtonStyles = getButtonVariantStyles(
-    "reject",
-    colors,
-    activeMode,
-  );
-  const completeButtonStyles = getButtonVariantStyles(
-    "complete",
-    colors,
-    activeMode,
-  );
-  const reviewButtonStyles = getButtonVariantStyles(
-    "review",
-    colors,
-    activeMode,
-  );
+  const displayState: ServiceRequest["agreement_state"] =
+    NS.isFinished(request) || NS.bothMarkedCompleted(request)
+      ? "FINISHED"
+      : NS.isCanceled(request) || NS.bothRejected(request)
+        ? "CANCELED"
+        : NS.isAccepted(request) || NS.bothAgreed(request)
+          ? "ACCEPTED"
+          : request.agreement_state;
+  const lastOfferByClient = lastOfferUserId === client.id;
+
+  const confirmAccept = () =>
+    show({
+      title: "¿Aceptar la propuesta?",
+      message: `${formatPrice(request.agreed_price)} para el ${formatShortDate(request.agreed_date)}. El trato se cierra cuando ambos acepten.`,
+      icon: "check-circle",
+      iconColor: colors.success,
+      onConfirm: statusModifier.setUserToAgreed,
+    });
+  const confirmReject = () =>
+    show({
+      title: "¿Rechazar la propuesta?",
+      message: "La otra persona podrá enviarte una nueva oferta.",
+      icon: "close-circle",
+      iconColor: colors.danger,
+      onConfirm: statusModifier.setUserToRejected,
+    });
+  const confirmComplete = () =>
+    show({
+      title: "¿Marcar como completado?",
+      message: "Confirma que el trabajo se realizó. Se cierra cuando ambos lo marquen.",
+      icon: "check-decagram",
+      iconColor: colors.done,
+      onConfirm: statusModifier.setUserToCompleted,
+    });
 
   return (
-    <View
-      style={{ padding: theme.spacing.md, backgroundColor: colors.darkerGray }}
-    >
-      <View style={styles.agreementsDataContainer}>
-        <View style={styles.userContainer}>
-          {authUser.id === client.id && (
-            <Text
-              color={colors.primaryBlue}
-              size={theme.fontSizes.sm + 1}
-              style={{ position: "absolute", bottom: 40, left: 7 }}
-            >
-              (Tú)
-            </Text>
-          )}
-          <MaterialIcons
-            name="person"
-            size={PERSON_ICON_SIZE}
-            color={getClientColor(request)}
-          />
-          {lastOfferUserId === client.id && (
-            <MaterialIcons
-              name="arrow-right"
-              size={32}
-              color={colors.text}
-              style={{ position: "absolute", left: 32 }}
-            />
-          )}
-        </View>
-        <View style={{ alignItems: "center" }}>
-          <Text fontFamily="bold" color={colors.text}>
-            Propuestas de Negociación
+    <View style={[styles.panel, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+      <View style={styles.topRow}>
+        <View style={styles.flex}>
+          <Text variant="caption" tone="subtle">
+            {isRefreshingRequest ? "Actualizando propuesta…" : "Propuesta actual"}
           </Text>
-          <View style={{ justifyContent: "center" }}>
-            {isRefreshingRequest ? (
-              <Text color={colors.lightGray} size={theme.fontSizes.sm}>
-                Actualizando estado...
-              </Text>
-            ) : null}
-            <View style={{ flexDirection: "row" }}>
-              <Text>Precio: </Text>
-              <Text
-                color={colors.primaryBlue}
-              >{`$${request.agreed_price}`}</Text>
-            </View>
-            <View style={{ flexDirection: "row" }}>
-              <Text>Fecha: </Text>
-              <Text color={colors.primaryBlue}>
-                {formatDate(request.agreed_date)}
+          <View style={styles.priceRow}>
+            <Text variant="display">{formatPrice(request.agreed_price)}</Text>
+            <View style={styles.date}>
+              <Feather name="calendar" size={14} color={colors.textMuted} />
+              <Text variant="label" tone="muted">
+                {formatShortDate(request.agreed_date)}
               </Text>
             </View>
           </View>
         </View>
-        <View style={styles.userContainer}>
-          {lastOfferUserId === provider.id && (
-            <MaterialIcons
-              name="arrow-left"
-              size={32}
-              color={colors.text}
-              style={{ position: "absolute", right: 32 }}
-            />
-          )}
-          <MaterialIcons
-            name="person-4"
-            size={PERSON_ICON_SIZE}
-            color={getProviderColor(request)}
-          />
-          {authUser.id === provider.id && (
-            <Text
-              color={colors.primaryBlue}
-              size={theme.fontSizes.sm + 1}
-              style={{ position: "absolute", bottom: 40, left: 7 }}
-            >
-              (Tú)
-            </Text>
-          )}
-        </View>
+        <StatusPill state={displayState} />
       </View>
-      <View style={styles.buttonsContainer}>
+
+      <View style={styles.parties}>
+        <Party
+          user={client}
+          isMe={authUser.id === client.id}
+          status={partyStatus(request, "client", colors)}
+          lastOffer={lastOfferByClient}
+        />
+        <Feather
+          name={lastOfferByClient ? "arrow-right" : "arrow-left"}
+          size={16}
+          color={colors.textSubtle}
+          accessibilityLabel={`${lastOfferByClient ? client.name : provider.name} hizo la última oferta`}
+        />
+        <Party
+          user={provider}
+          isMe={authUser.id === provider.id}
+          status={partyStatus(request, "provider", colors)}
+          lastOffer={!lastOfferByClient}
+          alignEnd
+        />
+      </View>
+
+      <View style={styles.actions}>
         {showingCompletedBtn ? (
           <>
-            <Pressable
-              onPress={() =>
-                show({
-                  title: "Marcar como Completado",
-                  message:
-                    "¿Estás seguro de marcar esta solicitud como completada?",
-                  icon: "check-circle",
-                  iconColor: colors.completePurple,
-                  onConfirm: statusModifier.setUserToCompleted,
-                })
-              }
-              style={[
-                styles.button,
-                completeButtonStyles.button,
-                { opacity: completedBtnDisabled ? 0.25 : 1 },
-              ]}
+            <Button
+              title="Completar"
+              size="md"
+              icon="check"
+              style={styles.flex}
               disabled={completedBtnDisabled}
-            >
-              <MaterialIcons
-                name="task-alt"
-                size={ACTION_ICON_SIZE}
-                color={completeButtonStyles.text}
-              />
-              <Text
-                fontFamily="bold"
-                color={completeButtonStyles.text}
-                size={ACTION_TEXT_SIZE}
-              >
-                Completar
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={openReviewFn}
-              style={[
-                styles.button,
-                reviewButtonStyles.button,
-                { opacity: reviewBtnDisabled ? 0.25 : 1 },
-              ]}
+              onPress={confirmComplete}
+            />
+            <Button
+              title="Valorar"
+              size="md"
+              icon="star"
+              variant="secondary"
+              style={styles.flex}
               disabled={reviewBtnDisabled}
-            >
-              <MaterialIcons
-                name="star-rate"
-                size={ACTION_ICON_SIZE}
-                color={reviewButtonStyles.text}
-              />
-              <Text
-                fontFamily="bold"
-                color={reviewButtonStyles.text}
-                size={ACTION_TEXT_SIZE}
-              >
-                Valorar
-              </Text>
-            </Pressable>
+              onPress={openReviewFn}
+            />
           </>
         ) : (
           <>
-            <Pressable
-              onPress={() =>
-                show({
-                  title: "Aceptar Propuesta",
-                  message: "¿Estás seguro de aceptar esta propuesta?",
-                  icon: "check-circle",
-                  iconColor: colors.successGreen,
-                  onConfirm: statusModifier.setUserToAgreed,
-                })
-              }
-              style={[
-                styles.button,
-                acceptButtonStyles.button,
-                { opacity: statusBtnDisabled ? 0.25 : 1 },
-              ]}
+            <Button
+              title="Rechazar"
+              size="md"
+              variant="danger"
+              style={styles.flex}
               disabled={statusBtnDisabled}
-            >
-              <MaterialIcons
-                name="check-circle"
-                size={ACTION_ICON_SIZE}
-                color={acceptButtonStyles.text}
-              />
-              <Text
-                fontFamily="bold"
-                color={acceptButtonStyles.text}
-                size={ACTION_TEXT_SIZE}
-              >
-                Aceptar
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={openOfferFn}
+              onPress={confirmReject}
+            />
+            <Button
+              title="Ofertar"
+              size="md"
+              variant="secondary"
+              style={styles.flex}
               disabled={offerBtnDisabled}
-              style={[
-                styles.button,
-                offerButtonStyles.button,
-                { opacity: offerBtnDisabled ? 0.25 : 1 },
-              ]}
-            >
-              <MaterialIcons
-                name="local-offer"
-                size={ACTION_ICON_SIZE}
-                color={offerButtonStyles.text}
-              />
-              <Text
-                fontFamily="bold"
-                color={offerButtonStyles.text}
-                size={ACTION_TEXT_SIZE}
-              >
-                Ofertar
-              </Text>
-            </Pressable>
-            <Pressable
+              onPress={openOfferFn}
+            />
+            <Button
+              title="Aceptar"
+              size="md"
+              style={styles.flex}
               disabled={statusBtnDisabled}
-              onPress={() =>
-                show({
-                  title: "Rechazar Propuesta",
-                  message: "¿Estás seguro de rechazar esta propuesta?",
-                  icon: "close-circle",
-                  iconColor: colors.redError,
-                  onConfirm: statusModifier.setUserToRejected,
-                })
-              }
-              style={[
-                styles.button,
-                rejectButtonStyles.button,
-                { opacity: statusBtnDisabled ? 0.25 : 1 },
-              ]}
-            >
-              <MaterialIcons
-                name="cancel"
-                size={ACTION_ICON_SIZE}
-                color={rejectButtonStyles.text}
-              />
-              <Text
-                fontFamily="bold"
-                color={rejectButtonStyles.text}
-                size={ACTION_TEXT_SIZE}
-              >
-                Rechazar
-              </Text>
-            </Pressable>
+              onPress={confirmAccept}
+            />
           </>
         )}
       </View>
@@ -400,119 +283,122 @@ export default function NegotiationBlock({
   );
 }
 
-const styles = StyleSheet.create({
-  agreementsDataContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
-  },
-  buttonsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-  },
-  button: {
-    paddingHorizontal: theme.spacing.sm + 2,
-    paddingVertical: theme.spacing.xs - 3,
-    backgroundColor: "#5757575E",
-    minWidth: 88,
-    borderRadius: 8,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: theme.spacing.xs - 4,
-  },
+type PartyStatus = { label: string; color: string };
 
-  userContainer: { alignItems: "center", flexDirection: "row", marginTop: 20 },
+function partyStatus(
+  request: ServiceRequest,
+  side: "client" | "provider",
+  colors: ThemeColors,
+): PartyStatus {
+  const isClient = side === "client";
+  if (isClient ? NS.clientMarkedCompleted(request) : NS.providerMarkedCompleted(request)) {
+    return { label: "Completó", color: colors.done };
+  }
+  if (isClient ? NS.clientAgreed(request) : NS.providerAgreed(request)) {
+    return { label: "Aceptó", color: colors.success };
+  }
+  if (isClient ? NS.clientRejected(request) : NS.providerRejected(request)) {
+    return { label: "Rechazó", color: colors.danger };
+  }
+  return { label: "Pendiente", color: colors.accentText };
+}
+
+function Party({
+  user,
+  isMe,
+  status,
+  lastOffer,
+  alignEnd,
+}: {
+  user: User;
+  isMe: boolean;
+  status: PartyStatus;
+  lastOffer: boolean;
+  alignEnd?: boolean;
+}) {
+  const avatar = (
+    <View style={[styles.avatarRing, { borderColor: status.color }]}>
+      <Avatar name={user.name} path={user.avatar} size={28} />
+    </View>
+  );
+  return (
+    <View style={[styles.party, alignEnd && styles.partyEnd]}>
+      {!alignEnd && avatar}
+      <View style={alignEnd ? styles.partyTextEnd : undefined}>
+        <Text variant="caption" bold numberOfLines={1}>
+          {isMe ? "Tú" : user.name?.split(" ")[0] ?? "—"}
+        </Text>
+        <Text variant="caption" color={status.color}>
+          {lastOffer && status.label === "Pendiente" ? "Ofertó" : status.label}
+        </Text>
+      </View>
+      {alignEnd && avatar}
+    </View>
+  );
+}
+
+const shortDate = new Intl.DateTimeFormat("es-MX", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
 });
 
-function getClientColor(request: ServiceRequest) {
-  const { colors } = useColorScheme();
-  if (NS.clientAgreed(request)) {
-    return colors.successGreen;
-  } else if (NS.clientRejected(request)) {
-    return colors.redError;
-  } else if (NS.clientMarkedCompleted(request)) {
-    return colors.completePurple;
-  }
-  return colors.primaryBlue;
+function formatShortDate(date: string) {
+  const value = new Date(date);
+  return Number.isNaN(value.getTime()) ? "Sin fecha" : shortDate.format(value);
 }
 
-function getProviderColor(request: ServiceRequest) {
-  const { colors } = useColorScheme();
-  if (NS.providerAgreed(request)) {
-    return colors.successGreen;
-  } else if (NS.providerRejected(request)) {
-    return colors.redError;
-  } else if (NS.providerMarkedCompleted(request)) {
-    return colors.completePurple;
-  }
-  return colors.primaryBlue;
-}
-
-function getButtonVariantStyles(
-  variant: "accept" | "offer" | "reject" | "complete" | "review",
-  colors: ReturnType<typeof useColorScheme>["colors"],
-  activeMode: ReturnType<typeof useColorScheme>["activeMode"],
-) {
-  const isLight = activeMode === "light";
-
-  switch (variant) {
-    case "accept":
-      return {
-        button: {
-          backgroundColor: isLight
-            ? colors.successGreen
-            : "rgba(0, 184, 107, 0.18)",
-          borderWidth: 1,
-          borderColor: colors.successGreen,
-        },
-        text: isLight ? colors.textOnBrand : colors.successGreen,
-      };
-    case "offer":
-      return {
-        button: {
-          backgroundColor: isLight
-            ? colors.primaryBlue
-            : "rgba(99, 195, 255, 0.18)",
-          borderWidth: 1,
-          borderColor: colors.primaryBlue,
-        },
-        text: isLight ? colors.textOnBrand : colors.primaryBlue,
-      };
-    case "reject":
-      return {
-        button: {
-          backgroundColor: isLight
-            ? colors.redError
-            : "rgba(255, 105, 89, 0.18)",
-          borderWidth: 1,
-          borderColor: colors.redError,
-        },
-        text: isLight ? colors.textOnBrand : colors.redError,
-      };
-    case "complete":
-      return {
-        button: {
-          backgroundColor: isLight
-            ? colors.completePurple
-            : "rgba(164, 94, 229, 0.18)",
-          borderWidth: 1,
-          borderColor: colors.completePurple,
-        },
-        text: isLight ? colors.textOnBrand : colors.completePurple,
-      };
-    case "review":
-      return {
-        button: {
-          backgroundColor: isLight ? colors.secondaryBlue : colors.darkGray,
-          borderWidth: 1,
-          borderColor: isLight ? colors.secondaryBlue : colors.border,
-        },
-        text: isLight ? colors.textOnBrand : colors.text,
-      };
-  }
-}
+const styles = StyleSheet.create({
+  panel: {
+    marginHorizontal: 16,
+    padding: 16,
+    borderRadius: 26,
+    borderWidth: 1,
+    gap: 14,
+  },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  flex: {
+    flex: 1,
+  },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  date: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  parties: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  party: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  partyEnd: {
+    justifyContent: "flex-end",
+  },
+  partyTextEnd: {
+    alignItems: "flex-end",
+  },
+  avatarRing: {
+    padding: 2,
+    borderWidth: 2,
+    borderRadius: radius.pill,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+});

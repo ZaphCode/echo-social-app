@@ -8,7 +8,7 @@ import { AuthStack } from "./stacks/Auth";
 import { MainStack } from "./stacks/Main";
 import ChangeApi from "@/screens/ChangeApi";
 import usePBCheck from "@/hooks/usePBCheck";
-import { theme } from "@/theme/theme";
+import { stackHeader } from "./headerOptions";
 import { getRootStackAccess } from "./rootAccess";
 
 const RootStack = createNativeStackNavigator({
@@ -32,15 +32,10 @@ const RootStack = createNativeStackNavigator({
     },
     ChangeApi: {
       screen: ChangeApi,
-      options: {
-        headerShown: true,
-        headerTintColor: theme.colors.textOnBrand,
+      options: (props) => ({
+        ...stackHeader(props, "Configuración de API"),
         headerBackVisible: false,
-        title: "Configuración de API",
-        headerStyle: {
-          backgroundColor: theme.colors.brandSurface,
-        },
-      },
+      }),
     },
   },
 });

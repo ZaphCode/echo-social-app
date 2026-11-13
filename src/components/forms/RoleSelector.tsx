@@ -1,98 +1,121 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import React, { useEffect, useState } from "react";
-import { User } from "@/models/User";
+import { ComponentProps } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { theme } from "@/theme/theme";
-import useColorScheme from "@/hooks/useColorScheme";
+
+import useTheme from "@/hooks/useTheme";
+import { User } from "@/models/User";
+import { radius } from "@/theme/theme";
+import Text from "../ui/Text";
 
 type Props = {
+  value: User["role"];
   onChange: (role: User["role"]) => void;
 };
 
-export default function RoleSelector({ onChange }: Props) {
-  const [role, setRole] = useState<User["role"]>("client");
-  const { colors } = useColorScheme();
+const ROLES: {
+  value: User["role"];
+  title: string;
+  body: string;
+  icon: ComponentProps<typeof Feather>["name"];
+}[] = [
+  {
+    value: "client",
+    title: "Cliente",
+    body: "Busco y contrato servicios.",
+    icon: "search",
+  },
+  {
+    value: "provider",
+    title: "Profesional",
+    body: "Ofrezco servicios y también contrato.",
+    icon: "tool",
+  },
+];
 
-  useEffect(() => onChange(role), [role]);
-
-  const styles = StyleSheet.create({
-    roleButtonContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      width: "90%",
-      marginTop: 10,
-    },
-    roleButton: {
-      flex: 1,
-      borderRadius: 12,
-      marginHorizontal: 5,
-      padding: theme.spacing.sm,
-      backgroundColor: colors.darkGray,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    roleButtonText: {
-      color: colors.lightGray,
-      fontSize: 17,
-      fontFamily: theme.fontFamily.regular,
-    },
-    selectedButton: {
-      backgroundColor: colors.darkerGray,
-      borderColor: colors.primaryBlue,
-    },
-    selectedText: {
-      color: colors.primaryBlue,
-      fontFamily: theme.fontFamily.bold,
-    },
-  });
+export default function RoleSelector({ value, onChange }: Props) {
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.roleButtonContainer}>
-      <Pressable
-        style={[styles.roleButton, role === "client" && styles.selectedButton]}
-        onPress={() => setRole("client")}
-      >
-        <Feather
-          name="user"
-          size={20}
-          color={
-            role === "client" ? theme.colors.primaryBlue : colors.lightGray
-          }
-          style={{ marginRight: 8 }}
-        />
-        <Text
-          style={[
-            styles.roleButtonText,
-            role === "client" && styles.selectedText,
-          ]}
-        >
-          Cliente
-        </Text>
-      </Pressable>
-      <Pressable
-        style={[
-          styles.roleButton,
-          role === "provider" && styles.selectedButton,
-        ]}
-        onPress={() => setRole("provider")}
-      >
-        <Feather
-          name="briefcase"
-          size={20}
-          color={
-            role === "provider" ? theme.colors.primaryBlue : colors.lightGray
-          }
-          style={{ marginRight: 8 }}
-        />
-        <Text
-          style={[
-            styles.roleButtonText,
-            role === "provider" && styles.selectedText,
-          ]}
-        >
-          Profesional
-        </Text>
-      </Pressable>
+    <View style={styles.list} accessibilityRole="radiogroup">
+      {ROLES.map((role) => {
+        const selected = role.value === value;
+        return (
+          <Pressable
+            key={role.value}
+            accessibilityRole="radio"
+            accessibilityState={{ selected }}
+            onPress={() => onChange(role.value)}
+            style={[
+              styles.card,
+              {
+                backgroundColor: selected ? colors.accentSoft : colors.surface,
+                borderColor: selected ? colors.accent : colors.line,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.icon,
+                { backgroundColor: selected ? colors.accent : colors.surface2 },
+              ]}
+            >
+              <Feather name={role.icon} size={20} color={selected ? colors.onAccent : colors.textMuted} />
+            </View>
+            <View style={styles.text}>
+              <Text bold>{role.title}</Text>
+              <Text variant="label" tone="muted">
+                {role.body}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.radio,
+                { borderColor: selected ? colors.accent : colors.lineStrong },
+              ]}
+            >
+              {selected && <View style={[styles.radioDot, { backgroundColor: colors.accent }]} />}
+            </View>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  list: {
+    gap: 10,
+  },
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderRadius: radius.card,
+    borderWidth: 1.5,
+  },
+  icon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  text: {
+    flex: 1,
+    gap: 2,
+  },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+});

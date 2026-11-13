@@ -1,17 +1,12 @@
-import { View, StyleSheet } from "react-native";
 import { StaticScreenProps } from "@react-navigation/native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm } from "react-hook-form";
-import { Feather } from "@expo/vector-icons";
 
 import { User } from "@/models/User";
-import { theme } from "@/theme/theme";
 import { useAlertCtx } from "@/context/Alert";
-import Divider from "@/components/ui/Divider";
 import useRegister from "@/hooks/auth/useRegister";
-import Text from "@/components/ui/Text";
 import ProviderInfoForm from "@/components/forms/ProviderInfoForm";
-import useColorScheme from "@/hooks/useColorScheme";
+import useTheme from "@/hooks/useTheme";
+import AuthLayout from "@/components/AuthLayout";
 
 type Props = StaticScreenProps<{
   userData: {
@@ -32,7 +27,7 @@ type Props = StaticScreenProps<{
 
 export default function ProviderData({ route }: Props) {
   const { userData } = route.params;
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
   const { registerProvider, loading } = useRegister();
   const { show } = useAlertCtx();
 
@@ -53,67 +48,26 @@ export default function ProviderData({ route }: Props) {
 
     if (error) {
       show({
-        title: "Error de Registro",
-        message:
-          "Ocurrió un error al registrar tu perfil profesional. Por favor, inténtalo de nuevo más tarde.",
+        title: "No pudimos registrar tu perfil",
+        message: "Ocurrió un error. Inténtalo de nuevo más tarde.",
         icon: "alert-circle",
-        iconColor: theme.colors.redError,
+        iconColor: colors.danger,
       });
     }
   });
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+    <AuthLayout
+      step={{ current: 3, total: 3 }}
+      title="Tu perfil profesional"
+      subtitle="Esto es lo que verán los clientes antes de enviarte una solicitud."
     >
-      <View>
-        <View style={styles.fieldsContainer}>
-          <View style={styles.headerContainer}>
-            <Feather
-              name="briefcase"
-              size={44}
-              color={theme.colors.primaryBlue}
-            />
-            <Text color="white" fontFamily="bold" size={theme.fontSizes.xl + 6}>
-              ¡Ya casi terminas!
-            </Text>
-            <Text
-              style={[styles.headerMsg, { color: colors.lightGray }]}
-              size={theme.fontSizes.md}
-            >
-              Completa tu perfil profesional y empieza a ofrecer tus servicios.
-            </Text>
-            <Divider />
-          </View>
-          <ProviderInfoForm
-            control={control}
-            loading={loading}
-            onContinue={onContinue}
-            submitBtnLabel="Registrar"
-          />
-        </View>
-      </View>
-    </SafeAreaView>
+      <ProviderInfoForm
+        control={control}
+        loading={loading}
+        onContinue={onContinue}
+        submitBtnLabel="Crear cuenta"
+      />
+    </AuthLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: theme.spacing.tabPT,
-    paddingHorizontal: theme.spacing.md,
-  },
-  fieldsContainer: {
-    gap: theme.spacing.md - 4,
-    paddingBottom: theme.spacing.lg + 24,
-  },
-  headerContainer: {
-    alignItems: "center",
-    gap: theme.spacing.sm,
-  },
-  headerMsg: {
-    // color: theme.colors.lightGray,
-    textAlign: "center",
-    paddingHorizontal: theme.spacing.sm,
-  },
-});

@@ -1,28 +1,27 @@
-import React from "react";
-import { View, Pressable, StyleSheet } from "react-native";
-import { useController, Control, RegisterOptions } from "react-hook-form";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Control, RegisterOptions, useController } from "react-hook-form";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+
+import useTheme from "@/hooks/useTheme";
 import Text from "../ui/Text";
-import { theme } from "@/theme/theme";
-import useColorScheme from "@/hooks/useColorScheme";
 
 type Props = {
   name: string;
   control: Control<any>;
-  label?: string;
   rules?: RegisterOptions;
 };
+
+const LABELS = ["", "Malo", "Regular", "Bien", "Muy bien", "Excelente"];
 
 export default function StarRatingField({
   name,
   control,
-  label,
   rules = {
-    required: "Por favor, selecciona una calificación",
-    validate: (value) => value > 0 || "La calificación debe ser mayor a 0",
+    required: "Elige una calificación",
+    validate: (value) => value > 0 || "Elige una calificación",
   },
 }: Props) {
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
   const {
     field: { value, onChange },
     fieldState: { error },
@@ -30,51 +29,38 @@ export default function StarRatingField({
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View style={{ ...styles.starsRow, backgroundColor: colors.darkGray }}>
+      <View style={styles.row} accessibilityRole="radiogroup">
         {[1, 2, 3, 4, 5].map((star) => (
           <Pressable
             key={star}
-            hitSlop={10}
+            hitSlop={6}
+            accessibilityRole="radio"
+            accessibilityLabel={`${star} ${star === 1 ? "estrella" : "estrellas"}`}
+            accessibilityState={{ selected: star === value }}
             onPress={() => onChange(star)}
-            style={styles.starPressable}
           >
             <MaterialCommunityIcons
               name={star <= value ? "star" : "star-outline"}
-              size={36}
-              color={
-                star <= value ? theme.colors.primaryBlue : colors.lightGray
-              }
-              style={{ marginHorizontal: 4 }}
+              size={42}
+              color={star <= value ? colors.star : colors.surface3}
             />
           </Pressable>
         ))}
       </View>
-      {error && (
-        <Text color={theme.colors.redError} size={15} style={styles.error}>
-          {error.message}
-        </Text>
-      )}
+      <Text variant="label" bold align="center" tone={error ? "danger" : value ? "default" : "subtle"}>
+        {error?.message ?? (value ? LABELS[value] : "Toca para calificar")}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 12,
-  },
-  label: {
-    marginBottom: 6,
-    paddingLeft: theme.spacing.sm,
-  },
-  starsRow: {
-    flexDirection: "row",
+    gap: 8,
     alignItems: "center",
-    justifyContent: "center",
-    padding: 8,
-    width: "100%",
-    borderRadius: 12,
   },
-  starPressable: { padding: 2 },
-  error: { marginTop: 10 },
+  row: {
+    flexDirection: "row",
+    gap: 6,
+  },
 });

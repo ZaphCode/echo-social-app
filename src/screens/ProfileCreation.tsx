@@ -1,18 +1,16 @@
-import { StyleSheet, ScrollView } from "react-native";
 import { StaticScreenProps, useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { User } from "@/models/User";
-import { theme } from "@/theme/theme";
 import { useAlertCtx } from "@/context/Alert";
 import AvatarPicker from "@/components/forms/AvatarPicker";
 import useRegister from "@/hooks/auth/useRegister";
 import useRedirect from "@/hooks/auth/useRedirect";
 import useLocation from "@/hooks/useLocation";
 import ProfileForm from "@/components/forms/ProfileForm";
-import useColorScheme from "@/hooks/useColorScheme";
+import useTheme from "@/hooks/useTheme";
+import AuthLayout from "@/components/AuthLayout";
 
 type Props = StaticScreenProps<{
   userData: {
@@ -28,7 +26,7 @@ type Props = StaticScreenProps<{
 export default function ProfileCreation({ route }: Props) {
   useRedirect();
   const { userData } = route.params;
-  const { colors } = useColorScheme();
+  const { colors } = useTheme();
   const [avatar, setAvatar] = useState<string>();
   const navigation = useNavigation();
   const { show } = useAlertCtx();
@@ -77,42 +75,30 @@ export default function ProfileCreation({ route }: Props) {
 
       if (error) {
         show({
-          title: "Error al crear cuenta",
-          message:
-            "Ocurrió un error al crear tu cuenta. Por favor, inténtalo de nuevo más tarde.",
+          title: "No pudimos crear tu cuenta",
+          message: "Ocurrió un error. Inténtalo de nuevo más tarde.",
           icon: "account-remove",
-          iconColor: theme.colors.redError,
+          iconColor: colors.danger,
         });
       }
     }
   });
 
+  const isProvider = userData.role === "provider";
+
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+    <AuthLayout
+      step={{ current: 2, total: isProvider ? 3 : 2 }}
+      title="Tus datos de contacto"
+      subtitle="Solo se comparten con quien negocies. Detectamos tu ciudad si diste permiso de ubicación."
     >
-      <ScrollView>
-        <AvatarPicker onChange={setAvatar} />
-        <ProfileForm
-          submitBtnLabel="Continuar"
-          control={control}
-          onContinue={onContinue}
-          loading={loading}
-        />
-      </ScrollView>
-    </SafeAreaView>
+      <AvatarPicker onChange={setAvatar} />
+      <ProfileForm
+        submitBtnLabel={isProvider ? "Continuar" : "Crear cuenta"}
+        control={control}
+        onContinue={onContinue}
+        loading={loading}
+      />
+    </AuthLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    // backgroundColor: theme.colors.background,
-    flex: 1,
-    paddingTop: theme.spacing.tabPT,
-  },
-  fieldsContainer: {
-    paddingHorizontal: theme.spacing.md - 2,
-    gap: theme.spacing.sm - 2,
-    paddingBottom: theme.spacing.lg + 24,
-  },
-});

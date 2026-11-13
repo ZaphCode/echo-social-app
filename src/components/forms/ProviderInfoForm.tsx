@@ -1,63 +1,51 @@
-import { View, Text } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { StyleSheet, View } from "react-native";
+import { Control } from "react-hook-form";
 
-import { categoriesKeys, listServiceCategories } from "@/api/categories";
-import { theme } from "@/theme/theme";
+import useCategories from "@/hooks/useCategories";
 import { validYearsRules } from "@/utils/validations";
-import Field from "./Field";
-import Dropdown from "./Dropdown";
 import Button from "../ui/Button";
+import Dropdown from "./Dropdown";
+import Field from "./Field";
 import WeekDaysPicker from "./WeekdaysPicker";
 
 type Props = {
-  control: any;
+  control: Control<any>;
   submitBtnLabel: string;
   loading?: boolean;
   onContinue: () => void;
 };
 
-export default function ProviderInfoForm({
-  control,
-  onContinue,
-  submitBtnLabel,
-  loading,
-}: Props) {
-  const categoriesQuery = useQuery({
-    queryKey: categoriesKeys.all,
-    queryFn: listServiceCategories,
-  });
+export default function ProviderInfoForm({ control, onContinue, submitBtnLabel, loading }: Props) {
+  const { categories, isPending } = useCategories();
 
   return (
-    <View style={{ gap: theme.spacing.md }}>
-      <Field
-        name="description"
+    <View style={styles.fields}>
+      <Dropdown
         control={control}
-        icon="info"
-        label="Descripción personal"
-        placeholder="Escribe una breve descripción"
+        name="specialty"
+        icon="tag"
+        label="Especialidad"
+        loading={isPending}
+        options={categories}
+        getLabel={(category) => category.name}
+        getValue={(category) => category.id}
       />
-      {categoriesQuery.isPending ? (
-        <Text>Loading categories...</Text>
-      ) : categoriesQuery.isError ? (
-        <Text>Error loading categories</Text>
-      ) : (
-        <Dropdown
-          control={control}
-          name="specialty"
-          icon="tag"
-          label="Especialidad"
-          options={categoriesQuery.data ?? []}
-          getLabel={(c) => c.name}
-          getValue={(c) => c.id}
-        />
-      )}
       <Field
         name="experience_years"
         control={control}
         label="Años de experiencia"
-        icon="calendar"
-        placeholder="Ej: 5"
+        icon="award"
+        placeholder="Ej. 5"
+        keyboardType="numeric"
         rules={validYearsRules}
+      />
+      <Field
+        name="description"
+        control={control}
+        label="Sobre ti"
+        placeholder="Cuéntales a tus clientes en qué eres bueno"
+        autoCapitalize="sentences"
+        multiline
       />
       <WeekDaysPicker
         control={control}
@@ -65,12 +53,16 @@ export default function ProviderInfoForm({
         label="Días disponibles"
         rules={{ required: "Selecciona al menos un día" }}
       />
-      <Button
-        title={submitBtnLabel}
-        loading={categoriesQuery.isPending || loading}
-        onPress={onContinue}
-        style={{ marginTop: 2 }}
-      />
+      <Button title={submitBtnLabel} loading={loading} onPress={onContinue} style={styles.submit} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  fields: {
+    gap: 16,
+  },
+  submit: {
+    marginTop: 8,
+  },
+});

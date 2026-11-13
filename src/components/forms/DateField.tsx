@@ -1,22 +1,31 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Platform } from "react-native";
+import { useState } from "react";
+import { Platform, Pressable, StyleSheet } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Controller } from "react-hook-form";
+import { Control, Controller } from "react-hook-form";
 import { Feather } from "@expo/vector-icons";
-import { theme } from "@/theme/theme";
-import { formatDate } from "@/utils/format";
-import { validDateRules } from "@/utils/validations";
-import useColorScheme from "@/hooks/useColorScheme";
 
-interface Props {
+import useTheme from "@/hooks/useTheme";
+import { radius } from "@/theme/theme";
+import { validDateRules } from "@/utils/validations";
+import Text from "../ui/Text";
+import { FieldShell } from "./Field";
+
+type Props = {
   name: string;
   label?: string;
-  control: any;
-}
+  control: Control<any>;
+};
+
+const formatter = new Intl.DateTimeFormat("es-MX", {
+  weekday: "short",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 
 export default function DateField({ name, label, control }: Props) {
   const [showPicker, setShowPicker] = useState(false);
-  const { colors, activeMode } = useColorScheme();
+  const { colors, mode } = useTheme();
 
   return (
     <Controller
@@ -25,38 +34,25 @@ export default function DateField({ name, label, control }: Props) {
       defaultValue=""
       rules={validDateRules}
       render={({ field: { onChange, value }, fieldState: { error } }) => (
-        <View>
-          {label && (
-            <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
-          )}
-
+        <FieldShell label={label} error={error?.message}>
           <Pressable
-            onPress={() => setShowPicker(true)}
-            style={{
-              ...styles.inputContainer,
-              borderColor: error ? colors.redError : colors.lightGray,
-              borderWidth: 1,
-            }}
+            accessibilityRole="button"
+            accessibilityLabel={label ?? "Elegir fecha"}
+            onPress={() => setShowPicker((open) => !open)}
+            style={[
+              styles.box,
+              {
+                backgroundColor: colors.surface,
+                borderColor: error ? colors.danger : showPicker ? colors.accent : colors.line,
+              },
+            ]}
           >
-            <Feather
-              name="calendar"
-              size={20}
-              color={colors.lightGray}
-              style={styles.icon}
-            />
-            <Text
-              style={{
-                ...styles.inputText,
-                color: value ? colors.text : colors.lightGray,
-              }}
-            >
-              {value
-                ? formatDate(new Date(value).toUTCString())
-                : "Selecciona una fecha"}
+            <Feather name="calendar" size={18} color={colors.textSubtle} />
+            <Text tone={value ? "default" : "subtle"} style={styles.flex}>
+              {value ? formatter.format(new Date(value)) : "Selecciona una fecha"}
             </Text>
+            <Feather name={showPicker ? "chevron-up" : "chevron-down"} size={18} color={colors.textSubtle} />
           </Pressable>
-
-          {error && <Text style={styles.error}>{error.message}</Text>}
 
           {showPicker && (
             <DateTimePicker
@@ -64,9 +60,11 @@ export default function DateField({ name, label, control }: Props) {
               mode="date"
               minimumDate={new Date()}
               textColor={colors.text}
-              themeVariant={activeMode}
+              accentColor={colors.accent}
+              themeVariant={mode}
               display={Platform.OS === "ios" ? "inline" : "default"}
               onChange={(_, selectedDate) => {
+                if (Platform.OS !== "ios") setShowPicker(false);
                 if (selectedDate) {
                   onChange(selectedDate.toISOString());
                   setShowPicker(false);
@@ -74,37 +72,23 @@ export default function DateField({ name, label, control }: Props) {
               }}
             />
           )}
-        </View>
+        </FieldShell>
       )}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  label: {
-    fontFamily: theme.fontFamily.regular,
-    fontSize: theme.fontSizes.md,
-    marginBottom: theme.spacing.sm,
-    marginLeft: theme.spacing.sm,
-  },
-  inputContainer: {
+  box: {
+    height: 54,
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 12,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: Platform.OS === "android" ? 17 : 14,
+    gap: 10,
+    borderRadius: radius.input,
+    borderWidth: 1,
+    paddingHorizontal: 16,
   },
-  icon: {
-    marginRight: 10,
-  },
-  inputText: {
-    color: "#fff",
-    fontSize: theme.fontSizes.md,
-    fontFamily: theme.fontFamily.regular,
-  },
-  error: {
-    color: theme.colors.redError,
-    marginTop: theme.spacing.sm,
-    fontSize: theme.fontSizes.sm,
+  flex: {
+    flex: 1,
   },
 });

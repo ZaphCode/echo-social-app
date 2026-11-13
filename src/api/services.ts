@@ -16,6 +16,12 @@ import {
   searchCachedServices,
   updateCachedService,
 } from "@/offline/store";
+import {
+  Coords,
+  isValidCoords,
+  roundForKey,
+  sortByProximity,
+} from "@/utils/geo";
 
 const serviceCardSelect = "*, provider_profile:profiles!provider(*)";
 const serviceSearchSelect =
@@ -23,8 +29,10 @@ const serviceSearchSelect =
 
 export const servicesKeys = {
   all: ["services"] as const,
-  byCategory: (categoryId: string) =>
-    ["services", "category", categoryId] as const,
+  byCategory: (categoryId: string, coords?: Coords | null) =>
+    coords === undefined
+      ? (["services", "category", categoryId] as const)
+      : (["services", "category", categoryId, roundForKey(coords)] as const),
   search: (query: string) => ["services", "search", query] as const,
   detail: (serviceId: string) => ["services", "detail", serviceId] as const,
 };
@@ -38,29 +46,50 @@ export type SaveServiceInput = {
   photos: string[];
 };
 
-export async function listServicesByCategory(categoryId: string) {
+export const serviceProviderCoords = (service: ServiceWithProvider) =>
+  isValidCoords(service.provider_profile?.location)
+    ? service.provider_profile.location
+    : null;
+
+/**
+ * Services ordered by distance bucket of the provider's (approximate)
+ * profile location and then recency. Without `coords`, newest first.
+ */
+export async function listServicesByCategory(
+  categoryId: string,
+  coords?: Coords | null
+) {
+  const origin = coords ?? null;
+  const sortCached = async () =>
+    sortByProximity(
+      await listCachedServicesByCategory(categoryId),
+      origin,
+      serviceProviderCoords,
+      (service) => service.created_at
+    );
+
   if (!getOfflineNetworkState()) {
-    return listCachedServicesByCategory(categoryId);
+    return sortCached();
   }
 
   try {
-    let query = supabase.from("service").select(serviceCardSelect);
-
-    if (categoryId !== "all") {
-      query = query.eq("category", categoryId);
-    }
-
-    const { data, error } = await query;
+    const { data, error } = await supabase
+      .rpc("list_services_nearby", {
+        p_lat: origin?.lat ?? null,
+        p_lon: origin?.lon ?? null,
+        p_category: categoryId,
+      })
+      .select(serviceCardSelect);
 
     throwIfError(error);
 
-    const services = (data ?? []) as ServiceWithProvider[];
+    const services = (data ?? []) as unknown as ServiceWithProvider[];
     await cacheServices(services);
 
     return services;
   } catch (error) {
     if (isLikelyNetworkError(error)) {
-      return listCachedServicesByCategory(categoryId);
+      return sortCached();
     }
 
     throw error;

@@ -1,26 +1,38 @@
-import { View, Text, ActivityIndicator } from "react-native";
-import React from "react";
-import { theme } from "@/theme/theme";
-import useColorScheme from "@/hooks/useColorScheme";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+
+import useTheme from "@/hooks/useTheme";
+import Text from "./Text";
 
 type Props = {
-  size?: number;
-  horizontal?: boolean;
+  label?: string;
+  inline?: boolean;
 };
 
-export default function Loader({ size = 40, horizontal = false }: Props) {
-  const { colors } = useColorScheme();
+export default function Loader({ label = "Cargando…", inline = false }: Props) {
+  const { colors } = useTheme();
+
   return (
-    <View
-      style={{
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 7,
-        flexDirection: horizontal ? "row" : "column",
-      }}
-    >
-      <ActivityIndicator size={size} color={colors.lightGray} />
-      <Text style={{ color: colors.lightGray }}>Cargando...</Text>
+    <View style={[styles.base, inline ? styles.inline : styles.block]}>
+      <ActivityIndicator color={colors.textSubtle} />
+      {label ? (
+        <Text variant="label" tone="subtle">
+          {label}
+        </Text>
+      ) : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  base: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  block: {
+    paddingVertical: 48,
+  },
+  inline: {
+    flexDirection: "row",
+  },
+});
