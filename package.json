@@ -10,7 +10,12 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "bun test"
+    "test": "bun test",
+    "seed:images": "unzip -oq seed/images.zip -d seed",
+    "seed:zip": "cd seed && rm -f images.zip && zip -rq -X images.zip images -x '*.DS_Store'",
+    "db:reset": "bun seed/reset.ts",
+    "db:seed": "bun seed/seed.ts",
+    "db:reseed": "bun seed/seed.ts --reset"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

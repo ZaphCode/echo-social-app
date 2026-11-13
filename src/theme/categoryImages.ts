@@ -13,18 +13,18 @@ const unsplash = (id: string) =>
 
 export const CATEGORY_IMAGES: Record<string, string | ImageSourcePropType> = {
   todas: unsplash("1625241152315-4a698f74ceb7"),
-  plomeria: unsplash("1613839397604-65fffe7fc3d4"),
+  plomeria: unsplash("1567769462911-520a38352744"),
   electricista: unsplash("1758101755915-462eddc23f57"),
   carpinteria: unsplash("1659930087003-2d64e33181f7"),
   pintura: unsplash("1562259949-e8e7689d7828"),
   jardineria: unsplash("1689728318937-17d24bc0a65c"),
-  "instalacion de aires acondicionados": unsplash("1718203862467-c33159fdc504"),
+  "instalacion de aires acondicionados": unsplash("1757219525975-03b5984bc6e8"),
   "instalacion de pisos": unsplash("1523413363574-c30aa1c2a516"),
   "limpieza de banos": unsplash("1661107259637-4e1c55462428"),
   // Temporales: reemplázalas por fotos propias de cada categoría.
-  albanileria: unsplash("1523413363574-c30aa1c2a516"),
-  "limpieza de casas y oficinas": unsplash("1661107259637-4e1c55462428"),
-  "limpieza de fosas y biodigestores": unsplash("1689728318937-17d24bc0a65c"),
+  albanileria: unsplash("1701850009190-2859ba2aeea6"),
+  "limpieza de casas y oficinas": unsplash("1713110824336-f78c320dcf8e"),
+  "limpieza de fosas y biodigestores": unsplash("1662445407335-db6b4e68c323"),
 };
 
 export function normalizeCategoryName(name: string) {
