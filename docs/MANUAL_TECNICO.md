@@ -94,7 +94,6 @@ Se definen en un archivo `.env` en la raíz, que no se versiona:
 |---|---|---|
 | `EXPO_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase. También sirve para derivar la clave de almacenamiento de la sesión. | [`src/lib/supabase.ts`](../src/lib/supabase.ts) |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Clave pública (anon) de Supabase. | [`src/lib/supabase.ts`](../src/lib/supabase.ts) |
-| `EXPO_PUBLIC_APP_VERSION` | Versión visible en Perfil ("Echo V…"). Por defecto vale `"2.0"`. | [`src/utils/constants.ts`](../src/utils/constants.ts) |
 | `GOOGLE_MAPS_ANDROID_API_KEY` | Clave de *Maps SDK for Android* para `expo-maps`. Se inyecta en `android.config.googleMaps.apiKey` al hacer *prebuild*. Sin ella el mapa sale en blanco en Android (iOS usa Apple Maps y no necesita clave). Conviene restringirla al paquete `com.anonymous.echoapp` y su SHA-1. | [`app.config.js`](../app.config.js) |
 
 ### 3.3 Scripts disponibles

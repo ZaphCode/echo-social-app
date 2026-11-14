@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import useTheme from "@/hooks/useTheme";
 import useAppNavigation from "@/navigation/useAppNavigation";
 import { space } from "@/theme/theme";
 import IconButton from "./ui/IconButton";
+import { KeyboardAwareScrollView, useKeyboardInset } from "./ui/KeyboardAware";
 import Text from "./ui/Text";
 
 type Props = {
@@ -23,10 +24,7 @@ export default function EditorLayout({ title, subtitle, children, footer }: Prop
   const topInset = Platform.OS === "ios" ? space.md : insets.top + space.xs;
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.fill, { backgroundColor: colors.bg }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <View style={[styles.fill, { backgroundColor: colors.bg }]}>
       <View style={[styles.header, { paddingTop: topInset }]}>
         <IconButton icon="x" accessibilityLabel="Cerrar" onPress={nav.back} />
         <View style={styles.headerText}>
@@ -38,23 +36,36 @@ export default function EditorLayout({ title, subtitle, children, footer }: Prop
           ) : null}
         </View>
       </View>
-      <ScrollView
-        style={styles.fill}
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.body}
-        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        footer={<Footer>{footer}</Footer>}
       >
         {children}
-      </ScrollView>
-      <View
-        style={[
-          styles.footer,
-          { borderTopColor: colors.line, paddingBottom: Math.max(insets.bottom, space.md) },
-        ]}
-      >
-        {footer}
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
+  );
+}
+
+/** Sticky CTA bar; sits right on the keyboard while it is open. */
+function Footer({ children }: { children: ReactNode }) {
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  // The keyboard already covers the home indicator / nav bar.
+  const keyboardOpen = useKeyboardInset() > 0;
+
+  return (
+    <View
+      style={[
+        styles.footer,
+        {
+          borderTopColor: colors.line,
+          paddingBottom: keyboardOpen ? space.sm : Math.max(insets.bottom, space.md),
+        },
+      ]}
+    >
+      {children}
+    </View>
   );
 }
 

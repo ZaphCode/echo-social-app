@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { StaticScreenProps } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
@@ -20,6 +20,7 @@ import { useAuthCtx } from "@/context/Auth";
 import useTheme from "@/hooks/useTheme";
 import useChatPresence from "@/hooks/useChatPresence";
 import EmptyState from "@/components/ui/EmptyState";
+import { KeyboardAvoidingBox } from "@/components/ui/KeyboardAware";
 
 type Props = StaticScreenProps<{ request: ServiceRequestWithRelations }>;
 
@@ -95,15 +96,12 @@ function ChatroomContent({
           hasReviewed={hasReviewed}
           shouldNotifyCounterparty={!isOfferRecipientInChat}
         />
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
+        <KeyboardAvoidingBox>
           <View style={styles.messageList}>
             <MessageList requestId={request.id} />
           </View>
           <ChatInput />
-        </KeyboardAvoidingView>
+        </KeyboardAvoidingBox>
         <SlideModal visible={offerModalVisible} onClose={closeOfferModal}>
           <View>
             <RequestForm
@@ -143,9 +141,6 @@ function ChatroomContent({
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
   messageList: {
     flex: 1,
     paddingHorizontal: 16,

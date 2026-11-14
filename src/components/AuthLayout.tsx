@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import useTheme from "@/hooks/useTheme";
 import { space } from "@/theme/theme";
 import IconButton from "./ui/IconButton";
+import { KeyboardAwareScrollView } from "./ui/KeyboardAware";
 import Text from "./ui/Text";
 
 type Props = {
@@ -24,18 +25,14 @@ export default function AuthLayout({ step, title, subtitle, children, footer, ca
   const navigation = useNavigation();
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.fill, { backgroundColor: colors.bg }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <KeyboardAwareScrollView
+      containerStyle={{ backgroundColor: colors.bg }}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: insets.top + space.xs, paddingBottom: insets.bottom + space.lg },
+      ]}
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: insets.top + space.xs, paddingBottom: insets.bottom + space.lg },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
         <View style={styles.topRow}>
           {canGoBack ? (
             <IconButton icon="chevron-left" accessibilityLabel="Volver" onPress={navigation.goBack} />
@@ -69,15 +66,11 @@ export default function AuthLayout({ step, title, subtitle, children, footer, ca
 
         <View style={styles.body}>{children}</View>
         {footer}
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  fill: {
-    flex: 1,
-  },
   content: {
     flexGrow: 1,
     paddingHorizontal: space.gutter,

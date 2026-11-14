@@ -1,5 +1,7 @@
 import { Platform } from "react-native";
 
+import appJson from "../../app.json";
+
 export const NOTIFICATIONS_KEY = "notificationsEnabled";
 export const SQL_VIEWER_ENABLED_KEY = "echo.sqlViewer.enabled";
 
@@ -20,4 +22,5 @@ export function getDevPassword(): string {
   return process.env.EXPO_PUBLIC_DEV_PASSWORD ?? "";
 }
 
-export const ECHO_VERSION = process.env.EXPO_PUBLIC_APP_VERSION ?? "2.0";
+/** Visible app version ("Echo v…"). app.json is the source of truth. */
+export const ECHO_VERSION: string = appJson.expo.version;

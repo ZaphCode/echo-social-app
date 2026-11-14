@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 import { useForm } from "react-hook-form";
@@ -8,6 +8,7 @@ import Field from "@/components/forms/Field";
 import Button from "@/components/ui/Button";
 import EchoMark from "@/components/ui/EchoMark";
 import EchoRings from "@/components/ui/EchoRings";
+import { KeyboardAwareScrollView } from "@/components/ui/KeyboardAware";
 import Text from "@/components/ui/Text";
 import { useAlertCtx } from "@/context/Alert";
 import useLogin from "@/hooks/auth/useLogin";
@@ -58,15 +59,11 @@ export default function SignIn() {
   });
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.fill, { backgroundColor: colors.bg }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <KeyboardAwareScrollView
+      containerStyle={{ backgroundColor: colors.bg }}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space.lg }]}
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space.lg }]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
         <View style={[styles.hero, { paddingTop: insets.top }]}>
           <EchoRings size={420} rings={5} style={styles.rings} />
           {ORBIT.map(([category, x, y, size, rotate]) => {
@@ -137,8 +134,7 @@ export default function SignIn() {
             </Text>
           </Pressable>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -153,9 +149,6 @@ function getLoginErrorMessage(error: string) {
 }
 
 const styles = StyleSheet.create({
-  fill: {
-    flex: 1,
-  },
   content: {
     flexGrow: 1,
     paddingHorizontal: space.gutter,

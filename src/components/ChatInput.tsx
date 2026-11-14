@@ -9,6 +9,7 @@ import { insertPendingMessage } from "@/chat/messages";
 import { chatMessagesKeys } from "@/chat/sync";
 import { useAuthCtx } from "@/context/Auth";
 import { useNegotiationCtx } from "@/context/Negotiation";
+import { useKeyboardInset } from "@/components/ui/KeyboardAware";
 import useTheme from "@/hooks/useTheme";
 import { fonts, radius } from "@/theme/theme";
 import { isCanceled } from "@/utils/negotiation";
@@ -17,6 +18,8 @@ export default function ChatInput() {
   const { user } = useAuthCtx();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  // While the keyboard is open it already covers the home indicator / nav bar.
+  const keyboardOpen = useKeyboardInset() > 0;
   const queryClient = useQueryClient();
   const { flushPendingMessages } = useChatSync();
   const { request } = useNegotiationCtx();
@@ -47,7 +50,7 @@ export default function ChatInput() {
   };
 
   return (
-    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+    <View style={[styles.bar, { paddingBottom: keyboardOpen ? 8 : Math.max(insets.bottom, 12) }]}>
       <View style={[styles.field, { backgroundColor: colors.surface, borderColor: colors.line }]}>
         <TextInput
           style={[styles.input, { color: colors.text }]}
